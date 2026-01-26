@@ -1,0 +1,11 @@
+# Ignore build outputs
+bin/
+obj/
+.vs/
+
+# Ignore logs and state files
+EasySave/Logs/
+EasySave/state.json
+
+# Ignore config files
+**/config.json
