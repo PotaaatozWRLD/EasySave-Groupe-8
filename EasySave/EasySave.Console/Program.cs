@@ -36,11 +36,12 @@ class Program
                 Console.WriteLine("============================");
                 Console.WriteLine($"1. {_lang.GetString("Menu_List")}");
                 Console.WriteLine($"2. {_lang.GetString("Menu_Create")}");
-                Console.WriteLine($"3. {_lang.GetString("Menu_Delete")}");
-                Console.WriteLine($"4. {_lang.GetString("Menu_Run")}");
-                Console.WriteLine($"5. {_lang.GetString("Menu_RunAll")}");
-                Console.WriteLine($"6. {_lang.GetString("Menu_Lang")}");
-                Console.WriteLine($"7. {_lang.GetString("Menu_Exit")}");
+                Console.WriteLine($"3. {_lang.GetString("Menu_Edit")}");
+                Console.WriteLine($"4. {_lang.GetString("Menu_Delete")}");
+                Console.WriteLine($"5. {_lang.GetString("Menu_Run")}");
+                Console.WriteLine($"6. {_lang.GetString("Menu_RunAll")}");
+                Console.WriteLine($"7. {_lang.GetString("Menu_Lang")}");
+                Console.WriteLine($"8. {_lang.GetString("Menu_Exit")}");
                 Console.Write(_lang.GetString("Msg_SelectOption"));
 
                 string? input = Console.ReadLine();
@@ -53,18 +54,21 @@ class Program
                         CreateJob();
                         break;
                     case "3":
-                        DeleteJob();
+                        EditJob();
                         break;
                     case "4":
-                        RunJob(backupService);
+                        DeleteJob();
                         break;
                     case "5":
-                        RunAllJobs(backupService);
+                        RunJob(backupService);
                         break;
                     case "6":
-                        ChangeLanguage();
+                        RunAllJobs(backupService);
                         break;
                     case "7":
+                        ChangeLanguage();
+                        break;
+                    case "8":
                         return;
                     default:
                         Console.WriteLine(_lang.GetString("Error_InvalidOption"));
@@ -155,6 +159,77 @@ class Program
             Console.WriteLine(ex.Message);
         }
 
+        Console.ReadKey();
+    }
+
+    static void EditJob()
+    {
+        Console.Clear();
+        Console.WriteLine("============================");
+        Console.WriteLine($"       {_lang.GetString("EditJob_Title")}         ");
+        Console.WriteLine("============================");
+
+        if (JobManager.Jobs.Count == 0)
+        {
+            Console.WriteLine(_lang.GetString("JobsList_NoJobs"));
+            Console.WriteLine(_lang.GetString("Msg_PressKey"));
+            Console.ReadKey();
+            return;
+        }
+
+        // Liste les jobs disponibles
+        Console.WriteLine(_lang.GetString("EditJob_AvailableJobs"));
+        for (int i = 0; i < JobManager.Jobs.Count; i++)
+        {
+            var job = JobManager.Jobs[i];
+            Console.WriteLine(string.Format(_lang.GetString("JobsList_Format"), 
+                i + 1, job.Name, job.SourcePath, job.TargetPath, job.Type));
+        }
+        Console.WriteLine();
+
+        Console.Write(_lang.GetString("EditJob_EnterIndex"));
+        if (!int.TryParse(Console.ReadLine(), out int index) || index < 1 || index > JobManager.Jobs.Count)
+        {
+            Console.WriteLine(_lang.GetString("Error_InvalidJobIndex"));
+            Console.ReadKey();
+            return;
+        }
+
+        var jobToEdit = JobManager.Jobs[index - 1];
+        Console.WriteLine();
+        Console.WriteLine(_lang.GetString("EditJob_CurrentValues"));
+        Console.WriteLine(string.Format(_lang.GetString("JobsList_Format"), 
+            index, jobToEdit.Name, jobToEdit.SourcePath, jobToEdit.TargetPath, jobToEdit.Type));
+        Console.WriteLine();
+
+        // Nom
+        Console.Write(_lang.GetString("EditJob_NewName"));
+        string newName = Console.ReadLine() ?? "";
+        if (!string.IsNullOrWhiteSpace(newName))
+            jobToEdit.Name = newName;
+
+        // Source
+        Console.Write(_lang.GetString("EditJob_NewSource"));
+        string newSource = Console.ReadLine() ?? "";
+        if (!string.IsNullOrWhiteSpace(newSource))
+            jobToEdit.SourcePath = newSource;
+
+        // Target
+        Console.Write(_lang.GetString("EditJob_NewTarget"));
+        string newTarget = Console.ReadLine() ?? "";
+        if (!string.IsNullOrWhiteSpace(newTarget))
+            jobToEdit.TargetPath = newTarget;
+
+        // Type
+        Console.Write(_lang.GetString("EditJob_NewType"));
+        string typeInput = Console.ReadLine() ?? "";
+        if (!string.IsNullOrWhiteSpace(typeInput))
+        {
+            jobToEdit.Type = typeInput.Equals("Full", StringComparison.OrdinalIgnoreCase) ? BackupType.Full : BackupType.Differential;
+        }
+
+        JobManager.SaveJobs();
+        Console.WriteLine(_lang.GetString("EditJob_Success"));
         Console.ReadKey();
     }
 
