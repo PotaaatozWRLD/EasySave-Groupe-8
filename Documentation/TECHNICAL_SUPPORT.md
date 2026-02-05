@@ -41,16 +41,20 @@
 ```
 EasySave.Console.exe
 ```
-Launches the application with a menu interface for creating and managing backup jobs.
+Launches the application with:
+1. Language selection prompt (English/French)
+2. Interactive menu for creating and managing backup jobs
 
-**Method 2: Command Line Mode**
+**Method 2: Command Line Mode (Automated)**
 ```
 EasySave.Console.exe <job_specification>
 ```
+Executes backup jobs directly without any prompts or user interaction.
+
 **Examples**:
-- `EasySave.Console.exe 1` - Execute backup job 1
-- `EasySave.Console.exe 1-3` - Execute jobs 1 through 3 sequentially
-- `EasySave.Console.exe 1;3;5` - Execute jobs 1, 3, and 5
+- `EasySave.Console.exe 1` - Execute backup job 1 immediately
+- `EasySave.Console.exe 1-3` - Execute jobs 1 through 3 sequentially (no prompts)
+- `EasySave.Console.exe 1;3;5` - Execute jobs 1, 3, and 5 (fully automated)
 
 **Supported Formats**:
 - Single job: `1`
