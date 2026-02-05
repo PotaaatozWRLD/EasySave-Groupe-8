@@ -1,0 +1,186 @@
+@startuml EasySave_Class_Diagram
+!theme plain
+skinparam classAttributeIconSize 0
+
+' =============== CONSOLE LAYER ===============
+package "EasySave.Console" {
+    class Program {
+        - {static} _lang : LanguageManager
+        + {static} Main(args : string[]) : void
+        - {static} ShowLanguageSelectionMenu() : void
+        - {static} ChangeLanguage() : void
+        - {static} ListJobs() : void
+        - {static} CreateJob() : void
+        - {static} EditJob() : void
+        - {static} DeleteJob() : void
+        - {static} RunJob(backupService : BackupService) : void
+        - {static} RunAllJobs(backupService : BackupService) : void
+        - {static} ParseJobIndexes(input : string) : IEnumerable<int>
+    }
+
+    class LanguageManager {
+        - {static} _instance : LanguageManager
+        - {static} _lock : object
+        - _strings : Dictionary<string, string>
+        - _currentLanguage : string
+        - LanguageManager()
+        + {static} Instance : LanguageManager <<get>>
+        + CurrentLanguage : string <<get>>
+        - LoadLanguage(culture : string) : void
+        + GetString(key : string) : string
+        + ChangeLanguage(culture : string) : void
+        + ToggleLanguage() : void
+    }
+
+    class AppConfig {
+        - {static} ConfigFilePath : string
+        - {static} _config : AppConfig
+        - {static} _configPath : string
+        + Language : string
+        - {static} Load() : void
+        + {static} GetLanguage() : string
+        + {static} HasLanguageConfigured() : bool
+        + {static} SetLanguage(language : string) : void
+    }
+}
+
+' =============== CORE LAYER ===============
+package "EasySave.Core" {
+    package "Models" {
+        enum BackupType {
+            Full
+            Differential
+        }
+
+        class BackupJob {
+            + Name : string
+            + SourcePath : string
+            + TargetPath : string
+            + Type : BackupType
+            + BackupJob(name, sourcePath, targetPath, type)
+        }
+    }
+
+    package "Services" {
+        class JobManager {
+            - {static} JobsFilePath : string
+            - {static} MaxJobs : int = 5
+            + {static} Jobs : List<BackupJob>
+            + {static} LoadJobs() : void
+            + {static} SaveJobs() : void
+            + {static} AddJob(name, source, target, type) : void
+            + {static} DeleteJob(index : int) : void
+            + {static} GetJob(index : int) : BackupJob
+        }
+
+        class BackupService {
+            - _logger : ILogger
+            + BackupService(logger : ILogger)
+            + ExecuteBackup(job : BackupJob) : void
+            - CalculateTotalFilesAndSize(sourceDir : string) : (int, long)
+            - ProcessDirectory(sourceDir, targetDir, job, filesProcessed, bytesProcessed, totalFiles, totalSize) : void
+            - IsSourceNewer(sourceFile, targetFile) : bool
+        }
+    }
+
+    package "Helpers" {
+        class PathHelper <<static>> {
+            + {static} ToUncPath(path : string) : string
+        }
+    }
+}
+
+' =============== EASYLOG DLL ===============
+package "EasyLog" {
+    interface ILogger {
+        + WriteLog(logEntry : LogEntry) : void
+        + UpdateState(stateEntry : StateEntry) : void
+    }
+
+    class JsonLogger {
+        - _logDirectory : string
+        - _stateFilePath : string
+        + JsonLogger(logDirectory, stateFilePath)
+        + WriteLog(logEntry : LogEntry) : void
+        + UpdateState(stateEntry : StateEntry) : void
+    }
+
+    class LogEntry {
+        + JobName : string
+        + SourcePath : string
+        + TargetPath : string
+        + FileName : string
+        + FileSize : long
+        + TransferTime : long
+        + ErrorMessage : string?
+        + Timestamp : DateTime
+    }
+
+    class StateEntry {
+        + Name : string
+        + LastActionTimestamp : string
+        + State : JobState
+        + TotalFiles : int
+        + TotalSize : long
+        + Progression : int
+        + NbFilesLeftToDo : int
+        + NbFilesLeftToDoSize : long
+        + CurrentSourceFilePath : string
+        + CurrentTargetFilePath : string
+    }
+
+    enum JobState {
+        ACTIVE
+        END
+        PAUSED
+    }
+}
+
+' =============== RELATIONSHIPS ===============
+Program --> LanguageManager : uses
+Program --> AppConfig : uses
+Program --> JobManager : uses
+Program --> BackupService : creates
+
+LanguageManager --> AppConfig : uses
+
+BackupService --> ILogger : depends on
+BackupService --> BackupJob : uses
+BackupService --> PathHelper : uses
+BackupService --> LogEntry : creates
+BackupService --> StateEntry : creates
+
+JobManager --> BackupJob : manages
+JobManager ..> BackupType : uses
+
+BackupJob --> BackupType : has
+
+JsonLogger ..|> ILogger : implements
+JsonLogger --> LogEntry : uses
+JsonLogger --> StateEntry : uses
+
+StateEntry --> JobState : has
+
+note right of JobManager
+  Maximum 5 jobs allowed
+  Saves to %AppData%\ProSoft\EasySave\jobs.json
+end note
+
+note right of BackupService
+  Supports Full and Differential backups
+  Calculates progress in real-time
+  Converts paths to UNC format
+end note
+
+note right of JsonLogger
+  Writes daily logs: YYYY-MM-DD.json
+  Updates state.json in real-time
+  Located in %AppData%\ProSoft\EasySave\
+end note
+
+note right of LanguageManager
+  Singleton pattern
+  Supports EN and FR
+end note
+
+@enduml

@@ -1,0 +1,125 @@
+@startuml EasySave_Use_Case_Diagram
+!theme plain
+left to right direction
+
+' =============== ACTORS ===============
+actor "User" as User
+actor "System Administrator" as Admin
+
+' =============== SYSTEM BOUNDARY ===============
+rectangle "EasySave v1.0" {
+    
+    ' Job Management
+    package "Job Management" {
+        usecase "Create Backup Job" as UC1
+        usecase "List Backup Jobs" as UC2
+        usecase "Edit Backup Job" as UC3
+        usecase "Delete Backup Job" as UC4
+        
+        note right of UC1
+            Maximum 5 jobs allowed
+            Define: name, source, target, type
+        end note
+    }
+    
+    ' Backup Execution
+    package "Backup Execution" {
+        usecase "Run Single Backup" as UC5
+        usecase "Run All Backups\n(Sequential)" as UC6
+        usecase "Execute via\nCommand Line" as UC7
+        
+        note right of UC7
+            Examples:
+            EasySave.exe 1-3
+            EasySave.exe 1;3
+        end note
+    }
+    
+    ' Backup Types
+    package "Backup Types" {
+        usecase "Perform Full Backup" as UC8
+        usecase "Perform Differential\nBackup" as UC9
+        
+        note right of UC8
+            Copy all files
+        end note
+        
+        note right of UC9
+            Copy only modified files
+        end note
+    }
+    
+    ' Configuration
+    package "Configuration" {
+        usecase "Change Language" as UC10
+        usecase "Select Language\n(EN/FR)" as UC11
+        
+        note right of UC11
+            Persistent setting
+        end note
+    }
+    
+    ' Monitoring
+    package "Monitoring" {
+        usecase "View Real-Time\nProgress" as UC12
+        usecase "Consult Daily Logs" as UC13
+        usecase "Check Backup State" as UC14
+        
+        note right of UC13
+            JSON format
+            UNC paths
+            Daily files
+        end note
+    }
+}
+
+' =============== EXTERNAL SYSTEMS ===============
+rectangle "External Systems" {
+    usecase "Write to Local Disk" as EXT1
+    usecase "Write to External Disk" as EXT2
+    usecase "Write to Network Drive" as EXT3
+}
+
+' =============== RELATIONSHIPS ===============
+
+' User actions
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC10
+User --> UC12
+User --> UC13
+
+' Admin actions
+Admin --> UC14
+Admin --> UC13
+Admin --> UC11
+
+' Include relationships
+UC5 ..> UC8 : <<include>>
+UC5 ..> UC9 : <<include>>
+UC6 ..> UC5 : <<include>>
+UC7 ..> UC5 : <<include>>
+
+UC1 ..> UC11 : <<extend>>
+UC10 ..> UC11 : <<include>>
+
+' Backup execution includes monitoring
+UC8 ..> UC12 : <<include>>
+UC9 ..> UC12 : <<include>>
+UC8 ..> UC14 : <<include>>
+UC9 ..> UC14 : <<include>>
+
+' External systems
+UC8 --> EXT1
+UC8 --> EXT2
+UC8 --> EXT3
+UC9 --> EXT1
+UC9 --> EXT2
+UC9 --> EXT3
+
+@enduml
