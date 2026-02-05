@@ -27,12 +27,11 @@ class Program
 
         JobManager.LoadJobs();
 
-        // Show language selection menu at every startup
-        ShowLanguageSelectionMenu();
-
         if (args.Length == 0)
         {
-            // MODE 1: Console Menu
+            // MODE 1: Console Menu - Interactive mode with language selection
+            ShowLanguageSelectionMenu();
+            
             while (true)
             {
                 Console.Clear();
