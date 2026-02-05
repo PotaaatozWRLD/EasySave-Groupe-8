@@ -1,0 +1,111 @@
+@startuml EasySave_Sequence_Execute_Backup
+!theme plain
+autonumber
+
+actor User
+participant "Program" as Prog
+participant "JobManager" as JM
+participant "BackupService" as BS
+participant "PathHelper" as PH
+participant "ILogger" as Log
+participant "FileSystem" as FS
+
+User -> Prog : Run backup (job index)
+activate Prog
+
+Prog -> JM : GetJob(index)
+activate JM
+JM --> Prog : BackupJob
+deactivate JM
+
+Prog -> BS : ExecuteBackup(job)
+activate BS
+
+' Calculate total files and size
+BS -> BS : CalculateTotalFilesAndSize(sourcePath)
+activate BS
+BS -> FS : GetFiles(sourceDir)
+activate FS
+FS --> BS : files[]
+deactivate FS
+BS -> FS : GetDirectories(sourceDir)
+activate FS
+FS --> BS : subdirs[]
+deactivate FS
+BS --> BS : (totalFiles, totalSize)
+deactivate BS
+
+' Initialize state
+BS -> Log : UpdateState(ACTIVE, 0%)
+activate Log
+Log -> FS : WriteAllText(state.json)
+activate FS
+deactivate FS
+deactivate Log
+
+' Process directory
+BS -> BS : ProcessDirectory(source, target, job)
+activate BS
+
+loop For each file in directory
+    ' Update state before copying
+    BS -> Log : UpdateState(ACTIVE, progress%)
+    activate Log
+    Log -> FS : WriteAllText(state.json)
+    deactivate Log
+    
+    alt Full backup OR (Differential AND source newer)
+        ' Copy file
+        BS -> FS : OpenRead(sourceFile)
+        activate FS
+        FS --> BS : sourceStream
+        deactivate FS
+        
+        BS -> FS : Create(targetFile)
+        activate FS
+        FS --> BS : targetStream
+        deactivate FS
+        
+        BS -> FS : CopyTo(targetStream)
+        
+        ' Convert to UNC format
+        BS -> PH : ToUncPath(sourcePath)
+        activate PH
+        PH --> BS : uncSourcePath
+        deactivate PH
+        
+        BS -> PH : ToUncPath(targetPath)
+        activate PH
+        PH --> BS : uncTargetPath
+        deactivate PH
+        
+        ' Log success
+        BS -> Log : WriteLog(logEntry)
+        activate Log
+        Log -> FS : AppendAllText(YYYY-MM-DD.json)
+        activate FS
+        deactivate FS
+        deactivate Log
+    end
+end
+
+' Process subdirectories recursively
+loop For each subdirectory
+    BS -> BS : ProcessDirectory(subDir, targetSubDir, job)
+end
+
+deactivate BS
+
+' Mark as completed
+BS -> Log : UpdateState(END, 100%)
+activate Log
+Log -> FS : WriteAllText(state.json)
+deactivate Log
+
+BS --> Prog : backup completed
+deactivate BS
+
+Prog --> User : Display success message
+deactivate Prog
+
+@enduml

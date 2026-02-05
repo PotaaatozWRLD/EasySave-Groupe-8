@@ -1,0 +1,124 @@
+@startuml EasySave_Sequence_Create_Job
+!theme plain
+autonumber
+
+actor User
+participant "Program" as Prog
+participant "Console" as Con
+participant "JobManager" as JM
+participant "FileSystem" as FS
+
+User -> Prog : Select "Create Job" (Option 2)
+activate Prog
+
+Prog -> Con : WriteLine("Enter job name:")
+activate Con
+Con --> User : prompt
+deactivate Con
+
+User -> Prog : Enter name
+Prog -> Con : ReadLine()
+activate Con
+Con --> Prog : name
+deactivate Con
+
+Prog -> Con : WriteLine("Enter source path:")
+activate Con
+Con --> User : prompt
+deactivate Con
+
+User -> Prog : Enter source path
+Prog -> Con : ReadLine()
+activate Con
+Con --> Prog : sourcePath
+deactivate Con
+
+Prog -> Con : WriteLine("Enter target path:")
+activate Con
+Con --> User : prompt
+deactivate Con
+
+User -> Prog : Enter target path
+Prog -> Con : ReadLine()
+activate Con
+Con --> Prog : targetPath
+deactivate Con
+
+Prog -> Con : WriteLine("1. Full Backup")
+Prog -> Con : WriteLine("2. Differential Backup")
+Prog -> Con : WriteLine("Enter type (1/2):")
+activate Con
+Con --> User : prompt
+deactivate Con
+
+User -> Prog : Enter type (1 or 2)
+Prog -> Con : ReadLine()
+activate Con
+Con --> Prog : typeInput
+deactivate Con
+
+Prog -> Prog : Parse typeInput
+alt typeInput == "1" or "Full"
+    Prog -> Prog : type = BackupType.Full
+else typeInput == "2" or "Differential"
+    Prog -> Prog : type = BackupType.Differential
+end
+
+Prog -> JM : AddJob(name, source, target, type)
+activate JM
+
+alt Jobs.Count < MaxJobs (5)
+    JM -> JM : Jobs.Add(new BackupJob(...))
+    
+    JM -> JM : SaveJobs()
+    activate JM
+    
+    ' Create directory if needed
+    JM -> FS : GetDirectoryName(JobsFilePath)
+    activate FS
+    FS --> JM : directory
+    deactivate FS
+    
+    alt directory doesn't exist
+        JM -> FS : CreateDirectory(directory)
+        activate FS
+        deactivate FS
+    end
+    
+    ' Serialize and save
+    JM -> JM : JsonSerializer.Serialize(Jobs)
+    JM -> FS : WriteAllText(jobs.json, json)
+    activate FS
+    note right
+        Location: %AppData%\ProSoft\EasySave\jobs.json
+    end note
+    deactivate FS
+    
+    deactivate JM
+    
+    JM --> Prog : success
+    deactivate JM
+    
+    Prog -> Con : WriteLine("Job created successfully")
+    activate Con
+    Con --> User : success message
+    deactivate Con
+    
+else Jobs.Count >= 5
+    JM --> Prog : throw InvalidOperationException
+    deactivate JM
+    
+    Prog -> Con : WriteLine("Cannot add more than 5 jobs")
+    activate Con
+    Con --> User : error message
+    deactivate Con
+end
+
+Prog -> Con : ReadKey()
+activate Con
+Con --> User : wait for key press
+deactivate Con
+
+deactivate Prog
+
+@enduml

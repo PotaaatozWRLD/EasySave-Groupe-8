@@ -1,0 +1,152 @@
+@startuml EasySave_Component_Diagram
+!theme plain
+
+' =============== EXTERNAL SYSTEMS ===============
+cloud "User Environment" {
+    actor User
+    file "Console\nTerminal" as Terminal
+}
+
+cloud "File System" {
+    folder "%AppData%\\ProSoft\\EasySave" as AppData {
+        file "config.json" as ConfigFile
+        file "jobs.json" as JobsFile
+        file "state.json" as StateFile
+        folder "Logs" as LogsFolder {
+            file "2026-02-05.json" as DailyLog
+            file "..." as MoreLogs
+        }
+    }
+    
+    folder "Language Files" as LangFolder {
+        file "lang.en.json" as LangEN
+        file "lang.fr.json" as LangFR
+    }
+    
+    folder "Source Directories" as SourceDirs {
+        file "Files to backup" as SourceFiles
+    }
+    
+    folder "Target Directories" as TargetDirs {
+        file "Backed up files" as TargetFiles
+    }
+}
+
+' =============== APPLICATION COMPONENTS ===============
+package "EasySave Application" {
+    
+    [EasySave.Console.exe] as Console
+    note right of Console
+        Main application
+        Command-line interface
+        Entry point
+    end note
+    
+    component "Presentation Layer" {
+        [Program] as Prog
+        [LanguageManager] as LangMgr
+        [AppConfig] as Config
+    }
+    
+    component "Business Logic Layer" {
+        [JobManager] as JobMgr
+        [BackupService] as BackupSvc
+        [PathHelper] as PathHelp
+    }
+    
+    component "EasyLog.dll" as LogDLL {
+        interface "ILogger" as ILog
+        [JsonLogger] as JsonLog
+        [LogEntry] as LogEnt
+        [StateEntry] as StateEnt
+    }
+    
+    component "Data Models" {
+        [BackupJob] as Job
+        [BackupType] as Type
+        [JobState] as State
+    }
+}
+
+' =============== RELATIONSHIPS ===============
+
+' User interactions
+User --> Terminal : interacts
+Terminal --> Console : executes
+
+' Console dependencies
+Console --> Prog : contains
+Prog --> LangMgr : uses
+Prog --> Config : uses
+Prog --> JobMgr : uses
+Prog --> BackupSvc : creates
+
+' Language management
+LangMgr --> Config : reads language preference
+LangMgr --> LangEN : loads
+LangMgr --> LangFR : loads
+LangMgr --> ConfigFile : reads
+
+' Job management
+JobMgr --> Job : manages
+JobMgr --> JobsFile : reads/writes
+JobMgr --> Type : uses
+
+' Backup service
+BackupSvc --> ILog : depends on
+BackupSvc --> Job : uses
+BackupSvc --> PathHelp : uses
+BackupSvc --> LogEnt : creates
+BackupSvc --> StateEnt : creates
+
+' Logging
+JsonLog ..|> ILog : implements
+JsonLog --> LogEnt : writes
+JsonLog --> StateEnt : writes
+JsonLog --> DailyLog : writes
+JsonLog --> StateFile : writes
+LogEnt --> State : uses
+
+' File system operations
+BackupSvc --> SourceDirs : reads
+BackupSvc --> TargetDirs : writes
+Config --> ConfigFile : reads/writes
+
+' =============== NOTES ===============
+note bottom of LogDLL
+    <b>EasyLog.dll</b>
+    - Reusable logging library
+    - JSON format with indentation
+    - Real-time state updates
+    - Daily log files
+    - Separate Git project
+end note
+
+note bottom of JobMgr
+    <b>Job Management</b>
+    - Maximum 5 jobs
+    - Persistent storage
+    - CRUD operations
+end note
+
+note bottom of BackupSvc
+    <b>Backup Engine</b>
+    - Full & Differential support
+    - Recursive directory processing
+    - Progress calculation
+    - UNC path conversion
+end note
+
+note bottom of AppData
+    <b>Storage Location</b>
+    Standard Windows AppData
+    Compatible with server deployments
+    User-specific configuration
+end note
+
+' =============== DEPLOYMENT ===============
+node ".NET Runtime 10.0" as Runtime {
+    Console -down-> Runtime : requires
+}
+
+@enduml
