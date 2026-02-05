@@ -1,11 +1,18 @@
 namespace EasySave.Core.Models;
 
+/// <summary>
+/// Defines the type of backup operation.
+/// </summary>
 public enum BackupType
 {
-    Full,
-    Differential
+    Full,          // Complete backup of all files
+    Differential   // Only files modified since last backup
 }
 
+/// <summary>
+/// Represents a backup job configuration.
+/// Maximum of 5 jobs allowed per user.
+/// </summary>
 public class BackupJob
 {
     public string Name { get; set; }

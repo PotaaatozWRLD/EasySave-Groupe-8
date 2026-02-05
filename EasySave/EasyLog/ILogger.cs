@@ -3,12 +3,27 @@ using EasySave.Shared;
 
 namespace EasyLog;
 
+/// <summary>
+/// Interface for logging backup operations and state updates.
+/// Part of EasyLog.dll - must remain compatible across versions.
+/// </summary>
 public interface ILogger
 {
+    /// <summary>
+    /// Writes a log entry for a file operation.
+    /// </summary>
     void WriteLog(LogEntry logEntry);
+    
+    /// <summary>
+    /// Updates the real-time state of a backup job.
+    /// </summary>
     void UpdateState(StateEntry stateEntry);
 }
 
+/// <summary>
+/// JSON implementation of the ILogger interface.
+/// Writes daily log files and a real-time state file.
+/// </summary>
 public class JsonLogger : ILogger
 {
     private readonly string _logDirectory;

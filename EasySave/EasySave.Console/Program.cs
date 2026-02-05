@@ -13,9 +13,14 @@ class Program
 
     static void Main(string[] args)
     {
-        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string logDirectory = Path.Combine(baseDirectory, "Logs");
-        string stateFilePath = Path.Combine(baseDirectory, "state.json");
+        // Use AppData for configuration files to respect server deployment standards
+        string appDataPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "ProSoft",
+            "EasySave"
+        );
+        string logDirectory = Path.Combine(appDataPath, "Logs");
+        string stateFilePath = Path.Combine(appDataPath, "state.json");
 
         ILogger logger = new JsonLogger(logDirectory, stateFilePath);
         BackupService backupService = new BackupService(logger);
@@ -145,9 +150,25 @@ class Program
         Console.Write(_lang.GetString("CreateJob_EnterTarget"));
         string target = Console.ReadLine() ?? "";
 
+        Console.WriteLine();
+        Console.WriteLine("1. Full Backup");
+        Console.WriteLine("2. Differential Backup");
         Console.Write(_lang.GetString("CreateJob_EnterType"));
         string typeInput = Console.ReadLine() ?? "";
-        BackupType type = typeInput.Equals("Full", StringComparison.OrdinalIgnoreCase) ? BackupType.Full : BackupType.Differential;
+        
+        BackupType type = BackupType.Full; // Default
+        if (int.TryParse(typeInput, out int typeChoice))
+        {
+            type = typeChoice == 2 ? BackupType.Differential : BackupType.Full;
+        }
+        else if (typeInput.Equals("Full", StringComparison.OrdinalIgnoreCase))
+        {
+            type = BackupType.Full;
+        }
+        else if (typeInput.Equals("Differential", StringComparison.OrdinalIgnoreCase))
+        {
+            type = BackupType.Differential;
+        }
 
         try
         {
@@ -221,11 +242,25 @@ class Program
             jobToEdit.TargetPath = newTarget;
 
         // Type
+        Console.WriteLine();
+        Console.WriteLine("1. Full Backup");
+        Console.WriteLine("2. Differential Backup");
         Console.Write(_lang.GetString("EditJob_NewType"));
         string typeInput = Console.ReadLine() ?? "";
         if (!string.IsNullOrWhiteSpace(typeInput))
         {
-            jobToEdit.Type = typeInput.Equals("Full", StringComparison.OrdinalIgnoreCase) ? BackupType.Full : BackupType.Differential;
+            if (int.TryParse(typeInput, out int typeChoice))
+            {
+                jobToEdit.Type = typeChoice == 2 ? BackupType.Differential : BackupType.Full;
+            }
+            else if (typeInput.Equals("Full", StringComparison.OrdinalIgnoreCase))
+            {
+                jobToEdit.Type = BackupType.Full;
+            }
+            else if (typeInput.Equals("Differential", StringComparison.OrdinalIgnoreCase))
+            {
+                jobToEdit.Type = BackupType.Differential;
+            }
         }
 
         JobManager.SaveJobs();
