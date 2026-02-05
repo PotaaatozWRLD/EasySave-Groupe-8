@@ -31,9 +31,32 @@
 ## Installation
 
 ### Default Installation Locations
-- **Executable**: Installed location chosen by user
+- **Executable**: `EasySave.Console.exe` (location chosen during installation)
 - **Configuration Files**: `%AppData%\ProSoft\EasySave\`
 - **Log Files**: `%AppData%\ProSoft\EasySave\Logs\`
+
+### Running the Application
+
+**Method 1: Interactive Mode**
+```
+EasySave.Console.exe
+```
+Launches the application with a menu interface for creating and managing backup jobs.
+
+**Method 2: Command Line Mode**
+```
+EasySave.Console.exe <job_specification>
+```
+**Examples**:
+- `EasySave.Console.exe 1` - Execute backup job 1
+- `EasySave.Console.exe 1-3` - Execute jobs 1 through 3 sequentially
+- `EasySave.Console.exe 1;3;5` - Execute jobs 1, 3, and 5
+
+**Supported Formats**:
+- Single job: `1`
+- Range: `1-5` (executes jobs 1, 2, 3, 4, 5)
+- List with semicolons: `1;3;5` (executes jobs 1, 3, 5)
+- Mixed: Not supported (use either range OR list)
 
 ### Full Paths (per user)
 ```
@@ -61,7 +84,7 @@ C:\Users\[USERNAME]\AppData\Roaming\ProSoft\EasySave\
     "Name": "Documents Backup",
     "SourcePath": "C:\\Users\\John\\Documents",
     "TargetPath": "D:\\Backups\\Documents",
-    "Type": 0  // 0 = Full, 1 = Differential
+    "Type": 0  // 1 = Full, 2 = Differential
   }
 ]
 ```
