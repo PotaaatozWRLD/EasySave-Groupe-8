@@ -5,8 +5,25 @@ EasySave is a backup software that allows you to create and manage up to 5 backu
 
 ## Getting Started
 
+### Launching EasySave
+
+**Interactive Mode** (with menu):
+1. Double-click `EasySave.Console.exe` or run from command prompt:
+   ```
+   EasySave.Console.exe
+   ```
+2. Select your language (English or French)
+3. Use the interactive menu to manage backups
+
+**Command Line Mode** (automated execution):
+```
+EasySave.Console.exe 1        (Run job #1)
+EasySave.Console.exe 1-3      (Run jobs 1 through 3)
+EasySave.Console.exe 1;3;5    (Run jobs 1, 3, and 5)
+```
+
 ### Creating a Backup Job
-1. Launch EasySave.exe
+1. Launch EasySave.Console.exe in interactive mode
 2. Select language (English or French)
 3. Choose option **2** from the menu to create a new job
 4. Enter:
@@ -26,10 +43,24 @@ EasySave is a backup software that allows you to create and manage up to 5 backu
 - **Run All Jobs** (Option 6): Execute all configured backups sequentially
 
 ### Command Line Usage
-You can also run backups directly from the command line:
+Run backups automatically without the interactive menu:
+
+**Syntax**:
 ```
-EasySave.exe 1-3     (Runs jobs 1 through 3)
-EasySave.exe 1;3     (Runs jobs 1 and 3)
+EasySave.Console.exe <job_specification>
+```
+
+**Examples**:
+```
+EasySave.Console.exe 1         → Execute job 1
+EasySave.Console.exe 1-3       → Execute jobs 1, 2, and 3 sequentially
+EasySave.Console.exe 1;3       → Execute jobs 1 and 3
+EasySave.Console.exe 2-4       → Execute jobs 2, 3, and 4
+```
+
+**Location**: The executable is located in:
+```
+EasySave\EasySave.Console\bin\Release\net10.0\win-x64\publish\EasySave.Console.exe
 ```
 
 ## Backup Types
