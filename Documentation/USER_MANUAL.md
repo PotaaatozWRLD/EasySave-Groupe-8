@@ -15,12 +15,13 @@ EasySave is a backup software that allows you to create and manage up to 5 backu
 2. Select your language (English or French)
 3. Use the interactive menu to manage backups
 
-**Command Line Mode** (automated execution):
+**Command Line Mode** (automated execution - no language prompt):
 ```
-EasySave.Console.exe 1        (Run job #1)
-EasySave.Console.exe 1-3      (Run jobs 1 through 3)
-EasySave.Console.exe 1;3;5    (Run jobs 1, 3, and 5)
+EasySave.Console.exe 1        (Run job #1 directly)
+EasySave.Console.exe 1-3      (Run jobs 1 through 3 automatically)
+EasySave.Console.exe 1;3;5    (Run jobs 1, 3, and 5 automatically)
 ```
+*Note: In command line mode, backups execute immediately without any prompts.*
 
 ### Creating a Backup Job
 1. Launch EasySave.Console.exe in interactive mode

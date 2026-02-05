@@ -19,18 +19,20 @@ EasySave 1.0 is the first release of ProSoft's backup solution. This version pro
 - **CRUD Operations**: Create, Read, Update, and Delete backup jobs
 
 ### Execution Modes
-- **Interactive Console Menu**: User-friendly menu for all operations
-- **Command Line Interface**: Execute backups via terminal commands
+- **Interactive Console Menu**: User-friendly menu with language selection for all operations
+- **Command Line Interface**: Execute backups via terminal commands (fully automated, no prompts)
   - Single job: `EasySave.exe 1`
   - Range: `EasySave.exe 1-3`
   - Multiple: `EasySave.exe 1;3;5`
+  - Executes immediately without language selection or confirmation
 - **Sequential Execution**: Run all configured jobs one after another
 
 ### Multi-Language Support
 - **English**: Full interface in English
 - **French**: Complete French translation
-- **Language Selection**: Choose language on startup
+- **Language Selection**: Choose language on startup (interactive mode only)
 - **Persistent Settings**: Language preference saved across sessions
+- **CLI Mode**: Command line execution skips language selection for automation
 
 ### Logging and Monitoring
 - **Daily Log Files**: Automatic creation of JSON log files (one per day)
