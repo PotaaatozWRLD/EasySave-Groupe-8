@@ -35,8 +35,8 @@ jobs:
         dotnet build EasySave/EasySave.Console/EasySave.Console.csproj --configuration Release --no-restore
         dotnet build EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-restore
     
-    - name: Run Unit Tests
-      run: dotnet test EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+    - name: Run Unit Tests with Code Coverage
+      run: dotnet test EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
     
     - name: Publish Test Results
       uses: actions/upload-artifact@v4
@@ -44,3 +44,11 @@ jobs:
       with:
         name: test-results
         path: '**/TestResults/test-results.trx'
+    
+    - name: Generate Coverage Report
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        files: ./coverage/**/coverage.cobertura.xml
+        fail_ci_if_error: false
+        verbose: true
