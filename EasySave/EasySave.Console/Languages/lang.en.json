@@ -6,6 +6,7 @@
   "Menu_Delete": "Delete a job",
   "Menu_Run": "Run a job",
   "Menu_RunAll": "Run all jobs sequentially",
+  "Menu_Logs": "Open logs",
   "Menu_Lang": "Change language",
   "Menu_Exit": "Quit",
   "Msg_LangChanged": "Language changed successfully!",

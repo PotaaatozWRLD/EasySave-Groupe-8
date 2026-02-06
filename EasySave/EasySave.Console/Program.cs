@@ -44,8 +44,9 @@ class Program
                 Console.WriteLine($"4. {_lang.GetString("Menu_Delete")}");
                 Console.WriteLine($"5. {_lang.GetString("Menu_Run")}");
                 Console.WriteLine($"6. {_lang.GetString("Menu_RunAll")}");
-                Console.WriteLine($"7. {_lang.GetString("Menu_Lang")}");
-                Console.WriteLine($"8. {_lang.GetString("Menu_Exit")}");
+                Console.WriteLine($"7. {_lang.GetString("Menu_Logs")}");
+                Console.WriteLine($"8. {_lang.GetString("Menu_Lang")}");
+                Console.WriteLine($"9. {_lang.GetString("Menu_Exit")}");
                 Console.Write(_lang.GetString("Msg_SelectOption"));
 
                 string? input = Console.ReadLine();
@@ -70,9 +71,12 @@ class Program
                         RunAllJobs(backupService);
                         break;
                     case "7":
-                        ChangeLanguage();
+                        OpenLogs(logDirectory);
                         break;
                     case "8":
+                        ChangeLanguage();
+                        break;
+                    case "9":
                         return;
                     default:
                         Console.WriteLine(_lang.GetString("Error_InvalidOption"));
@@ -81,9 +85,30 @@ class Program
                 }
             }
         }
+        else if (args[0] == "--logs" || args[0] == "-l")
+        {
+            // MODE 2: Open logs folder
+            try
+            {
+                if (Directory.Exists(logDirectory))
+                {
+                    Console.WriteLine($"Opening logs folder: {logDirectory}");
+                    System.Diagnostics.Process.Start("explorer.exe", logDirectory);
+                }
+                else
+                {
+                    Console.WriteLine($"Logs folder does not exist yet: {logDirectory}");
+                    Console.WriteLine("Run a backup first to create log files.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error opening logs folder: {ex.Message}");
+            }
+        }
         else
         {
-            // MODE 2: Run jobs based on arguments
+            // MODE 3: Run jobs based on arguments
             var jobIndexes = ParseJobIndexes(args[0]);
             foreach (var index in jobIndexes)
             {
@@ -97,6 +122,33 @@ class Program
                     Console.WriteLine(string.Format(_lang.GetString("Error_JobNotFound"), index));
                 }
             }
+        }
+    }
+
+    static void OpenLogs(string logDirectory)
+    {
+        Console.Clear();
+        try
+        {
+            if (Directory.Exists(logDirectory))
+            {
+                Console.WriteLine($"Opening logs folder: {logDirectory}");
+                System.Diagnostics.Process.Start("explorer.exe", logDirectory);
+                System.Threading.Thread.Sleep(1000);
+            }
+            else
+            {
+                Console.WriteLine($"Logs folder does not exist yet: {logDirectory}");
+                Console.WriteLine("Run a backup first to create log files.");
+                Console.WriteLine(_lang.GetString("Msg_PressKey"));
+                Console.ReadKey();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening logs folder: {ex.Message}");
+            Console.WriteLine(_lang.GetString("Msg_PressKey"));
+            Console.ReadKey();
         }
     }
 

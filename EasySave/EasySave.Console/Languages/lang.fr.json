@@ -6,6 +6,7 @@
   "Menu_Delete": "Supprimer un travail",
   "Menu_Run": "Lancer un travail",
   "Menu_RunAll": "Lancer tous les travaux séquentiellement",
+  "Menu_Logs": "Ouvrir les logs",
   "Menu_Lang": "Changer de langue",
   "Menu_Exit": "Quitter",
   "Msg_LangChanged": "Langue changée avec succès !",
