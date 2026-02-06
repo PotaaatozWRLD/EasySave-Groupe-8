@@ -3,7 +3,7 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Build and Test](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml/badge.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml)
 [![License](https://img.shields.io/badge/License-ProSoft-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-37%20passing-brightgreen.svg)](EasySave/EasySave.Tests)
+[![Tests](https://img.shields.io/badge/Tests-82%20passing-brightgreen.svg)](EasySave/EasySave.Tests)
 [![Release](https://img.shields.io/badge/Release-v1.0-success.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases/tag/v1.0)
 
 EasySave is a powerful console-based backup application developed by ProSoft. It provides reliable file backup with full and differential modes, multi-language support, and comprehensive logging.
@@ -26,6 +26,7 @@ EasySave is a powerful console-based backup application developed by ProSoft. It
 ## ✨ Features
 
 ### Backup Management
+
 - **Up to 5 backup jobs** with unique configurations
 - **Full Backup**: Complete copy of all files
 - **Differential Backup**: Only modified files since last backup
@@ -33,23 +34,28 @@ EasySave is a powerful console-based backup application developed by ProSoft. It
 - Support for local drives, external drives, and network paths
 
 ### Execution Modes
+
 - **Interactive Console**: User-friendly menu with language selection
 - **Command-Line Interface**: Automated execution for scripting
+
   ```bash
   EasySave.Console.exe 1        # Run job 1
   EasySave.Console.exe 1-3      # Run jobs 1 through 3
   EasySave.Console.exe 1;3;5    # Run jobs 1, 3, and 5
   EasySave.Console.exe --logs   # Open logs folder
   ```
+
 - **Sequential execution** of all configured jobs
 
 ### Logging & Monitoring
+
 - **Daily JSON log files** with detailed transfer information
 - **Real-time state file** tracking backup progress
 - **UNC path format** for network compatibility
 - Logs stored in: `%AppData%\ProSoft\EasySave\Logs\`
 
 ### Multi-Language Support
+
 - English and French interfaces
 - Persistent language preference
 - Easy language switching
@@ -59,21 +65,26 @@ EasySave is a powerful console-based backup application developed by ProSoft. It
 ## 🚀 Installation
 
 ### Prerequisites
+
 - Windows 10 or later
 - .NET 10.0 Runtime ([Download](https://dotnet.microsoft.com/download/dotnet/10.0))
 
 ### Option 1: Quick Start (Recommended)
+
 1. **Download** the latest release from [Releases](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases)
 2. **Extract** the ZIP archive to your desired location (e.g., `C:\Program Files\EasySave\`)
 3. **Navigate** to the extracted folder
 4. **Double-click** `EasySave.Console.exe` in Windows Explorer, or run from command prompt:
+
    ```powershell
    cd "C:\Path\To\EasySave"
    .\EasySave.Console.exe
    ```
 
 ### Option 2: Running from Source (Development)
+
 If you have the source code:
+
 ```powershell
 # Navigate to the Console project folder
 cd "c:\Users\YourName\Desktop\Projet Genie Logiciel\EasySave\EasySave.Console"
@@ -94,6 +105,7 @@ cd bin\Release\net10.0
 ```
 
 ### Option 3: Building from GitHub
+
 ```powershell
 git clone https://github.com/PotaaatozWRLD/EasySave-Groupe-8.git
 cd EasySave-Groupe-8\EasySave\EasySave.Console
@@ -115,6 +127,7 @@ EasySave.Console.exe
 ### Interactive Mode
 
 **For Release version (downloaded from GitHub Releases):**
+
 ```powershell
 # Option 1: Double-click EasySave.Console.exe in Windows Explorer
 # Option 2: Open PowerShell in the folder and run:
@@ -122,6 +135,7 @@ EasySave.Console.exe
 ```
 
 **For Development (running from source code):**
+
 ```powershell
 # Navigate to the project folder
 cd "C:\Path\To\EasySave\EasySave.Console"
@@ -135,11 +149,13 @@ cd bin\Debug\net10.0
 ```
 
 **From any location (if added to PATH):**
+
 ```bash
 EasySave.Console.exe
 ```
 
 **Menu Options:**
+
 1. List all backup jobs
 2. Create a new backup job
 3. Edit an existing job
@@ -151,9 +167,11 @@ EasySave.Console.exe
 9. Exit
 
 ### Command-Line Mode
+
 Execute backups automatically without user interaction:
 
 **Examples:**
+
 ```bash
 # Navigate to the folder containing EasySave.Console.exe first
 cd C:\Path\To\EasySave
@@ -174,6 +192,7 @@ cd C:\Path\To\EasySave
 ```
 
 **For automation (scripts, Task Scheduler):**
+
 ```powershell
 # Full path in PowerShell script
 & "C:\Program Files\EasySave\EasySave.Console.exe" 1-3
@@ -183,7 +202,9 @@ cd C:\Path\To\EasySave
 ```
 
 ### Configuration Files
+
 All configuration and log files are stored in:
+
 ```
 %AppData%\ProSoft\EasySave\
 ├── jobs.json          # Backup job configurations
@@ -198,6 +219,7 @@ All configuration and log files are stored in:
 ## 🏗️ Architecture
 
 ### Project Structure
+
 ```
 EasySave/
 ├── EasySave.Console/      # Console application (UI)
@@ -210,6 +232,7 @@ EasySave/
 ```
 
 ### Key Components
+
 - **JobManager**: Manages up to 5 backup jobs with JSON persistence
 - **BackupService**: Executes backups with progress tracking
 - **EasyLog.dll**: Reusable logging library for other ProSoft projects
@@ -217,6 +240,7 @@ EasySave/
 - **LanguageManager**: Handles multi-language support (EN/FR)
 
 ### Design Patterns
+
 - **Singleton**: LanguageManager for global language state
 - **Dependency Injection**: ILogger interface for flexible logging
 - **Repository Pattern**: JobManager for job persistence
@@ -225,28 +249,35 @@ EasySave/
 
 ## 🧪 Testing
 
-The project includes a comprehensive unit test suite with **37 tests** covering all core components.
+The project includes a comprehensive unit test suite with **82 tests** covering all core components.
 
 ### Running Tests
+
 ```bash
 cd EasySave/EasySave.Tests
 dotnet test
 ```
 
 ### Test Coverage
-- **BackupJob, LogEntry, StateEntry**: Data model tests (7 tests)
-- **JsonLogger**: Logging with JSON formatting (4 tests)
+
+- **BackupJob, LogEntry, StateEntry**: Data model tests (11 tests)
+- **JsonLogger & Logging**: Log generation, UNC paths, error handling (7 tests)
 - **JobManager**: Job management with 5-job limit (6 tests)
 - **PathHelper**: UNC path conversion (8 tests)
 - **LanguageManager**: Multi-language support (7 tests)
-- **BackupService**: Service initialization (1 test)
+- **BackupService**: Integration tests for Full/Differential backups (6 tests)
+- **CLI Arguments**: Command-line parsing (1-3, 1;3;5, --logs) (8 tests)
+- **Performance**: Large files, progress tracking (6 tests)
+- **Error Handling**: Invalid paths, permissions, edge cases (10 tests)
 
 ### Test Results
+
 ```
-Total: 37 tests
-Passed: 37 ✅
+Total: 83 tests
+Passed: 82 ✅
 Failed: 0
-Duration: ~1.4s
+Skipped: 1 (OS-dependent)
+Duration: ~5s
 ```
 
 ---
@@ -281,6 +312,7 @@ Duration: ~1.4s
 ## 🔮 Roadmap
 
 ### Version 2.0 (Coming Soon)
+
 - Graphical user interface (WPF/Avalonia)
 - Unlimited number of backup jobs
 - File encryption support (CryptoSoft integration)
@@ -288,6 +320,7 @@ Duration: ~1.4s
 - XML log format option
 
 ### Version 3.0 (Future)
+
 - Parallel backup execution
 - Priority file management
 - Bandwidth throttling
@@ -307,7 +340,8 @@ Duration: ~1.4s
 ## 📞 Support
 
 For technical assistance or bug reports:
-- **Email**: support@prosoft.com
+
+- **Email**: <support@prosoft.com>
 - **GitHub Issues**: [Report a bug](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/issues)
 - **Documentation**: [Technical Support Guide](Documentation/TECHNICAL_SUPPORT.md)
 
