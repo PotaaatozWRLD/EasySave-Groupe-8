@@ -61,16 +61,39 @@ EasySave is a powerful console-based backup application developed by ProSoft. It
 - Windows 10 or later
 - .NET 10.0 Runtime ([Download](https://dotnet.microsoft.com/download/dotnet/10.0))
 
-### Quick Start
-1. Download the latest release from [Releases](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases)
-2. Extract the archive to your desired location
-3. Run `EasySave.Console.exe`
+### Option 1: Quick Start (Recommended)
+1. **Download** the latest release from [Releases](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases)
+2. **Extract** the ZIP archive to your desired location (e.g., `C:\Program Files\EasySave\`)
+3. **Navigate** to the extracted folder
+4. **Double-click** `EasySave.Console.exe` or run from command prompt:
+   ```bash
+   cd C:\Path\To\EasySave
+   EasySave.Console.exe
+   ```
 
-### Building from Source
+### Option 2: Running from Source
+If you have the source code:
+```bash
+# Navigate to project folder
+cd "c:\Users\YourName\Desktop\Projet Genie Logiciel"
+
+# Run in development mode
+dotnet run --project EasySave\EasySave.Console\EasySave.Console.csproj
+
+# Or build and run the executable
+cd EasySave\EasySave.Console
+dotnet build -c Release
+cd bin\Release\net10.0
+EasySave.Console.exe
+```
+
+### Option 3: Building from GitHub
 ```bash
 git clone https://github.com/PotaaatozWRLD/EasySave-Groupe-8.git
-cd EasySave-Groupe-8/EasySave
-dotnet build EasySave.Console/EasySave.Console.csproj -c Release
+cd EasySave-Groupe-8\EasySave\EasySave.Console
+dotnet build -c Release
+cd bin\Release\net10.0
+EasySave.Console.exe
 ```
 
 ---
@@ -79,6 +102,15 @@ dotnet build EasySave.Console/EasySave.Console.csproj -c Release
 
 ### Interactive Mode
 Launch the application without arguments to access the interactive menu:
+
+**From extracted folder:**
+```bash
+# Double-click EasySave.Console.exe in Windows Explorer
+# OR open Command Prompt/PowerShell in the folder and run:
+.\EasySave.Console.exe
+```
+
+**From any location (if added to PATH):**
 ```bash
 EasySave.Console.exe
 ```
@@ -97,20 +129,33 @@ EasySave.Console.exe
 ### Command-Line Mode
 Execute backups automatically without user interaction:
 
+**Examples:**
 ```bash
+# Navigate to the folder containing EasySave.Console.exe first
+cd C:\Path\To\EasySave
+
 # Single job
-EasySave.Console.exe 1
+.\EasySave.Console.exe 1
 
 # Range of jobs
-EasySave.Console.exe 1-3
+.\EasySave.Console.exe 1-3
 
 # Specific jobs
-EasySave.Console.exe 1;3;5
+.\EasySave.Console.exe 1;3;5
 
-# Open logs
-EasySave.Console.exe --logs
+# Open logs folder
+.\EasySave.Console.exe --logs
 # or
-EasySave.Console.exe -l
+.\EasySave.Console.exe -l
+```
+
+**For automation (scripts, Task Scheduler):**
+```powershell
+# Full path in PowerShell script
+& "C:\Program Files\EasySave\EasySave.Console.exe" 1-3
+
+# Or in batch file (.bat)
+"C:\Program Files\EasySave\EasySave.Console.exe" 1-3
 ```
 
 ### Configuration Files
