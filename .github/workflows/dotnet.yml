@@ -19,23 +19,21 @@ jobs:
       with:
         dotnet-version: '10.0.x'
     
-    - name: Restore dependencies
-      run: dotnet restore EasySave/EasyLog/EasyLog.csproj
-      
-    - name: Build EasyLog
-      run: dotnet build EasySave/EasyLog/EasyLog.csproj --configuration Release --no-restore
+    - name: Restore all dependencies
+      run: |
+        dotnet restore EasySave/EasyLog/EasyLog.csproj
+        dotnet restore EasySave/EasySave.Shared/EasySave.Shared.csproj
+        dotnet restore EasySave/EasySave.Core/EasySave.Core.csproj
+        dotnet restore EasySave/EasySave.Console/EasySave.Console.csproj
+        dotnet restore EasySave/EasySave.Tests/EasySave.Tests.csproj
     
-    - name: Build EasySave.Shared
-      run: dotnet build EasySave/EasySave.Shared/EasySave.Shared.csproj --configuration Release --no-restore
-    
-    - name: Build EasySave.Core
-      run: dotnet build EasySave/EasySave.Core/EasySave.Core.csproj --configuration Release --no-restore
-    
-    - name: Build EasySave.Console
-      run: dotnet build EasySave/EasySave.Console/EasySave.Console.csproj --configuration Release --no-restore
-    
-    - name: Build EasySave.Tests
-      run: dotnet build EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-restore
+    - name: Build all projects
+      run: |
+        dotnet build EasySave/EasyLog/EasyLog.csproj --configuration Release --no-restore
+        dotnet build EasySave/EasySave.Shared/EasySave.Shared.csproj --configuration Release --no-restore
+        dotnet build EasySave/EasySave.Core/EasySave.Core.csproj --configuration Release --no-restore
+        dotnet build EasySave/EasySave.Console/EasySave.Console.csproj --configuration Release --no-restore
+        dotnet build EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-restore
     
     - name: Run Unit Tests
       run: dotnet test EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
@@ -45,4 +43,4 @@ jobs:
       if: always()
       with:
         name: test-results
-        path: '**/test-results.trx'
+        path: '**/TestResults/test-results.trx'
