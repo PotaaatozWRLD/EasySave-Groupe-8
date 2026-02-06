@@ -1,6 +1,7 @@
 # EasySave - Professional Backup Solution
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Build and Test](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml/badge.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml)
 [![License](https://img.shields.io/badge/License-ProSoft-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-37%20passing-brightgreen.svg)](EasySave/EasySave.Tests)
 [![Release](https://img.shields.io/badge/Release-v1.0-success.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases/tag/v1.0)
