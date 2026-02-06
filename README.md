@@ -71,28 +71,39 @@ EasySave is a powerful console-based backup application developed by ProSoft. It
    .\EasySave.Console.exe
    ```
 
-### Option 2: Running from Source
+### Option 2: Running from Source (Development)
 If you have the source code:
-```bash
-# Navigate to project folder
-cd "c:\Users\YourName\Desktop\Projet Genie Logiciel"
+```powershell
+# Navigate to the Console project folder
+cd "c:\Users\YourName\Desktop\Projet Genie Logiciel\EasySave\EasySave.Console"
 
-# Run in development mode
-dotnet run --project EasySave\EasySave.Console\EasySave.Console.csproj
+# Option A: Run directly with dotnet (recommended for development)
+dotnet run
 
-# Or build and run the executable
-cd EasySave\EasySave.Console
-dotnet build -c Release
+# Option B: Build and run the executable
+dotnet build -c Debug
+cd bin\Debug\net10.0
+.\EasySave.Console.exe
+
+# Option C: Build Release version
+cd ..\..
+ dotnet build -c Release
 cd bin\Release\net10.0
-EasySave.Console.exe
+.\EasySave.Console.exe
 ```
 
 ### Option 3: Building from GitHub
-```bash
+```powershell
 git clone https://github.com/PotaaatozWRLD/EasySave-Groupe-8.git
 cd EasySave-Groupe-8\EasySave\EasySave.Console
+
+# Run directly
+dotnet run
+
+# OR build and run executable
 dotnet build -c Release
 cd bin\Release\net10.0
+.\EasySave.Console.exe
 EasySave.Console.exe
 ```
 
@@ -101,12 +112,24 @@ EasySave.Console.exe
 ## 📖 Usage
 
 ### Interactive Mode
-Launch the application without arguments to access the interactive menu:
 
-**From extracted folder:**
+**For Release version (downloaded from GitHub Releases):**
 ```powershell
 # Option 1: Double-click EasySave.Console.exe in Windows Explorer
-# Option 2: Open PowerShell in the folder (Shift + Right-click → "Open PowerShell window here") and run:
+# Option 2: Open PowerShell in the folder and run:
+.\EasySave.Console.exe
+```
+
+**For Development (running from source code):**
+```powershell
+# Navigate to the project folder
+cd "C:\Path\To\EasySave\EasySave.Console"
+
+# Run with dotnet
+dotnet run
+
+# OR navigate to the built executable
+cd bin\Debug\net10.0
 .\EasySave.Console.exe
 ```
 
