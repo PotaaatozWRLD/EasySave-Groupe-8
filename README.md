@@ -65,10 +65,10 @@ EasySave is a powerful console-based backup application developed by ProSoft. It
 1. **Download** the latest release from [Releases](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases)
 2. **Extract** the ZIP archive to your desired location (e.g., `C:\Program Files\EasySave\`)
 3. **Navigate** to the extracted folder
-4. **Double-click** `EasySave.Console.exe` or run from command prompt:
-   ```bash
-   cd C:\Path\To\EasySave
-   EasySave.Console.exe
+4. **Double-click** `EasySave.Console.exe` in Windows Explorer, or run from command prompt:
+   ```powershell
+   cd "C:\Path\To\EasySave"
+   .\EasySave.Console.exe
    ```
 
 ### Option 2: Running from Source
@@ -104,9 +104,9 @@ EasySave.Console.exe
 Launch the application without arguments to access the interactive menu:
 
 **From extracted folder:**
-```bash
-# Double-click EasySave.Console.exe in Windows Explorer
-# OR open Command Prompt/PowerShell in the folder and run:
+```powershell
+# Option 1: Double-click EasySave.Console.exe in Windows Explorer
+# Option 2: Open PowerShell in the folder (Shift + Right-click → "Open PowerShell window here") and run:
 .\EasySave.Console.exe
 ```
 
