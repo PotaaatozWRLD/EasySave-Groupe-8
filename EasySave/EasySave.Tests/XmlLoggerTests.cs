@@ -274,9 +274,11 @@ public class XmlLoggerTests : IDisposable
         XDocument doc = XDocument.Load(stateFile);
         
         // Should only have one entry (updated, not duplicated)
-        Assert.Single(doc.Root?.Elements("StateEntry"));
+        Assert.NotNull(doc.Root);
+        var stateEntries = doc.Root.Elements("StateEntry");
+        Assert.Single(stateEntries);
         
-        var stateEntry = doc.Root?.Element("StateEntry");
+        var stateEntry = doc.Root.Element("StateEntry");
         Assert.NotNull(stateEntry);
         Assert.Equal("60", stateEntry.Element("Progression")?.Value);
     }
