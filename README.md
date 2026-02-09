@@ -1,4 +1,4 @@
-# EasySave - Professional Backup Solution
+﻿# EasySave - Professional Backup Solution
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Build and Test](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml/badge.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml)
@@ -12,7 +12,7 @@
 
 ---
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 - [Features](#-features)
 - [Installation](#-installation)
@@ -25,7 +25,7 @@
 
 ---
 
-## ✨ Features
+## âœ¨ Features
 
 ### Backup Management
 
@@ -64,7 +64,7 @@
 
 ---
 
-## 🚀 Installation
+## ðŸš€ Installation
 
 ### Prerequisites
 
@@ -124,7 +124,7 @@ EasySave.Console.exe
 
 ---
 
-## 📖 Usage
+## ðŸ“– Usage
 
 ### Interactive Mode
 
@@ -209,28 +209,28 @@ All configuration and log files are stored in:
 
 ```
 %AppData%\ProSoft\EasySave\
-├── jobs.json          # Backup job configurations
-├── config.json        # Application settings
-├── state.json         # Real-time backup state
-└── Logs\
-    └── YYYY-MM-DD.json  # Daily log files
+â”œâ”€â”€ jobs.json          # Backup job configurations
+â”œâ”€â”€ config.json        # Application settings
+â”œâ”€â”€ state.json         # Real-time backup state
+â””â”€â”€ Logs\
+    â””â”€â”€ YYYY-MM-DD.json  # Daily log files
 ```
 
 ---
 
-## 🏗️ Architecture
+## ðŸ—ï¸ Architecture
 
 ### Project Structure
 
 ```
 EasySave/
-├── EasySave.Console/      # Console application (UI)
-├── EasySave.Core/         # Business logic
-│   ├── Services/          # BackupService, JobManager
-│   └── Helpers/           # PathHelper (UNC conversion)
-├── EasySave.Shared/       # Common data models
-├── EasyLog/               # Logging library (DLL)
-└── EasySave.Tests/        # Unit tests (xUnit)
+â”œâ”€â”€ EasySave.Console/      # Console application (UI)
+â”œâ”€â”€ EasySave.Core/         # Business logic
+â”‚   â”œâ”€â”€ Services/          # BackupService, JobManager
+â”‚   â””â”€â”€ Helpers/           # PathHelper (UNC conversion)
+â”œâ”€â”€ EasySave.Shared/       # Common data models
+â”œâ”€â”€ EasyLog/               # Logging library (DLL)
+â””â”€â”€ EasySave.Tests/        # Unit tests (xUnit)
 ```
 
 ### Key Components
@@ -249,7 +249,7 @@ EasySave/
 
 ---
 
-## 🧪 Testing
+## ðŸ§ª Testing
 
 The project includes a comprehensive unit test suite with **82 tests** covering all core components.
 
@@ -276,7 +276,7 @@ dotnet test
 
 ```
 Total: 83 tests
-Passed: 82 ✅
+Passed: 82 âœ…
 Failed: 0
 Skipped: 1 (OS-dependent)
 Duration: ~5s
@@ -284,7 +284,7 @@ Duration: ~5s
 
 ---
 
-## 📚 Documentation
+## ðŸ“š Documentation
 
 - **[User Manual](Documentation/USER_MANUAL.md)**: Quick start guide (1 page)
 - **[Technical Support](Documentation/TECHNICAL_SUPPORT.md)**: Troubleshooting and configuration
@@ -293,7 +293,7 @@ Duration: ~5s
 
 ---
 
-## 👥 Development Team
+## ðŸ‘¥ Development Team
 
 **ProSoft - Groupe 8**
 
@@ -311,7 +311,7 @@ Duration: ~5s
 
 ---
 
-## 🔮 Roadmap
+## ðŸ”® Roadmap
 
 ### Version 2.0 (Coming Soon)
 
@@ -330,16 +330,16 @@ Duration: ~5s
 
 ---
 
-## 💼 Commercial Information
+## ðŸ’¼ Commercial Information
 
-- **Price**: 200 €HT per license
-- **Maintenance**: 12% annual (24 €HT/year)
+- **Price**: 200 â‚¬HT per license
+- **Maintenance**: 12% annual (24 â‚¬HT/year)
 - **Support**: Monday-Friday, 8:00 AM - 5:00 PM
 - **Updates**: Included with maintenance contract
 
 ---
 
-## 📞 Support
+## ðŸ“ž Support
 
 For technical assistance or bug reports:
 
@@ -349,15 +349,15 @@ For technical assistance or bug reports:
 
 ---
 
-## 📄 License
+## ðŸ“„ License
 
-© 2026 ProSoft. All rights reserved.
+Â© 2026 ProSoft. All rights reserved.
 
 This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
 
 ---
 
-## 🙏 Acknowledgments
+## ðŸ™ Acknowledgments
 
 - Built with [.NET 10.0](https://dotnet.microsoft.com/)
 - Tested with [xUnit](https://xunit.net/)
