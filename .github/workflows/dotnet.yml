@@ -46,11 +46,12 @@ jobs:
         path: './TestResults/**/*.trx'
     
     - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       continue-on-error: true
       if: always()
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./TestResults/**/coverage.cobertura.xml
+        slug: PotaaatozWRLD/EasySave-Groupe-8
         fail_ci_if_error: false
         verbose: true
