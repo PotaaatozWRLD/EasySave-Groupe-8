@@ -1,0 +1,92 @@
+name: Suggest Pull Request
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - 'dependabot/**'
+
+jobs:
+  suggest-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="${{ github.ref_name }}"
+          pr_count=$(gh pr list --head "$branch" --base main --json number --jq 'length')
+          echo "pr_exists=$pr_count" >> $GITHUB_OUTPUT
+          echo "Branch: $branch"
+          echo "Existing PRs: $pr_count"
+      
+      - name: Create Draft Pull Request
+        if: steps.check_pr.outputs.pr_exists == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="${{ github.ref_name }}"
+          author="${{ github.actor }}"
+          
+          # Create PR title based on last commit message
+          last_commit=$(git log -1 --pretty=format:"%s")
+          
+          # Create PR body
+          cat > pr_body.md << 'EOF'
+          🤖 **Pull Request automatique créée par GitHub Actions**
+          
+          ## 📝 Description
+          Cette PR a été créée automatiquement suite à un push sur la branche `$BRANCH`.
+          
+          **Auteur:** @$AUTHOR
+          **Dernier commit:** $COMMIT
+          
+          ## ✅ Checklist
+          Avant de demander une review, assure-toi de :
+          - [ ] Avoir testé localement (`dotnet test`)
+          - [ ] Tous les tests passent
+          - [ ] Code respecte les conventions C# Microsoft
+          - [ ] Commentaires en anglais
+          - [ ] Documentation à jour si nécessaire
+          
+          ## 🔄 Prochaines étapes
+          1. **Vérifier** que les tests CI/CD passent (build-and-test)
+          2. **Remplir** la description ci-dessus avec les détails
+          3. **Marquer comme Ready for review** quand prêt
+          4. **Demander une review** à @PotaaatozWRLD (Kenan)
+          
+          💡 *Cette PR est en **draft** - passe-la en 'Ready for review' quand tu es prêt !*
+          EOF
+          
+          # Replace variables in body
+          sed -i "s/\$BRANCH/$branch/g" pr_body.md
+          sed -i "s/\$AUTHOR/$author/g" pr_body.md
+          sed -i "s/\$COMMIT/$last_commit/g" pr_body.md
+          
+          # Create draft PR
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "$last_commit" \
+            --body-file pr_body.md \
+            --draft \
+            --assignee "$author"
+          
+          echo "✅ Draft PR créée pour la branche $branch"
+      
+      - name: PR already exists
+        if: steps.check_pr.outputs.pr_exists != '0'
+        run: |
+          branch="${{ github.ref_name }}"
+          echo "ℹ️  Une PR existe déjà pour la branche $branch"
+          echo "🔗 Voir: https://github.com/${{ github.repository }}/pulls?q=is%3Apr+head%3A$branch"
