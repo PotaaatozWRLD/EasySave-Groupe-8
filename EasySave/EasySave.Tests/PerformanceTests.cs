@@ -168,9 +168,13 @@ public class PerformanceTests : IDisposable
             {
                 Directory.Delete(_testRoot, true);
             }
-            catch
+            catch (IOException)
             {
-                // Cleanup may fail, ignore
+                // Cleanup may fail if files are locked, ignore
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Cleanup may fail due to permissions, ignore
             }
         }
     }

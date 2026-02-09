@@ -59,7 +59,6 @@ public class BackupIntegrationTests : IDisposable
 
         // First backup (full)
         service.ExecuteBackup(job);
-        var initialCount = Directory.GetFiles(_testTargetDir, "*", SearchOption.AllDirectories).Length;
 
         // Modify one file
         Thread.Sleep(1100); // Ensure timestamp difference
@@ -159,9 +158,13 @@ public class BackupIntegrationTests : IDisposable
             {
                 Directory.Delete(_testRoot, true);
             }
-            catch
+            catch (IOException)
             {
                 // Cleanup may fail if files are locked, ignore
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Cleanup may fail due to permissions, ignore
             }
         }
     }

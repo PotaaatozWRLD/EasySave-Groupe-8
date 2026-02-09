@@ -9,7 +9,7 @@ namespace EasySave.ConsoleApp;
 
 class Program
 {
-    private static LanguageManager _lang = LanguageManager.Instance;
+    private static readonly LanguageManager _lang = LanguageManager.Instance;
 
     static void Main(string[] args)
     {
@@ -101,7 +101,11 @@ class Program
                     Console.WriteLine("Run a backup first to create log files.");
                 }
             }
-            catch (Exception ex)
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error opening logs folder: {ex.Message}");
+            }
+            catch (UnauthorizedAccessException ex)
             {
                 Console.WriteLine($"Error opening logs folder: {ex.Message}");
             }
@@ -144,7 +148,13 @@ class Program
                 Console.ReadKey();
             }
         }
-        catch (Exception ex)
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Error opening logs folder: {ex.Message}");
+            Console.WriteLine(_lang.GetString("Msg_PressKey"));
+            Console.ReadKey();
+        }
+        catch (UnauthorizedAccessException ex)
         {
             Console.WriteLine($"Error opening logs folder: {ex.Message}");
             Console.WriteLine(_lang.GetString("Msg_PressKey"));
@@ -374,7 +384,11 @@ class Program
                 backupService.ExecuteBackup(job);
                 Console.WriteLine($"✓ Job '{job.Name}' completed successfully.\n");
             }
-            catch (Exception ex)
+            catch (IOException ex)
+            {
+                Console.WriteLine($"✗ Job '{job.Name}' failed: {ex.Message}\n");
+            }
+            catch (UnauthorizedAccessException ex)
             {
                 Console.WriteLine($"✗ Job '{job.Name}' failed: {ex.Message}\n");
             }
@@ -424,7 +438,12 @@ class Program
                     Console.WriteLine($"✗ Job {index} not found.");
                     failCount++;
                 }
-                catch (Exception ex)
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"✗ Job {index} failed: {ex.Message}");
+                    failCount++;
+                }
+                catch (UnauthorizedAccessException ex)
                 {
                     Console.WriteLine($"✗ Job {index} failed: {ex.Message}");
                     failCount++;
@@ -433,7 +452,11 @@ class Program
 
             Console.WriteLine($"\nSummary: {successCount} succeeded, {failCount} failed.");
         }
-        catch (Exception)
+        catch (ArgumentException)
+        {
+            Console.WriteLine(_lang.GetString("Error_Input"));
+        }
+        catch (FormatException)
         {
             Console.WriteLine(_lang.GetString("Error_Input"));
         }

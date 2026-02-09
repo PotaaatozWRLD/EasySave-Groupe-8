@@ -126,14 +126,10 @@ public class CLIArgumentTests
             if (input.Contains(';'))
             {
                 var parts = input.Split(';');
-                var jobs = new List<int>();
-                foreach (var part in parts)
-                {
-                    if (int.TryParse(part.Trim(), out int job) && job >= 1 && job <= 5)
-                    {
-                        jobs.Add(job);
-                    }
-                }
+                var jobs = parts
+                    .Where(part => int.TryParse(part.Trim(), out int job) && job >= 1 && job <= 5)
+                    .Select(part => int.Parse(part.Trim()))
+                    .ToList();
                 return jobs.ToArray();
             }
 
@@ -143,7 +139,7 @@ public class CLIArgumentTests
                 return new[] { singleJob };
             }
         }
-        catch
+        catch (ArgumentException)
         {
             return Array.Empty<int>();
         }

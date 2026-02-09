@@ -5,8 +5,7 @@ namespace EasySave.ConsoleApp.Languages;
 
 public class LanguageManager
 {
-    private static LanguageManager? _instance;
-    private static readonly object _lock = new object();
+    private static readonly Lazy<LanguageManager> _instance = new Lazy<LanguageManager>(() => new LanguageManager());
     
     private Dictionary<string, string> _strings = new();
     private string _currentLanguage = "en";
@@ -18,23 +17,7 @@ public class LanguageManager
         LoadLanguage(language);
     }
 
-    public static LanguageManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                lock (_lock)
-                {
-                    if (_instance == null)
-                    {
-                        _instance = new LanguageManager();
-                    }
-                }
-            }
-            return _instance;
-        }
-    }
+    public static LanguageManager Instance => _instance.Value;
 
     public string CurrentLanguage => _currentLanguage;
 

@@ -65,7 +65,7 @@ public class BackupService
                 CurrentTargetFilePath = ""
             });
         }
-        catch (Exception ex)
+        catch (IOException ex)
         {
             _logger.WriteLog(new LogEntry
             {
@@ -75,8 +75,48 @@ public class BackupService
                 FileName = "",
                 FileSize = 0,
                 TransferTime = -1,
-                ErrorMessage = ex.Message,
-                Timestamp = DateTime.Now
+                ErrorMessage = ex.Message
+            });
+
+            _logger.UpdateState(new StateEntry
+            {
+                Name = job.Name,
+                State = JobState.END,
+                LastActionTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                TotalFiles = 0,
+                TotalSize = 0,
+                Progression = 0,
+                NbFilesLeftToDo = 0,
+                NbFilesLeftToDoSize = 0,
+                CurrentSourceFilePath = "",
+                CurrentTargetFilePath = ""
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = job.Name,
+                SourcePath = PathHelper.ToUncPath(job.SourcePath),
+                TargetPath = PathHelper.ToUncPath(job.TargetPath),
+                FileName = "",
+                FileSize = 0,
+                TransferTime = -1,
+                ErrorMessage = ex.Message
+            });
+
+            _logger.UpdateState(new StateEntry
+            {
+                Name = job.Name,
+                State = JobState.END,
+                LastActionTimestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                TotalFiles = 0,
+                TotalSize = 0,
+                Progression = 0,
+                NbFilesLeftToDo = 0,
+                NbFilesLeftToDoSize = 0,
+                CurrentSourceFilePath = "",
+                CurrentTargetFilePath = ""
             });
         }
     }
@@ -105,9 +145,13 @@ public class BackupService
                 totalSize += subSize;
             }
         }
-        catch
+        catch (UnauthorizedAccessException)
         {
             // Ignore access errors during calculation
+        }
+        catch (IOException)
+        {
+            // Ignore I/O errors during calculation
         }
 
         return (totalFiles, totalSize);
@@ -186,7 +230,7 @@ public class BackupService
                 filesProcessed++;
                 bytesProcessed += fileSize;
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
                 // Get file size if possible
                 long fileSize = 0;
@@ -194,26 +238,55 @@ public class BackupService
                 {
                     if (File.Exists(filePath))
                     {
-                        var fileInfo = new FileInfo(filePath);
-                        fileSize = fileInfo.Length;
+                        fileSize = new FileInfo(filePath).Length;
                     }
                 }
-                catch { }
+                catch
+                {
+                    // If we can't get size, just use 0
+                }
 
-                // Log the error
                 _logger.WriteLog(new LogEntry
                 {
                     JobName = job.Name,
                     SourcePath = PathHelper.ToUncPath(filePath),
                     TargetPath = PathHelper.ToUncPath(targetFilePath),
-                    FileName = fileName,
+                    FileName = Path.GetFileName(filePath),
                     FileSize = fileSize,
                     TransferTime = -1,
-                    ErrorMessage = ex.Message,
-                    Timestamp = DateTime.Now
+                    ErrorMessage = ex.Message
                 });
 
-                // Still count as processed for progression
+                filesProcessed++;
+                bytesProcessed += fileSize;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                // Get file size if possible
+                long fileSize = 0;
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        fileSize = new FileInfo(filePath).Length;
+                    }
+                }
+                catch
+                {
+                    // If we can't get size, just use 0
+                }
+
+                _logger.WriteLog(new LogEntry
+                {
+                    JobName = job.Name,
+                    SourcePath = PathHelper.ToUncPath(filePath),
+                    TargetPath = PathHelper.ToUncPath(targetFilePath),
+                    FileName = Path.GetFileName(filePath),
+                    FileSize = fileSize,
+                    TransferTime = -1,
+                    ErrorMessage = ex.Message
+                });
+
                 filesProcessed++;
                 bytesProcessed += fileSize;
             }
