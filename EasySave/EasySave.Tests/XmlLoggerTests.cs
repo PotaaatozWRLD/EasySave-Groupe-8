@@ -325,9 +325,13 @@ public class XmlLoggerTests : IDisposable
             {
                 Directory.Delete(_testDir, true);
             }
-            catch (Exception)
+            catch (IOException)
             {
-                // Ignore cleanup errors - test directory may already be deleted
+                // Ignore cleanup errors - directory may be locked or in use
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Ignore cleanup errors - insufficient permissions
             }
         }
     }
