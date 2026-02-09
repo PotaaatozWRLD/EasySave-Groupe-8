@@ -10,9 +10,6 @@ disable-default-queries: false
 queries:
   - uses: security-extended
   - uses: security-and-quality
-  
-# Suppress Path.Combine warnings - all paths are validated and controlled
-query-filters:
   - exclude:
       id: cs/path-concatenation
       
