@@ -188,6 +188,19 @@ public class AppConfig
         string fullPath = Path.Combine(appDataPath, ConfigFilePath);
         
         string json = JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(fullPath, json);
+        
+        // Retry write in case of concurrent test access
+        for (int i = 0; i < 3; i++)
+        {
+            try
+            {
+                File.WriteAllText(fullPath, json);
+                break;
+            }
+            catch (IOException) when (i < 2)
+            {
+                System.Threading.Thread.Sleep(50);
+            }
+        }
     }
 }

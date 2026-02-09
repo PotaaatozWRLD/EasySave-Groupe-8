@@ -12,28 +12,49 @@ public class AppConfigTests : IDisposable
 
     public AppConfigTests()
     {
-        // Setup: Use test-specific config path
+        // Setup: Clean config for isolated test runs
         _testConfigPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "ProSoft",
             "EasySave",
-            "config_test.json"
+            "config.json" // Use actual config file
         );
         
-        // Clean up before tests
+        // CRITICAL: Reset config state between tests
+        CleanConfig();
+    }
+    
+    private void CleanConfig()
+    {
+        // Delete config file to reset to defaults
         if (File.Exists(_testConfigPath))
         {
-            File.Delete(_testConfigPath);
+            // Retry deletion in case of file lock
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    File.Delete(_testConfigPath);
+                    break;
+                }
+                catch (IOException) when (i < 2)
+                {
+                    System.Threading.Thread.Sleep(50);
+                }
+            }
         }
+        
+        // Force AppConfig to reload from empty state
+        // This clears the singleton cache
+        typeof(AppConfig)
+            .GetField("_config", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)?
+            .SetValue(null, null);
     }
 
     public void Dispose()
     {
-        // Cleanup after tests
-        if (File.Exists(_testConfigPath))
-        {
-            File.Delete(_testConfigPath);
-        }
+        // Cleanup after tests - reset to clean state
+        CleanConfig();
     }
 
     [Fact]
@@ -230,7 +251,12 @@ public class AppConfigTests : IDisposable
         {
             Directory.CreateDirectory(configDir);
         }
+        
+        // Write v1.0 config
         File.WriteAllText(_testConfigPath, v1Config);
+        
+        // Force reload
+        CleanConfig();
 
         // Act - Load config should not throw, and new properties should have defaults
         string language = AppConfig.GetLanguage();
