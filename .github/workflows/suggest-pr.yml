@@ -1,0 +1,82 @@
+name: Suggest Pull Request
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - 'dependabot/**'
+
+jobs:
+  suggest-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      
+      - name: Check if PR already exists
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="${{ github.ref_name }}"
+          pr_count=$(gh pr list --head "$branch" --base main --json number --jq 'length')
+          echo "pr_exists=$pr_count" >> $GITHUB_OUTPUT
+          echo "Branch: $branch"
+          echo "Existing PRs: $pr_count"
+      
+      - name: Create Draft Pull Request
+        if: steps.check_pr.outputs.pr_exists == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="${{ github.ref_name }}"
+          author="${{ github.actor }}"
+          
+          # Create PR title based on last commit message
+          last_commit=$(git log -1 --pretty=format:"%s")
+          
+          # Use the full PR template from .github/pull_request_template.md
+          cp .github/pull_request_template.md pr_body.md
+          
+          # Add automatic header at the top
+          cat > pr_header.md << 'EOF'
+          🤖 **Pull Request automatique créée par GitHub Actions**
+          
+          **Branche:** `$BRANCH` | **Auteur:** @$AUTHOR | **Dernier commit:** $COMMIT
+          
+          ---
+          
+          EOF
+          
+          # Replace variables in header
+          sed -i "s/\$BRANCH/$branch/g" pr_header.md
+          sed -i "s/\$AUTHOR/$author/g" pr_header.md
+          sed -i "s/\$COMMIT/$last_commit/g" pr_header.md
+          
+          # Combine header + template
+          cat pr_header.md pr_body.md > final_pr_body.md
+          mv final_pr_body.md pr_body.md
+          
+          # Create draft PR
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "$last_commit" \
+            --body-file pr_body.md \
+            --draft \
+            --assignee "$author"
+          
+          echo "✅ Draft PR créée pour la branche $branch"
+      
+      - name: PR already exists
+        if: steps.check_pr.outputs.pr_exists != '0'
+        run: |
+          branch="${{ github.ref_name }}"
+          echo "ℹ️  Une PR existe déjà pour la branche $branch"
+          echo "🔗 Voir: https://github.com/${{ github.repository }}/pulls?q=is%3Apr+head%3A$branch"
