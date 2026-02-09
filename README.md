@@ -2,6 +2,7 @@
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Build and Test](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml/badge.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/dotnet.yml)
+[![CodeQL](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/codeql.yml/badge.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/PotaaatozWRLD/EasySave-Groupe-8/graph/badge.svg?token=A2ED4T73IC)](https://codecov.io/gh/PotaaatozWRLD/EasySave-Groupe-8)
 [![License](https://img.shields.io/badge/License-ProSoft-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-82%20passing-brightgreen.svg)](EasySave/EasySave.Tests)
@@ -366,3 +367,6 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 **ProSoft - Professional Software Solutions**  
 February 2026
+#    T e s t 
+ 
+ 
