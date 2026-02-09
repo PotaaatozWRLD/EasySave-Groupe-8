@@ -10,20 +10,20 @@ namespace EasySave.ConsoleApp;
 class Program
 {
     private static readonly LanguageManager _lang = LanguageManager.Instance;
+    private static string _appDataPath = string.Empty;
+    private static string _logDirectory = string.Empty;
+    private static string _stateFilePath = string.Empty;
 
     static void Main(string[] args)
     {
         // Use AppData for configuration files to respect server deployment standards
-        string appDataPath = Path.Combine(
+        _appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "ProSoft",
             "EasySave"
         );
-        string logDirectory = Path.Combine(appDataPath, "Logs");
-        string stateFilePath = Path.Combine(appDataPath, "state.json");
-
-        ILogger logger = new JsonLogger(logDirectory, stateFilePath);
-        BackupService backupService = new BackupService(logger);
+        _logDirectory = Path.Combine(_appDataPath, "Logs");
+        _stateFilePath = Path.Combine(_appDataPath, "state.json");
 
         JobManager.LoadJobs();
 
@@ -46,7 +46,8 @@ class Program
                 Console.WriteLine($"6. {_lang.GetString("Menu_RunAll")}");
                 Console.WriteLine($"7. {_lang.GetString("Menu_Logs")}");
                 Console.WriteLine($"8. {_lang.GetString("Menu_Lang")}");
-                Console.WriteLine($"9. {_lang.GetString("Menu_Exit")}");
+                Console.WriteLine($"9. {_lang.GetString("Menu_Settings")}");
+                Console.WriteLine($"0. {_lang.GetString("Menu_Exit")}");
                 Console.Write(_lang.GetString("Msg_SelectOption"));
 
                 string? input = Console.ReadLine();
@@ -65,18 +66,21 @@ class Program
                         DeleteJob();
                         break;
                     case "5":
-                        RunJob(backupService);
+                        RunJob();
                         break;
                     case "6":
-                        RunAllJobs(backupService);
+                        RunAllJobs();
                         break;
                     case "7":
-                        OpenLogs(logDirectory);
+                        OpenLogs(_logDirectory);
                         break;
                     case "8":
                         ChangeLanguage();
                         break;
                     case "9":
+                        ShowSettingsMenu();
+                        break;
+                    case "0":
                         return;
                     default:
                         Console.WriteLine(_lang.GetString("Error_InvalidOption"));
@@ -90,14 +94,14 @@ class Program
             // MODE 2: Open logs folder
             try
             {
-                if (Directory.Exists(logDirectory))
+                if (Directory.Exists(_logDirectory))
                 {
-                    Console.WriteLine($"Opening logs folder: {logDirectory}");
-                    System.Diagnostics.Process.Start("explorer.exe", logDirectory);
+                    Console.WriteLine($"Opening logs folder: {_logDirectory}");
+                    System.Diagnostics.Process.Start("explorer.exe", _logDirectory);
                 }
                 else
                 {
-                    Console.WriteLine($"Logs folder does not exist yet: {logDirectory}");
+                    Console.WriteLine($"Logs folder does not exist yet: {_logDirectory}");
                     Console.WriteLine("Run a backup first to create log files.");
                 }
             }
@@ -113,6 +117,11 @@ class Program
         else
         {
             // MODE 3: Run jobs based on arguments
+            // Create logger with current settings for CLI mode
+            LogFormat logFormat = AppConfig.GetLogFormat();
+            ILogger logger = LoggerFactory.CreateLogger(logFormat, _logDirectory, _stateFilePath);
+            BackupService backupService = new BackupService(logger);
+            
             var jobIndexes = ParseJobIndexes(args[0]);
             foreach (var index in jobIndexes)
             {
@@ -357,12 +366,17 @@ class Program
         Console.ReadKey();
     }
 
-    static void RunAllJobs(BackupService backupService)
+    static void RunAllJobs()
     {
         Console.Clear();
         Console.WriteLine("============================");
         Console.WriteLine("   RUN ALL JOBS            ");
         Console.WriteLine("============================");
+
+        // Create fresh logger with current settings
+        LogFormat logFormat = AppConfig.GetLogFormat();
+        ILogger logger = LoggerFactory.CreateLogger(logFormat, _logDirectory, _stateFilePath);
+        BackupService backupService = new BackupService(logger);
 
         if (JobManager.Jobs.Count == 0)
         {
@@ -398,7 +412,7 @@ class Program
         Console.ReadKey();
     }
 
-    static void RunJob(BackupService backupService)
+    static void RunJob()
     {
         Console.Clear();
         Console.WriteLine("============================");
@@ -416,6 +430,11 @@ class Program
             Console.ReadKey();
             return;
         }
+
+        // Create fresh logger with current settings
+        LogFormat logFormat = AppConfig.GetLogFormat();
+        ILogger logger = LoggerFactory.CreateLogger(logFormat, _logDirectory, _stateFilePath);
+        BackupService backupService = new BackupService(logger);
 
         try
         {
@@ -481,6 +500,76 @@ class Program
             }
         }
         return indexes;
+    }
+
+    static void ShowSettingsMenu()
+    {
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine("============================");
+            Console.WriteLine($"      {_lang.GetString("Settings_Title")}      ");
+            Console.WriteLine("============================");
+            
+            LogFormat currentFormat = AppConfig.GetLogFormat();
+            Console.WriteLine();
+            Console.WriteLine($"{_lang.GetString("Settings_CurrentLogFormat")}: {currentFormat}");
+            Console.WriteLine();
+            Console.WriteLine($"1. {_lang.GetString("Settings_ChangeLogFormat")}");
+            Console.WriteLine($"2. {_lang.GetString("Settings_Back")}");
+            Console.Write(_lang.GetString("Msg_SelectOption"));
+
+            string? input = Console.ReadLine();
+            
+            if (input == "1")
+            {
+                ShowLogFormatSelectionMenu();
+            }
+            else if (input == "2")
+            {
+                break;
+            }
+            else
+            {
+                Console.WriteLine(_lang.GetString("Error_InvalidOption"));
+                Console.ReadKey();
+            }
+        }
+    }
+
+    static void ShowLogFormatSelectionMenu()
+    {
+        Console.Clear();
+        Console.WriteLine("============================");
+        Console.WriteLine($"      {_lang.GetString("LogFormat_Title")}      ");
+        Console.WriteLine("============================");
+        Console.WriteLine();
+        Console.WriteLine($"1. JSON ({_lang.GetString("LogFormat_Default")})");
+        Console.WriteLine($"2. XML");
+        Console.WriteLine();
+        Console.Write(_lang.GetString("Msg_SelectOption"));
+
+        string? input = Console.ReadLine();
+        
+        if (input == "1")
+        {
+            AppConfig.SetLogFormat(LogFormat.JSON);
+            Console.WriteLine($"\n{_lang.GetString("LogFormat_Changed")}: JSON");
+            Console.WriteLine(_lang.GetString("LogFormat_RestartRequired"));
+            Console.ReadKey();
+        }
+        else if (input == "2")
+        {
+            AppConfig.SetLogFormat(LogFormat.XML);
+            Console.WriteLine($"\n{_lang.GetString("LogFormat_Changed")}: XML");
+            Console.WriteLine(_lang.GetString("LogFormat_RestartRequired"));
+            Console.ReadKey();
+        }
+        else
+        {
+            Console.WriteLine(_lang.GetString("Error_InvalidOption"));
+            Console.ReadKey();
+        }
     }
 
     static void ShowLanguageSelectionMenu()
