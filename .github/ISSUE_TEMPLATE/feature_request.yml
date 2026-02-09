@@ -1,0 +1,142 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for EasySave
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible.
+
+  - type: dropdown
+    id: target-version
+    attributes:
+      label: Target Version
+      description: Which version should this feature be added to?
+      options:
+        - Next minor release (v1.x)
+        - Next major release (v2.0+)
+        - Future release (v3.0+)
+        - Any version
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New backup mode (compression, encryption, etc.)
+        - UI/UX improvement
+        - Performance enhancement
+        - Logging/Reporting improvement
+        - Configuration/Settings option
+        - CLI improvement
+        - Integration with external tools
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like
+      placeholder: |
+        I would like EasySave to...
+        This would work by...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or features?
+      placeholder: |
+        Alternative 1: Use external tool X
+        Alternative 2: Manual workaround by...
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case / User Story
+      description: Provide a concrete example of how this feature would be used
+      placeholder: |
+        As a [user type],
+        I want to [goal],
+        So that [benefit].
+        
+        Example: As a system administrator, I want to schedule backups to run weekly, so that I don't have to manually trigger them.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical (Blocking my usage)
+        - High (Would significantly improve my workflow)
+        - Medium (Nice to have)
+        - Low (Minor improvement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Suggestions
+      description: Do you have ideas about how this could be implemented?
+      placeholder: |
+        - Could add a new property in BackupJob class
+        - Might require changes to BackupService.PerformBackup()
+        - Similar to how [existing feature] works
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Breaking Changes / Compatibility
+      description: Would this feature require breaking changes?
+      placeholder: |
+        - Backward compatible with v1.0 config files
+        - Requires new property in state.json
+        - EasyLog.dll API remains unchanged
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the feature request
+      placeholder: |
+        - Screenshots/mockups (if UI change)
+        - Links to similar features in other software
+        - Performance benchmarks (if relevant)
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for similar feature requests before creating this one
+          required: true
+        - label: This feature aligns with EasySave's goal as a professional backup solution
+          required: true
+        - label: I have provided a clear use case and problem statement
+          required: true
+        - label: I am willing to help test this feature once implemented
+          required: false

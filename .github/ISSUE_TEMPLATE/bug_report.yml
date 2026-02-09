@@ -1,0 +1,132 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in EasySave
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible.
+
+  - type: dropdown
+    id: version
+    attributes:
+      label: EasySave Version
+      description: Which version are you using?
+      options:
+        - v1.0 (Console)
+        - v1.1 (Console + XML)
+        - v2.0 (GUI)
+        - v3.0 (Parallel)
+        - Development/Main branch
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical (Data loss, crash, cannot use app)
+        - High (Major feature broken)
+        - Medium (Feature partially working)
+        - Low (Minor issue, workaround available)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Create a backup job with...
+        2. Set source path to...
+        3. Run the backup...
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The backup should complete successfully
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: The backup failed with error message...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Please paste relevant log entries from the daily log file
+      placeholder: |
+        Paste logs from %AppData%\ProSoft\EasySave\Logs\YYYY-MM-DD.json
+      render: json
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: Which OS are you using?
+      options:
+        - Windows 11
+        - Windows 10
+        - Windows Server 2025
+        - Windows Server 2022
+        - Other (specify in Additional Context)
+    validations:
+      required: true
+
+  - type: input
+    id: dotnet-version
+    attributes:
+      label: .NET Version
+      description: Run `dotnet --version` in terminal
+      placeholder: e.g., 10.0.102
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: |
+        - Network path details (if applicable)
+        - File system type (NTFS, FAT32, etc.)
+        - Antivirus software running
+        - Screenshots (if applicable)
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for similar issues before creating this one
+          required: true
+        - label: I have included all relevant information (version, OS, logs)
+          required: true
+        - label: This bug is reproducible
+          required: false
