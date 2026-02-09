@@ -5,7 +5,7 @@ namespace EasySave.Core.Services;
 
 /// <summary>
 /// Manages backup jobs: loading, saving, adding, deleting, and retrieving jobs.
-/// Maximum of 5 jobs allowed as per specifications.
+/// v2.0: Unlimited jobs (v1.0/v1.1 had 5-job limit).
 /// </summary>
 public class JobManager
 {
@@ -15,7 +15,6 @@ public class JobManager
         "EasySave",
         "jobs.json"
     );
-    private const int MaxJobs = 5;
     public static List<BackupJob> Jobs { get; private set; } = new();
 
     // Load jobs from the JSON file
@@ -48,14 +47,12 @@ public class JobManager
         File.WriteAllText(JobsFilePath, json);
     }
 
-    // Add a new job
+    /// <summary>
+    /// Adds a new backup job to the list.
+    /// v2.0: No limit on number of jobs (v1.0/v1.1 limited to 5).
+    /// </summary>
     public static void AddJob(string name, string source, string target, BackupType type)
     {
-        if (Jobs.Count >= MaxJobs)
-        {
-            throw new InvalidOperationException("Cannot add more than 5 jobs.");
-        }
-
         Jobs.Add(new BackupJob(name, source, target, type));
         SaveJobs();
     }

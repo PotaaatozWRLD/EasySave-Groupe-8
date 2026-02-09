@@ -35,17 +35,17 @@ public class JobManagerTests
     }
 
     [Fact]
-    public void AddJob_ShouldThrowException_WhenMaxJobsReached()
+    public void AddJob_v2_ShouldAllowUnlimitedJobs()
     {
-        // Arrange - Add 5 jobs to reach limit
-        for (int i = 0; i < 5; i++)
+        // Arrange - v2.0 allows unlimited jobs (v1.0/v1.1 limited to 5)
+        // Act - Add 20 jobs to verify no limit
+        for (int i = 0; i < 20; i++)
         {
             JobManager.AddJob($"Job {i}", "C:\\Source", "D:\\Target", BackupType.Full);
         }
 
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => 
-            JobManager.AddJob("Job 6", "C:\\Source", "D:\\Target", BackupType.Full));
+        // Assert - Should succeed with 20+ jobs
+        Assert.True(JobManager.Jobs.Count >= 20, "v2.0 should allow unlimited jobs");
     }
 
     [Fact]
