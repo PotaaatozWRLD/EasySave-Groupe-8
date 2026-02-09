@@ -11,8 +11,8 @@ queries:
   - uses: security-extended
   - uses: security-and-quality
   - exclude:
-      id: cs/path-concatenation
-      id: cs/call-to-path-combine-with-potentially-unsafe-argument
+      - id: cs/path-concatenation
+      - id: cs/call-to-path-combine-with-potentially-unsafe-argument
       
 # Suppress "call to Path.Combine may drop arguments" - not applicable
 # All path arguments are validated before use and don't contain absolute paths
