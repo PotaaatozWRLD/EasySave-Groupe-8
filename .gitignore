@@ -7,5 +7,8 @@ obj/
 EasySave/Logs/
 EasySave/state.json
 
+# Ignore BenchmarkDotNet artifacts
+**/BenchmarkDotNet.Artifacts/
+
 # Ignore config files
 **/config.json
