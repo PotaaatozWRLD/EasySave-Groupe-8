@@ -5,7 +5,7 @@ namespace EasyLog;
 
 /// <summary>
 /// Interface for logging backup operations and state updates.
-/// Part of EasyLog.dll - must remain compatible across versions.
+/// Part of EasyLog.dll - must remain compatible across versions and platforms.
 /// </summary>
 public interface ILogger
 {
