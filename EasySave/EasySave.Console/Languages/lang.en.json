@@ -8,6 +8,7 @@
   "Menu_RunAll": "Run all jobs sequentially",
   "Menu_Logs": "Open logs",
   "Menu_Lang": "Change language",
+  "Menu_Settings": "Settings",
   "Menu_Exit": "Quit",
   "Msg_LangChanged": "Language changed successfully!",
   "Msg_SelectOption": "Select an option: ",
@@ -39,5 +40,13 @@
   "DeleteJob_Success": "Job deleted successfully. Press any key to return to the menu...",
   "RunJob_Title": "RUN JOB(S)",
   "RunJob_EnterIndex": "Enter job(s) to run: ",
-  "RunJob_Success": "Job executed successfully. Press any key to return to the menu..."
+  "RunJob_Success": "Job executed successfully. Press any key to return to the menu...",
+  "Settings_Title": "SETTINGS",
+  "Settings_CurrentLogFormat": "Current log format",
+  "Settings_ChangeLogFormat": "Change log format",
+  "Settings_Back": "Back to main menu",
+  "LogFormat_Title": "LOG FORMAT SELECTION",
+  "LogFormat_Default": "default, v1.0 compatible",
+  "LogFormat_Changed": "Log format changed to",
+  "LogFormat_RestartRequired": "The application will use the new format on next run. Press any key to continue..."
 }

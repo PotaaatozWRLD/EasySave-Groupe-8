@@ -13,5 +13,5 @@ public class LogEntry
     public long FileSize { get; set; }                       // Size in bytes
     public long TransferTime { get; set; }                   // Time in ms (negative if error)
     public string? ErrorMessage { get; set; }                // Null if no error
-    public DateTime Timestamp { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.Now; // Auto-set to current time
 }

@@ -8,6 +8,7 @@
   "Menu_RunAll": "Lancer tous les travaux séquentiellement",
   "Menu_Logs": "Ouvrir les logs",
   "Menu_Lang": "Changer de langue",
+  "Menu_Settings": "Paramètres",
   "Menu_Exit": "Quitter",
   "Msg_LangChanged": "Langue changée avec succès !",
   "Msg_SelectOption": "Sélectionnez une option : ",
@@ -39,5 +40,13 @@
   "DeleteJob_Success": "Travail supprimé avec succès. Appuyez sur une touche pour revenir au menu...",
   "RunJob_Title": "LANCER TRAVAIL(X)",
   "RunJob_EnterIndex": "Entrez le(s) travail(x) à lancer : ",
-  "RunJob_Success": "Travail exécuté avec succès. Appuyez sur une touche pour revenir au menu..."
+  "RunJob_Success": "Travail exécuté avec succès. Appuyez sur une touche pour revenir au menu...",
+  "Settings_Title": "PARAMÈTRES",
+  "Settings_CurrentLogFormat": "Format de log actuel",
+  "Settings_ChangeLogFormat": "Changer le format de log",
+  "Settings_Back": "Retour au menu principal",
+  "LogFormat_Title": "SÉLECTION DU FORMAT DE LOG",
+  "LogFormat_Default": "par défaut, compatible v1.0",
+  "LogFormat_Changed": "Format de log changé en",
+  "LogFormat_RestartRequired": "L'application utilisera le nouveau format au prochain lancement. Appuyez sur une touche pour continuer..."
 }
