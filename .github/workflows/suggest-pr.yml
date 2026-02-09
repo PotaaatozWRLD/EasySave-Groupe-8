@@ -41,37 +41,27 @@ jobs:
           # Create PR title based on last commit message
           last_commit=$(git log -1 --pretty=format:"%s")
           
-          # Create PR body
-          cat > pr_body.md << 'EOF'
+          # Use the full PR template from .github/pull_request_template.md
+          cp .github/pull_request_template.md pr_body.md
+          
+          # Add automatic header at the top
+          cat > pr_header.md << 'EOF'
           🤖 **Pull Request automatique créée par GitHub Actions**
           
-          ## 📝 Description
-          Cette PR a été créée automatiquement suite à un push sur la branche `$BRANCH`.
+          **Branche:** `$BRANCH` | **Auteur:** @$AUTHOR | **Dernier commit:** $COMMIT
           
-          **Auteur:** @$AUTHOR
-          **Dernier commit:** $COMMIT
+          ---
           
-          ## ✅ Checklist
-          Avant de demander une review, assure-toi de :
-          - [ ] Avoir testé localement (`dotnet test`)
-          - [ ] Tous les tests passent
-          - [ ] Code respecte les conventions C# Microsoft
-          - [ ] Commentaires en anglais
-          - [ ] Documentation à jour si nécessaire
-          
-          ## 🔄 Prochaines étapes
-          1. **Vérifier** que les tests CI/CD passent (build-and-test)
-          2. **Remplir** la description ci-dessus avec les détails
-          3. **Marquer comme Ready for review** quand prêt
-          4. **Demander une review** à @PotaaatozWRLD (Kenan)
-          
-          💡 *Cette PR est en **draft** - passe-la en 'Ready for review' quand tu es prêt !*
           EOF
           
-          # Replace variables in body
-          sed -i "s/\$BRANCH/$branch/g" pr_body.md
-          sed -i "s/\$AUTHOR/$author/g" pr_body.md
-          sed -i "s/\$COMMIT/$last_commit/g" pr_body.md
+          # Replace variables in header
+          sed -i "s/\$BRANCH/$branch/g" pr_header.md
+          sed -i "s/\$AUTHOR/$author/g" pr_header.md
+          sed -i "s/\$COMMIT/$last_commit/g" pr_header.md
+          
+          # Combine header + template
+          cat pr_header.md pr_body.md > final_pr_body.md
+          mv final_pr_body.md pr_body.md
           
           # Create draft PR
           gh pr create \
