@@ -38,12 +38,20 @@ jobs:
     - name: Run Unit Tests with Code Coverage
       run: dotnet test EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
     
-    - name: Publish Test Results
+    - name: List generated files (debug)
+      if: always()
+      run: |
+        Write-Host "=== TestResults Directory Structure ==="
+        Get-ChildItem -Path ./TestResults -Recurse | Select-Object FullName
+    
+    - name: Publish Test Results and Coverage
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results
-        path: './TestResults/**/*.trx'
+        name: test-results-and-coverage
+        path: |
+          ./TestResults/**/*.trx
+          ./TestResults/**/coverage.cobertura.xml
     
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v5
