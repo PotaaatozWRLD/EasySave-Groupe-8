@@ -1,5 +1,6 @@
 # CodeQL configuration for EasySave security analysis
 # https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning
+# Test: Branch protection - Kenan
 
 name: "EasySave CodeQL Config"
 
