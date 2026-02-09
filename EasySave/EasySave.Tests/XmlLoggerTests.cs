@@ -325,9 +325,9 @@ public class XmlLoggerTests : IDisposable
             {
                 Directory.Delete(_testDir, true);
             }
-            catch
+            catch (Exception)
             {
-                // Ignore cleanup errors
+                // Ignore cleanup errors - test directory may already be deleted
             }
         }
     }

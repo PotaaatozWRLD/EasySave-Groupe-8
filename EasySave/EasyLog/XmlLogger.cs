@@ -49,15 +49,9 @@ public class XmlLogger : ILogger
         try
         {
             // Read existing entries if file exists
-            List<LogEntry> entries;
-            if (File.Exists(logFilePath))
-            {
-                entries = DeserializeLogEntries(logFilePath);
-            }
-            else
-            {
-                entries = new List<LogEntry>();
-            }
+            List<LogEntry> entries = File.Exists(logFilePath)
+                ? DeserializeLogEntries(logFilePath)
+                : new List<LogEntry>();
 
             // Add new entry
             entries.Add(entry);
@@ -90,15 +84,9 @@ public class XmlLogger : ILogger
         try
         {
             // For state file, we maintain a list of all backup job states
-            List<StateEntry> states;
-            if (File.Exists(_stateFilePath))
-            {
-                states = DeserializeStateEntries(_stateFilePath);
-            }
-            else
-            {
-                states = new List<StateEntry>();
-            }
+            List<StateEntry> states = File.Exists(_stateFilePath)
+                ? DeserializeStateEntries(_stateFilePath)
+                : new List<StateEntry>();
 
             // Update existing state or add new one
             int existingIndex = states.FindIndex(s => s.Name == state.Name);
