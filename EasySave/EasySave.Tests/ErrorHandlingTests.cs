@@ -248,9 +248,13 @@ public class ErrorHandlingTests : IDisposable
                     {
                         File.SetAttributes(file, FileAttributes.Normal);
                     }
-                    catch
+                    catch (UnauthorizedAccessException)
                     {
                         // Ignore if we can't reset attributes during cleanup
+                    }
+                    catch (IOException)
+                    {
+                        // Ignore if file is locked during cleanup
                     }
                 }
                 Directory.Delete(_testRoot, true);

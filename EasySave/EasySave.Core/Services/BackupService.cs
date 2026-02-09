@@ -241,9 +241,13 @@ public class BackupService
                         fileSize = new FileInfo(filePath).Length;
                     }
                 }
-                catch
+                catch (UnauthorizedAccessException)
                 {
-                    // If we can't get size, just use 0
+                    // File access denied during size calculation - ignore
+                }
+                catch (IOException)
+                {
+                    // File I/O error during size calculation - ignore
                 }
 
                 _logger.WriteLog(new LogEntry
@@ -271,9 +275,13 @@ public class BackupService
                         fileSize = new FileInfo(filePath).Length;
                     }
                 }
-                catch
+                catch (UnauthorizedAccessException)
                 {
-                    // If we can't get size, just use 0
+                    // File access denied during size calculation - ignore
+                }
+                catch (IOException)
+                {
+                    // File I/O error during size calculation - ignore
                 }
 
                 _logger.WriteLog(new LogEntry
