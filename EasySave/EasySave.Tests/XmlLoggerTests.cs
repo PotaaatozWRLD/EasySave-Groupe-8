@@ -316,6 +316,63 @@ public class XmlLoggerTests : IDisposable
         Assert.IsType<JsonLogger>(logger);
     }
 
+    [Fact]
+    public void XmlLogger_ShouldIncludeEncryptionTimeField()
+    {
+        // Arrange
+        var logger = new XmlLogger(_testLogPath, _testStatePath);
+        var entry = new LogEntry
+        {
+            JobName = "Encryption Test",
+            SourcePath = "\\\\localhost\\C$\\source\\document.docx",
+            TargetPath = "\\\\localhost\\D$\\backup\\document.docx",
+            FileName = "document.docx",
+            FileSize = 2048000,
+            TransferTime = 250,
+            EncryptionTime = 450, // Encrypted file
+            Timestamp = DateTime.Now
+        };
+
+        // Act
+        logger.WriteLog(entry);
+
+        // Assert
+        string logFile = Path.Combine(_testLogPath, $"{DateTime.Now:yyyy-MM-dd}.xml");
+        XDocument doc = XDocument.Load(logFile);
+        
+        var logEntry = doc.Root?.Element("LogEntry");
+        Assert.NotNull(logEntry);
+        Assert.Equal("450", logEntry.Element("EncryptionTime")?.Value);
+    }
+
+    [Fact]
+    public void XmlLogger_BackwardCompatibility_DefaultEncryptionTimeIsZero()
+    {
+        // Arrange - Simulate v1.0/v1.1 log entry without explicit EncryptionTime
+        var logger = new XmlLogger(_testLogPath, _testStatePath);
+        var entry = new LogEntry
+        {
+            JobName = "Old Format Test",
+            SourcePath = "\\\\localhost\\C$\\old\\file.txt",
+            TargetPath = "\\\\localhost\\D$\\backup\\file.txt",
+            FileName = "file.txt",
+            FileSize = 1024,
+            TransferTime = 100
+            // Note: EncryptionTime NOT set - should default to 0
+        };
+
+        // Act
+        logger.WriteLog(entry);
+
+        // Assert
+        string logFile = Path.Combine(_testLogPath, $"{DateTime.Now:yyyy-MM-dd}.xml");
+        XDocument doc = XDocument.Load(logFile);
+        
+        var logEntry = doc.Root?.Element("LogEntry");
+        Assert.NotNull(logEntry);
+        Assert.Equal("0", logEntry.Element("EncryptionTime")?.Value);
+    }
+
     public void Dispose()
     {
         // Cleanup test directory
