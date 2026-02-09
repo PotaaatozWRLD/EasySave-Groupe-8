@@ -36,20 +36,21 @@ jobs:
         dotnet build EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-restore
     
     - name: Run Unit Tests with Code Coverage
-      run: dotnet test EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory ./coverage
+      run: dotnet test EasySave/EasySave.Tests/EasySave.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
     
     - name: Publish Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
-        path: '**/TestResults/test-results.trx'
+        path: './TestResults/**/*.trx'
     
-    - name: Generate Coverage Report
+    - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v4
+      continue-on-error: true
       if: always()
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/**/coverage.cobertura.xml
+        files: ./TestResults/**/coverage.cobertura.xml
         fail_ci_if_error: false
         verbose: true
