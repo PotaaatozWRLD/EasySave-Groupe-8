@@ -8,7 +8,7 @@
 [![Tests](https://img.shields.io/badge/Tests-82%20passing-brightgreen.svg)](EasySave/EasySave.Tests)
 [![Release](https://img.shields.io/badge/Release-v1.0-success.svg)](https://github.com/PotaaatozWRLD/EasySave-Groupe-8/releases/tag/v1.0)
 
-EasySave is a powerful console-based backup application developed by ProSoft. It provides reliable file backup with full and differential modes, multi-language support, and comprehensive logging.
+> **EasySave** is a powerful console-based backup application developed by ProSoft. It provides reliable file backup with full and differential modes, multi-language support, and comprehensive logging.
 
 ---
 
