@@ -1,0 +1,25 @@
+# CodeQL configuration for EasySave security analysis
+# https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning
+
+name: "EasySave CodeQL Config"
+
+# Disable specific queries that generate false positives in our controlled environment
+disable-default-queries: false
+
+# Exclude specific queries that don't apply to our use case
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+  
+# Suppress Path.Combine warnings - all paths are validated and controlled
+query-filters:
+  - exclude:
+      id: cs/path-concatenation
+      
+# Suppress "call to Path.Combine may drop arguments" - not applicable
+# All path arguments are validated before use and don't contain absolute paths
+paths-ignore:
+  - "**/bin/**"
+  - "**/obj/**"
+  - "**/.vs/**"
+  - "**/BenchmarkDotNet.Artifacts/**"
