@@ -222,7 +222,7 @@ public class BackupServiceTests
                 service.ExecuteBackup(job, "dotnet"));
             
             Assert.Contains("dotnet", exception.Message);
-            Assert.Contains("is currently running", exception.Message);
+            Assert.Contains("are currently running", exception.Message);
         }
         finally
         {

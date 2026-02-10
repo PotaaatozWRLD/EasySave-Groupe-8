@@ -168,9 +168,14 @@ public class AppConfig
     {
         Load();
         _config!.BusinessSoftwareName = processName;
-        if (!string.IsNullOrWhiteSpace(processName) && !_config.BusinessSoftwareNames.Contains(processName))
+        if (!string.IsNullOrWhiteSpace(processName))
         {
             _config.BusinessSoftwareNames = new List<string> { processName };
+        }
+        else
+        {
+            // Clear the list when empty string is provided
+            _config.BusinessSoftwareNames = new List<string>();
         }
         Save();
     }
