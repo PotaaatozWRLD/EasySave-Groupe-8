@@ -184,6 +184,12 @@ public class BackupServiceTests
     [Fact]
     public void ExecuteBackup_v2_ShouldThrowException_WhenBusinessSoftwareIsRunning()
     {
+        // Skip on non-Windows platforms (calc.exe is Windows-only)
+        if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Arrange
         string tempLogDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         string tempSourceDir = Path.Combine(tempLogDir, "Source");

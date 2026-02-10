@@ -1,6 +1,7 @@
 using Xunit;
 using EasySave.Core.Services;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace EasySave.Tests;
 
@@ -56,6 +57,12 @@ public class BusinessSoftwareDetectorTests
     [Fact]
     public void IsRunning_WithRunningProcess_ShouldReturnTrue()
     {
+        // Skip on non-Windows platforms (calc.exe is Windows-only)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Arrange - Start a calculator process for testing
         Process? testProcess = null;
         try
@@ -96,6 +103,12 @@ public class BusinessSoftwareDetectorTests
     [Fact]
     public void IsRunning_WithExeExtension_ShouldStillDetectProcess()
     {
+        // Skip on non-Windows platforms (calc.exe is Windows-only)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Arrange - Start a calculator process for testing
         Process? testProcess = null;
         try
@@ -136,6 +149,12 @@ public class BusinessSoftwareDetectorTests
     [Fact]
     public void IsRunning_AfterProcessClosed_ShouldReturnFalse()
     {
+        // Skip on non-Windows platforms (calc.exe is Windows-only)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Arrange - Start and immediately close a process
         Process? testProcess = Process.Start(new ProcessStartInfo
         {
@@ -172,6 +191,12 @@ public class BusinessSoftwareDetectorTests
     [Fact]
     public void IsRunning_CaseInsensitive_ShouldWork()
     {
+        // Skip on non-Windows platforms (calc.exe is Windows-only)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Arrange - Start calculator
         Process? testProcess = null;
         try
