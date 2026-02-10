@@ -1,0 +1,122 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EasySave.GUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+        x:Class="EasySave.GUI.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="ProSoft EasySave v2.0"
+        Width="1000" Height="600"
+        MinWidth="800" MinHeight="500">
+
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Top Menu Bar -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="{Binding Localization[Menu_File]}">
+                <MenuItem Header="{Binding Localization[Menu_NewJob]}" Command="{Binding CreateJobCommand}"/>
+                <Separator/>
+                <MenuItem Header="{Binding Localization[Menu_Settings]}" Command="{Binding OpenSettingsCommand}"/>
+                <Separator/>
+                <MenuItem Header="{Binding Localization[Menu_Exit]}" Command="{Binding ExitCommand}"/>
+            </MenuItem>
+            <MenuItem Header="{Binding Localization[Menu_Jobs]}">
+                <MenuItem Header="{Binding Localization[Menu_ExecuteSelected]}" Command="{Binding ExecuteSelectedJobCommand}"/>
+                <MenuItem Header="{Binding Localization[Menu_ExecuteAll]}" Command="{Binding ExecuteAllJobsCommand}"/>
+            </MenuItem>
+            <MenuItem Header="{Binding Localization[Menu_Language]}">
+                <MenuItem Header="{Binding Localization[Menu_SwitchLanguage]}" Command="{Binding SwitchLanguageCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" ColumnDefinitions="2*,*" Margin="10">
+            <!-- Left: Job List -->
+            <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Padding="5" Margin="0,0,5,0">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Row="0" Text="{Binding Localization[BackupJobs]}" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Jobs}"
+                             SelectedItem="{Binding SelectedJob}"
+                             SelectionMode="Multiple"
+                             Name="JobsListBox"
+                             MinHeight="200">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <Button Content="{Binding Localization[NewJob]}" Command="{Binding CreateJobCommand}" MinWidth="100" Padding="10,5" Margin="5"/>
+                        <Button Content="{Binding Localization[Edit]}" Command="{Binding EditJobCommand}" MinWidth="100" Padding="10,5" Margin="5"/>
+                        <Button Content="{Binding Localization[Delete]}" Command="{Binding DeleteJobCommand}" MinWidth="100" Padding="10,5" Margin="5"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Right: Job Details & Actions -->
+            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="5" Margin="5,0,0,0">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Row="0" Text="{Binding Localization[JobDetails]}" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                    <StackPanel Grid.Row="1" IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding Localization[Name]}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedJob.Name}" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="{Binding Localization[Source]}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedJob.SourcePath}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="{Binding Localization[Target]}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedJob.TargetPath}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="{Binding Localization[Type]}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedJob.Type}" Margin="0,0,0,10"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" 
+                               Text="{Binding Localization[SelectJobMessage]}" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center"
+                               Foreground="Gray"
+                               IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                    <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="10">
+                        <Button Content="{Binding Localization[ExecuteSelectedJob]}" 
+                                Command="{Binding ExecuteSelectedJobCommand}"
+                                IsEnabled="{Binding !IsExecuting}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"/>
+                        <Button Content="{Binding Localization[ExecuteAllJobs]}" 
+                                Command="{Binding ExecuteAllJobsCommand}"
+                                IsEnabled="{Binding !IsExecuting}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Border Grid.Row="2" Background="#F0F0F0" BorderBrush="Gray" BorderThickness="0,1,0,0" Padding="10,5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding Localization.CurrentCulture}" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <ProgressBar IsIndeterminate="True" 
+                                 IsVisible="{Binding IsExecuting}"
+                                 Width="100"
+                                 Height="15"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>
