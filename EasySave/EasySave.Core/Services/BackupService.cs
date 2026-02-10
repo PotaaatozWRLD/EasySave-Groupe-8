@@ -13,10 +13,31 @@ namespace EasySave.Core.Services;
 public class BackupService
 {
     private readonly ILogger _logger;
+    private readonly EncryptionService? _encryptionService;
+    private readonly List<string> _extensionsToEncrypt;
 
     public BackupService(ILogger logger)
     {
         _logger = logger;
+        _extensionsToEncrypt = new List<string>();
+        _encryptionService = null;
+    }
+    
+    /// <summary>
+    /// Initializes BackupService with encryption support (v2.0).
+    /// </summary>
+    /// <param name="logger">Logger instance for writing logs.</param>
+    /// <param name="cryptoSoftPath">Path to CryptoSoft.exe executable.</param>
+    /// <param name="extensionsToEncrypt">List of file extensions to encrypt (e.g., ".docx", ".xlsx").</param>
+    public BackupService(ILogger logger, string cryptoSoftPath, List<string> extensionsToEncrypt)
+    {
+        _logger = logger;
+        _extensionsToEncrypt = extensionsToEncrypt ?? new List<string>();
+        
+        if (!string.IsNullOrWhiteSpace(cryptoSoftPath) && File.Exists(cryptoSoftPath))
+        {
+            _encryptionService = new EncryptionService(cryptoSoftPath);
+        }
     }
 
     /// <summary>
@@ -214,16 +235,48 @@ public class BackupService
                     (job.Type == BackupType.Differential && IsSourceNewer(filePath, targetFilePath)))
                 {
                     var stopwatch = Stopwatch.StartNew();
+                    long encryptionTime = 0;
+                    string finalTargetPath = targetFilePath;
 
-                    using (var sourceStream = File.OpenRead(filePath))
-                    using (var targetStream = File.Create(targetFilePath))
+                    // v2.0: Check if file should be encrypted
+                    bool shouldEncrypt = _encryptionService != null && 
+                                        EncryptionService.ShouldEncrypt(filePath, _extensionsToEncrypt);
+
+                    if (shouldEncrypt)
                     {
-                        sourceStream.CopyTo(targetStream);
+                        // Copy to temporary file first
+                        string tempTarget = targetFilePath + ".temp";
+                        using (var sourceStream = File.OpenRead(filePath))
+                        using (var targetStream = File.Create(tempTarget))
+                        {
+                            sourceStream.CopyTo(targetStream);
+                        }
+
+                        // Encrypt the temporary file
+                        encryptionTime = _encryptionService!.EncryptFile(tempTarget, targetFilePath);
+                        
+                        // Delete temporary file
+                        try { File.Delete(tempTarget); } catch { /* Ignore cleanup errors */ }
+                        
+                        // If encryption failed, copy the original file
+                        if (encryptionTime < 0)
+                        {
+                            File.Copy(filePath, targetFilePath, true);
+                        }
+                    }
+                    else
+                    {
+                        // No encryption - direct copy
+                        using (var sourceStream = File.OpenRead(filePath))
+                        using (var targetStream = File.Create(targetFilePath))
+                        {
+                            sourceStream.CopyTo(targetStream);
+                        }
                     }
 
                     stopwatch.Stop();
 
-                    // Log the successful copy
+                    // Log the successful copy with encryption time
                     _logger.WriteLog(new LogEntry
                     {
                         JobName = job.Name,
@@ -232,6 +285,7 @@ public class BackupService
                         FileName = fileName,
                         FileSize = fileSize,
                         TransferTime = stopwatch.ElapsedMilliseconds,
+                        EncryptionTime = encryptionTime, // v2.0: Track encryption time
                         ErrorMessage = null,
                         Timestamp = DateTime.Now
                     });

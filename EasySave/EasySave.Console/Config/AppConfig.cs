@@ -32,6 +32,11 @@ public class AppConfig
     public long MaxLargeFileSize { get; set; } = 0;
     
     /// <summary>
+    /// v2.0: Path to CryptoSoft.exe executable. Default: relative path to CryptoSoft in project.
+    /// </summary>
+    public string CryptoSoftPath { get; set; } = "CryptoSoft\\bin\\Release\\net10.0\\CryptoSoft.exe";
+    
+    /// <summary>
     /// Gets the log format as LogFormat enum.
     /// </summary>
     public LogFormat LogFormat => Enum.TryParse<LogFormat>(LogFormatString, true, out var format) ? format : LogFormat.JSON;
@@ -150,6 +155,26 @@ public class AppConfig
     {
         Load();
         _config!.MaxLargeFileSize = sizeInBytes;
+        Save();
+    }
+    
+    /// <summary>
+    /// v2.0: Gets the path to CryptoSoft.exe executable.
+    /// </summary>
+    public static string GetCryptoSoftPath()
+    {
+        Load();
+        return _config!.CryptoSoftPath;
+    }
+    
+    /// <summary>
+    /// v2.0: Sets the path to CryptoSoft.exe executable.
+    /// </summary>
+    /// <param name="path">Absolute or relative path to CryptoSoft.exe.</param>
+    public static void SetCryptoSoftPath(string path)
+    {
+        Load();
+        _config!.CryptoSoftPath = path;
         Save();
     }
 
