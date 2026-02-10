@@ -44,10 +44,14 @@ public static class BusinessSoftwareDetector
             var processes = Process.GetProcessesByName(processName);
             return processes.Length > 0;
         }
-        catch (Exception)
+        catch (InvalidOperationException)
         {
             // If we can't check (permissions, etc.), assume not running
-            // This allows backup to proceed rather than fail
+            return false;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Win32 error accessing process list, assume not running
             return false;
         }
     }

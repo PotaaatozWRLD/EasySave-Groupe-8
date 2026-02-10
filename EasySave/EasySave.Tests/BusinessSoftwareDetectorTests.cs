@@ -57,18 +57,15 @@ public class BusinessSoftwareDetectorTests
     public void IsRunning_WithRunningProcess_ShouldReturnTrue()
     {
         // Arrange - Start a long-running dotnet process for testing (cross-platform)
-        Process? testProcess = null;
-        try
+        using (var testProcess = Process.Start(new ProcessStartInfo
         {
-            testProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = "--info",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true
-            });
-
+            FileName = "dotnet",
+            Arguments = "--info",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true
+        }))
+        {
             // Wait for process to fully start and be queryable
             System.Threading.Thread.Sleep(500);
 
@@ -77,13 +74,10 @@ public class BusinessSoftwareDetectorTests
 
             // Assert
             Assert.True(result, "dotnet process should be detected as running");
-        }
-        finally
-        {
+            
             // Cleanup
             testProcess?.Kill();
             testProcess?.WaitForExit(1000);
-            testProcess?.Dispose();
         }
     }
 
@@ -91,18 +85,15 @@ public class BusinessSoftwareDetectorTests
     public void IsRunning_WithExeExtension_ShouldStillDetectProcess()
     {
         // Arrange - Start a long-running dotnet process for testing (cross-platform)
-        Process? testProcess = null;
-        try
+        using (var testProcess = Process.Start(new ProcessStartInfo
         {
-            testProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = "--info",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true
-            });
-
+            FileName = "dotnet",
+            Arguments = "--info",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true
+        }))
+        {
             // Wait for process to fully start and be queryable
             System.Threading.Thread.Sleep(500);
 
@@ -111,13 +102,10 @@ public class BusinessSoftwareDetectorTests
 
             // Assert
             Assert.True(result, "dotnet process should be detected even with .exe extension");
-        }
-        finally
-        {
+            
             // Cleanup
             testProcess?.Kill();
             testProcess?.WaitForExit(1000);
-            testProcess?.Dispose();
         }
     }
 
@@ -156,18 +144,15 @@ public class BusinessSoftwareDetectorTests
     public void IsRunning_CaseInsensitive_ShouldWork()
     {
         // Arrange - Start a long-running dotnet process (cross-platform)
-        Process? testProcess = null;
-        try
+        using (var testProcess = Process.Start(new ProcessStartInfo
         {
-            testProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = "--info",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true
-            });
-
+            FileName = "dotnet",
+            Arguments = "--info",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true
+        }))
+        {
             // Wait for process to fully start and be queryable
             System.Threading.Thread.Sleep(500);
 
@@ -180,13 +165,10 @@ public class BusinessSoftwareDetectorTests
             Assert.True(resultLowerCase, "Should detect with lowercase");
             Assert.True(resultUpperCase, "Should detect with uppercase");
             Assert.True(resultMixedCase, "Should detect with mixed case");
-        }
-        finally
-        {
+            
             // Cleanup
             testProcess?.Kill();
             testProcess?.WaitForExit(1000);
-            testProcess?.Dispose();
         }
     }
 }

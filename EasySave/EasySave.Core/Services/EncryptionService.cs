@@ -95,9 +95,17 @@ public class EncryptionService
 
             return stopwatch.ElapsedMilliseconds;
         }
-        catch (Exception)
+        catch (InvalidOperationException)
         {
-            return -5; // Unexpected error
+            return -5; // Process error
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return -5; // Win32 error (process not found, etc.)
+        }
+        catch (IOException)
+        {
+            return -5; // File I/O error
         }
     }
 

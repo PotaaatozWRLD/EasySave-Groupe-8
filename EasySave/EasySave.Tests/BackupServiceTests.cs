@@ -231,7 +231,12 @@ public class BackupServiceTests
             testProcess?.WaitForExit(1000);
             testProcess?.Dispose();
             
-            Directory.Delete(tempLogDir, true);
+            try
+            {
+                Directory.Delete(tempLogDir, true);
+            }
+            catch (IOException) { /* Ignore cleanup errors */ }
+            catch (UnauthorizedAccessException) { /* Ignore cleanup errors */ }
         }
     }
 

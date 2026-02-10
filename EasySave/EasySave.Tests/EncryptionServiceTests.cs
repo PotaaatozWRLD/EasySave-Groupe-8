@@ -32,7 +32,8 @@ public class EncryptionServiceTests : IDisposable
                 Directory.Delete(_testDir, true);
             }
         }
-        catch { /* Ignore cleanup errors */ }
+        catch (IOException) { /* Ignore cleanup errors */ }
+        catch (UnauthorizedAccessException) { /* Ignore cleanup errors */ }
     }
 
     [Fact]

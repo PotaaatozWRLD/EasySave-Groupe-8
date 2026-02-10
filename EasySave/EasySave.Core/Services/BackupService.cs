@@ -236,7 +236,6 @@ public class BackupService
                 {
                     var stopwatch = Stopwatch.StartNew();
                     long encryptionTime = 0;
-                    string finalTargetPath = targetFilePath;
 
                     // v2.0: Check if file should be encrypted
                     bool shouldEncrypt = _encryptionService != null && 
@@ -256,7 +255,9 @@ public class BackupService
                         encryptionTime = _encryptionService!.EncryptFile(tempTarget, targetFilePath);
                         
                         // Delete temporary file
-                        try { File.Delete(tempTarget); } catch { /* Ignore cleanup errors */ }
+                        try { File.Delete(tempTarget); } 
+                        catch (IOException) { /* Ignore cleanup errors */ }
+                        catch (UnauthorizedAccessException) { /* Ignore cleanup errors */ }
                         
                         // If encryption failed, copy the original file
                         if (encryptionTime < 0)
