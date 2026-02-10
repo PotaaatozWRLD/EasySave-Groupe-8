@@ -4,113 +4,170 @@
         x:Class="EasySave.GUI.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="{Binding Localization[Settings]}"
-        Width="700" Height="500"
+        Width="750" Height="650"
         WindowStartupLocation="CenterOwner"
-        CanResize="false">
+        CanResize="False"
+        Background="{DynamicResource BackgroundColor}">
 
     <Design.DataContext>
         <vm:SettingsViewModel/>
     </Design.DataContext>
 
-    <Grid Margin="20" RowDefinitions="Auto,*,Auto">
+    <Grid Margin="30" RowDefinitions="Auto,*,Auto">
         
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="{Binding Localization[Settings]}" Classes="H2" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+
         <!-- Settings Content -->
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Spacing="20">
+        <ScrollViewer Grid.Row="1" Padding="0,0,15,0">
+            <StackPanel Spacing="15">
                 
                 <!-- Encryption Extensions -->
-                <Border BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="5">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{Binding Localization[FileExtensionsToEncrypt]}" 
-                                   FontWeight="Bold" 
-                                   FontSize="14"/>
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                         <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🔒" FontSize="20"/>
+                            <TextBlock Text="{Binding Localization[FileExtensionsToEncrypt]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
                         
                         <Grid ColumnDefinitions="*,Auto,Auto">
                             <TextBox Grid.Column="0" 
                                      Text="{Binding NewExtension}" 
-                                     Watermark=".txt, .docx, .pdf..."
-                                     Margin="0,0,5,0"/>
+                                     Watermark=".txt"
+                                     Margin="0,0,5,0"
+                                     Height="35"
+                                     VerticalContentAlignment="Center"/>
                             <Button Grid.Column="1" 
                                     Content="{Binding Localization[Add]}" 
                                     Command="{Binding AddExtensionCommand}"
-                                    MinWidth="70"
-                                    Padding="10,5"
-                                    Margin="0,0,5,0"/>
+                                    Classes="Primary"
+                                    Margin="5,0,5,0"
+                                    Height="35"/>
                             <Button Grid.Column="2" 
                                     Content="{Binding Localization[Remove]}" 
                                     Command="{Binding RemoveExtensionCommand}"
-                                    MinWidth="70"
-                                    Padding="10,5"/>
+                                    Height="35"/>
                         </Grid>
                         
                         <ListBox ItemsSource="{Binding ExtensionsToEncrypt}"
                                  SelectedItem="{Binding SelectedExtension}"
-                                 Height="120"
-                                 Background="#F5F5F5"/>
+                                 Height="100"
+                                 Background="#F9F9F9"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 BorderThickness="1"
+                                 CornerRadius="4"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Business Software Detection -->
-                <Border BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="5">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{Binding Localization[BusinessSoftwareDetection]}" 
-                                   FontWeight="Bold" 
-                                   FontSize="14"/>
-                        <TextBlock Text="{Binding Localization[ProcessNameToMonitor]}" 
-                                   Foreground="Gray"/>
-                        <TextBox Text="{Binding BusinessSoftwareName}" 
-                                 Watermark="e.g., notepad, excel, word..."/>
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🛑" FontSize="20" Classes="Emoji"/>
+                            <TextBlock Text="{Binding Localization[BusinessSoftwareDetection]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                             <TextBlock Classes="Label" Text="{Binding Localization[ProcessNameToMonitor]}"/>
+                             <Grid ColumnDefinitions="*,Auto,Auto">
+                                <TextBox Grid.Column="0" 
+                                         Text="{Binding NewBusinessSoftware}" 
+                                         Watermark="e.g., notepad, excel"
+                                         Height="35"
+                                         VerticalContentAlignment="Center"
+                                         Margin="0,0,8,0"/>
+                                <Button Grid.Column="1" 
+                                        Content="+"
+                                        Command="{Binding AddBusinessSoftwareCommand}"
+                                        Width="35"
+                                        Height="35"
+                                        Margin="0,0,8,0"
+                                        FontSize="18"
+                                        FontWeight="Bold"/>
+                                <Button Grid.Column="2" 
+                                        Content="-"
+                                        Command="{Binding RemoveBusinessSoftwareCommand}"
+                                        Width="35"
+                                        Height="35"
+                                        FontSize="18"
+                                        FontWeight="Bold"/>
+                             </Grid>
+                             
+                             <!-- List of business software -->
+                             <ListBox ItemsSource="{Binding BusinessSoftwareNames}"
+                                      SelectedItem="{Binding SelectedBusinessSoftware}"
+                                      MinHeight="80"
+                                      MaxHeight="150"
+                                      Margin="0,8,0,0"
+                                      IsVisible="{Binding BusinessSoftwareNames.Count}"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- CryptoSoft Configuration -->
-                <Border BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="5">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{Binding Localization[CryptoSoftEncryptionTool]}" 
-                                   FontWeight="Bold" 
-                                   FontSize="14"/>
-                        <TextBlock Text="{Binding Localization[PathToCryptoSoft]}" 
-                                   Foreground="Gray"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0" 
-                                     Text="{Binding CryptoSoftPath}" 
-                                     Watermark="C:\Path\To\CryptoSoft.exe"/>
-                            <Button Grid.Column="1" 
-                                    Content="{Binding Localization[Browse]}" 
-                                    Command="{Binding BrowseCryptoSoftCommand}"
-                                    Margin="5,0,0,0"
-                                    MinWidth="80"
-                                    Padding="10,5"/>
-                        </Grid>
+                <Border Classes="Card">
+                     <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🔒" FontSize="20" Classes="Emoji"/>
+                            <TextBlock Text="{Binding Localization[CryptoSoftEncryptionTool]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[PathToCryptoSoft]}"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" 
+                                         Text="{Binding CryptoSoftPath}" 
+                                         Watermark="C:\Path\To\CryptoSoft.exe"
+                                         Height="35"
+                                         VerticalContentAlignment="Center"/>
+                                <Button Grid.Column="1" 
+                                        Command="{Binding BrowseCryptoSoftCommand}"
+                                        Margin="10,0,0,0"
+                                        Height="35"
+                                        Padding="15,0">
+                                     <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                        <TextBlock Text="📂" Classes="Emoji"/>
+                                        <TextBlock Text="{Binding Localization[Browse]}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- Large File Threshold -->
-                <Border BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="5">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{Binding Localization[LargeFileThreshold]}" 
-                                   FontWeight="Bold" 
-                                   FontSize="14"/>
-                        <TextBlock Text="{Binding Localization[MaxFileSizeForParallel]}" 
-                                   Foreground="Gray"
-                                   TextWrapping="Wrap"/>
-                        <NumericUpDown Value="{Binding MaxLargeFileSize}" 
+               <Border Classes="Card">
+                     <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⚖️" FontSize="20" Classes="Emoji"/>
+                            <TextBlock Text="{Binding Localization[LargeFileThreshold]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <StackPanel>
+                             <TextBlock Classes="Label" Text="{Binding Localization[MaxFileSizeForParallel]}"/>
+                             <NumericUpDown Value="{Binding MaxLargeFileSize}" 
                                        Minimum="0"
                                        Maximum="9999999999"
                                        Increment="1048576"
-                                       FormatString="N0"/>
+                                       FormatString="N0"
+                                       Height="35"
+                                       VerticalContentAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- Log Format -->
-                <Border BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="5">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{Binding Localization[LogFormat]}" 
-                                   FontWeight="Bold" 
-                                   FontSize="14"/>
+                <Border Classes="Card">
+                     <StackPanel Spacing="12">
+                         <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="📝" FontSize="20" Classes="Emoji"/>
+                            <TextBlock Text="{Binding Localization[LogFormat]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
                         <ComboBox ItemsSource="{Binding LogFormats}"
                                   SelectedItem="{Binding SelectedLogFormat}"
-                                  HorizontalAlignment="Stretch"/>
+                                  HorizontalAlignment="Stretch"
+                                  Height="35"/>
                     </StackPanel>
                 </Border>
 
@@ -121,17 +178,23 @@
         <StackPanel Grid.Row="2" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
-                    Spacing="10"
+                    Spacing="15"
                     Margin="0,20,0,0">
-            <Button Content="{Binding Localization[Save]}" 
-                    Command="{Binding SaveCommand}"
-                    MinWidth="100"
-                    Padding="15,5"
-                    IsDefault="True"/>
             <Button Content="{Binding Localization[Cancel]}" 
                     Command="{Binding CancelCommand}"
-                    MinWidth="100"
-                    Padding="15,5"/>
+                    Height="40"
+                    Padding="25,0"/>
+            
+            <Button Classes="Primary" 
+                    Command="{Binding SaveCommand}"
+                    IsDefault="True"
+                     Height="40"
+                    Padding="30,0">
+                 <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="💾"/>
+                    <TextBlock Text="{Binding Localization[Save]}"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

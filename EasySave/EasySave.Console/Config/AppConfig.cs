@@ -22,7 +22,13 @@ public class AppConfig
     public List<string> ExtensionsToEncrypt { get; set; } = new();
     
     /// <summary>
-    /// v2.0: Name of business software process to detect (e.g., "calc", "notepad"). Default: empty (no detection).
+    /// v2.0: List of business software process names to detect (e.g., "calc", "notepad"). Default: empty (no detection).
+    /// </summary>
+    public List<string> BusinessSoftwareNames { get; set; } = new();
+    
+    /// <summary>
+    /// [DEPRECATED] v2.0: Name of business software process to detect. Use BusinessSoftwareNames instead.
+    /// Kept for backward compatibility.
     /// </summary>
     public string BusinessSoftwareName { get; set; } = string.Empty;
     
@@ -119,22 +125,53 @@ public class AppConfig
     }
     
     /// <summary>
-    /// v2.0: Gets the business software process name to detect.
+    /// v2.0: Gets the list of business software process names to detect.
+    /// </summary>
+    public static List<string> GetBusinessSoftwareNames()
+    {
+        Load();
+        // Migration: if old single value exists and list is empty, migrate it
+        if (_config!.BusinessSoftwareNames.Count == 0 && !string.IsNullOrWhiteSpace(_config.BusinessSoftwareName))
+        {
+            _config.BusinessSoftwareNames.Add(_config.BusinessSoftwareName);
+            Save();
+        }
+        return _config!.BusinessSoftwareNames;
+    }
+    
+    /// <summary>
+    /// v2.0: Sets the list of business software process names to detect.
+    /// </summary>
+    /// <param name="processNames">List of process names without extension (e.g., "calc", not "calc.exe").</param>
+    public static void SetBusinessSoftwareNames(List<string> processNames)
+    {
+        Load();
+        _config!.BusinessSoftwareNames = processNames;
+        Save();
+    }
+    
+    /// <summary>
+    /// [DEPRECATED] v2.0: Gets the business software process name to detect. Use GetBusinessSoftwareNames instead.
     /// </summary>
     public static string GetBusinessSoftwareName()
     {
         Load();
-        return _config!.BusinessSoftwareName;
+        var names = GetBusinessSoftwareNames();
+        return names.Count > 0 ? names[0] : string.Empty;
     }
     
     /// <summary>
-    /// v2.0: Sets the business software process name to detect.
+    /// [DEPRECATED] v2.0: Sets the business software process name to detect. Use SetBusinessSoftwareNames instead.
     /// </summary>
     /// <param name="processName">Process name without extension (e.g., "calc", not "calc.exe").</param>
     public static void SetBusinessSoftwareName(string processName)
     {
         Load();
         _config!.BusinessSoftwareName = processName;
+        if (!string.IsNullOrWhiteSpace(processName) && !_config.BusinessSoftwareNames.Contains(processName))
+        {
+            _config.BusinessSoftwareNames = new List<string> { processName };
+        }
         Save();
     }
     
