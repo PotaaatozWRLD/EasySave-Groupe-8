@@ -181,6 +181,180 @@ public class BackupServiceTests
         Directory.Delete(tempLogDir, true);
     }
 
+    [Fact]
+    public void ExecuteBackup_v2_ShouldThrowException_WhenBusinessSoftwareIsRunning()
+    {
+        // Arrange
+        string tempLogDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempSourceDir = Path.Combine(tempLogDir, "Source");
+        string tempTargetDir = Path.Combine(tempLogDir, "Target");
+        string tempStateFile = Path.Combine(tempLogDir, "state.json");
+        
+        Directory.CreateDirectory(tempSourceDir);
+        Directory.CreateDirectory(tempTargetDir);
+        Directory.CreateDirectory(tempLogDir);
+        
+        // Create a test file
+        File.WriteAllText(Path.Combine(tempSourceDir, "test.txt"), "Test content");
+        
+        var logger = new JsonLogger(tempLogDir, tempStateFile);
+        var service = new BackupService(logger);
+        var job = new BackupJob("Test Backup", tempSourceDir, tempTargetDir, BackupType.Full);
+
+        // Start dotnet process to simulate business software (cross-platform)
+        System.Diagnostics.Process? testProcess = null;
+        try
+        {
+            testProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
+            });
+            
+            // Wait for process to start
+            System.Threading.Thread.Sleep(500);
+
+            // Act & Assert - Should throw when business software is running
+            var exception = Assert.Throws<InvalidOperationException>(() => 
+                service.ExecuteBackup(job, "dotnet"));
+            
+            Assert.Contains("dotnet", exception.Message);
+            Assert.Contains("is currently running", exception.Message);
+        }
+        finally
+        {
+            // Cleanup
+            testProcess?.Kill();
+            testProcess?.WaitForExit(1000);
+            testProcess?.Dispose();
+            
+            try
+            {
+                Directory.Delete(tempLogDir, true);
+            }
+            catch (IOException) { /* Ignore cleanup errors */ }
+            catch (UnauthorizedAccessException) { /* Ignore cleanup errors */ }
+        }
+    }
+
+    [Fact]
+    public void ExecuteBackup_v2_ShouldSucceed_WhenBusinessSoftwareNotRunning()
+    {
+        // Arrange
+        string tempLogDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempSourceDir = Path.Combine(tempLogDir, "Source");
+        string tempTargetDir = Path.Combine(tempLogDir, "Target");
+        string tempStateFile = Path.Combine(tempLogDir, "state.json");
+        
+        Directory.CreateDirectory(tempSourceDir);
+        Directory.CreateDirectory(tempTargetDir);
+        Directory.CreateDirectory(tempLogDir);
+        
+        // Create a test file
+        File.WriteAllText(Path.Combine(tempSourceDir, "test.txt"), "Test content");
+        
+        var logger = new JsonLogger(tempLogDir, tempStateFile);
+        var service = new BackupService(logger);
+        var job = new BackupJob("Test Backup", tempSourceDir, tempTargetDir, BackupType.Full);
+
+        try
+        {
+            // Ensure calculator is NOT running
+            var calculators = System.Diagnostics.Process.GetProcessesByName("CalculatorApp");
+            foreach (var calc in calculators)
+            {
+                try { calc.Kill(); calc.WaitForExit(1000); calc.Dispose(); }
+                catch { /* Ignore */ }
+            }
+            
+            System.Threading.Thread.Sleep(500);
+
+            // Act - Should succeed when business software is not running
+            service.ExecuteBackup(job, "CalculatorApp");
+
+            // Assert - Backup completed successfully
+            Assert.True(File.Exists(Path.Combine(tempTargetDir, "test.txt")));
+        }
+        finally
+        {
+            // Cleanup
+            Directory.Delete(tempLogDir, true);
+        }
+    }
+
+    [Fact]
+    public void ExecuteBackup_v2_ShouldSucceed_WhenBusinessSoftwareNameIsNull()
+    {
+        // Arrange
+        string tempLogDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempSourceDir = Path.Combine(tempLogDir, "Source");
+        string tempTargetDir = Path.Combine(tempLogDir, "Target");
+        string tempStateFile = Path.Combine(tempLogDir, "state.json");
+        
+        Directory.CreateDirectory(tempSourceDir);
+        Directory.CreateDirectory(tempTargetDir);
+        Directory.CreateDirectory(tempLogDir);
+        
+        // Create a test file
+        File.WriteAllText(Path.Combine(tempSourceDir, "test.txt"), "Test content");
+        
+        var logger = new JsonLogger(tempLogDir, tempStateFile);
+        var service = new BackupService(logger);
+        var job = new BackupJob("Test Backup", tempSourceDir, tempTargetDir, BackupType.Full);
+
+        try
+        {
+            // Act - Should succeed when businessSoftwareName is null (backward compatible)
+            service.ExecuteBackup(job, null);
+
+            // Assert - Backup completed successfully
+            Assert.True(File.Exists(Path.Combine(tempTargetDir, "test.txt")));
+        }
+        finally
+        {
+            // Cleanup
+            Directory.Delete(tempLogDir, true);
+        }
+    }
+
+    [Fact]
+    public void ExecuteBackup_v2_ShouldSucceed_WhenBusinessSoftwareNameIsEmpty()
+    {
+        // Arrange
+        string tempLogDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempSourceDir = Path.Combine(tempLogDir, "Source");
+        string tempTargetDir = Path.Combine(tempLogDir, "Target");
+        string tempStateFile = Path.Combine(tempLogDir, "state.json");
+        
+        Directory.CreateDirectory(tempSourceDir);
+        Directory.CreateDirectory(tempTargetDir);
+        Directory.CreateDirectory(tempLogDir);
+        
+        // Create a test file
+        File.WriteAllText(Path.Combine(tempSourceDir, "test.txt"), "Test content");
+        
+        var logger = new JsonLogger(tempLogDir, tempStateFile);
+        var service = new BackupService(logger);
+        var job = new BackupJob("Test Backup", tempSourceDir, tempTargetDir, BackupType.Full);
+
+        try
+        {
+            // Act - Should succeed when businessSoftwareName is empty (v1.0/v1.1 backward compatible)
+            service.ExecuteBackup(job, "");
+
+            // Assert - Backup completed successfully
+            Assert.True(File.Exists(Path.Combine(tempTargetDir, "test.txt")));
+        }
+        finally
+        {
+            // Cleanup
+            Directory.Delete(tempLogDir, true);
+        }
+    }
+
     /* Helper methods for integration tests
     private void CreateTestFiles(string directory, int count)
     {
