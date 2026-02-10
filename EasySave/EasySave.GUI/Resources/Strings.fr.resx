@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" msdata:Ordinal="5" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- Menu -->
+  <data name="Menu_File" xml:space="preserve">
+    <value>Fichier</value>
+  </data>
+  <data name="Menu_NewJob" xml:space="preserve">
+    <value>Nouveau Travail</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="Menu_Exit" xml:space="preserve">
+    <value>Quitter</value>
+  </data>
+  <data name="Menu_Jobs" xml:space="preserve">
+    <value>Travaux</value>
+  </data>
+  <data name="Menu_ExecuteSelected" xml:space="preserve">
+    <value>Exécuter Sélectionné</value>
+  </data>
+  <data name="Menu_ExecuteAll" xml:space="preserve">
+    <value>Tout Exécuter</value>
+  </data>
+  <data name="Menu_Language" xml:space="preserve">
+    <value>Langue</value>
+  </data>
+  <data name="Menu_SwitchLanguage" xml:space="preserve">
+    <value>Changer Langue (EN/FR)</value>
+  </data>
+  <!-- Main Window -->
+  <data name="BackupJobs" xml:space="preserve">
+    <value>Travaux de Sauvegarde</value>
+  </data>
+  <data name="JobDetails" xml:space="preserve">
+    <value>Détails du Travail</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nom :</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Source :</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>Cible :</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type :</value>
+  </data>
+  <data name="SelectJobMessage" xml:space="preserve">
+    <value>Sélectionnez un travail pour voir les détails</value>
+  </data>
+  <data name="NewJob" xml:space="preserve">
+    <value>Nouveau Travail</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="ExecuteSelectedJob" xml:space="preserve">
+    <value>Exécuter le Travail Sélectionné</value>
+  </data>
+  <data name="ExecuteAllJobs" xml:space="preserve">
+    <value>Exécuter Tous les Travaux</value>
+  </data>
+  <!-- Job Editor -->
+  <data name="JobEditor" xml:space="preserve">
+    <value>Éditeur de Travail</value>
+  </data>
+  <data name="JobName" xml:space="preserve">
+    <value>Nom du Travail :</value>
+  </data>
+  <data name="SourcePath" xml:space="preserve">
+    <value>Chemin Source :</value>
+  </data>
+  <data name="TargetPath" xml:space="preserve">
+    <value>Chemin Cible :</value>
+  </data>
+  <data name="BackupType" xml:space="preserve">
+    <value>Type de Sauvegarde :</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>Parcourir...</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <!-- Settings -->
+  <data name="Settings" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="FileExtensionsToEncrypt" xml:space="preserve">
+    <value>Extensions de Fichiers à Crypter</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Ajouter</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="BusinessSoftwareDetection" xml:space="preserve">
+    <value>Détection Logiciel Métier</value>
+  </data>
+  <data name="ProcessNameToMonitor" xml:space="preserve">
+    <value>Nom du processus à surveiller (sans .exe) :</value>
+  </data>
+  <data name="CryptoSoftEncryptionTool" xml:space="preserve">
+    <value>Outil de Cryptage CryptoSoft</value>
+  </data>
+  <data name="PathToCryptoSoft" xml:space="preserve">
+    <value>Chemin vers CryptoSoft.exe :</value>
+  </data>
+  <data name="LargeFileThreshold" xml:space="preserve">
+    <value>Seuil Fichiers Volumineux</value>
+  </data>
+  <data name="MaxFileSizeForParallel" xml:space="preserve">
+    <value>Taille maximale pour transferts parallèles (octets, 0 = illimité) :</value>
+  </data>
+  <data name="LogFormat" xml:space="preserve">
+    <value>Format de Log</value>
+  </data>
+</root>

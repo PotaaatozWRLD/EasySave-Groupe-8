@@ -1,0 +1,147 @@
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using EasySave.ConsoleApp.Config;
+using EasyLog;
+using EasySave.GUI.Helpers;
+
+namespace EasySave.GUI.ViewModels;
+
+/// <summary>
+/// ViewModel for application settings.
+/// </summary>
+public partial class SettingsViewModel : ViewModelBase
+{
+    public LocalizationManager Localization => LocalizationManager.Instance;
+    [ObservableProperty]
+    private ObservableCollection<string> _extensionsToEncrypt = new();
+
+    [ObservableProperty]
+    private string _newExtension = string.Empty;
+
+    [ObservableProperty]
+    private string? _selectedExtension;
+
+    [ObservableProperty]
+    private string _businessSoftwareName = string.Empty;
+
+    [ObservableProperty]
+    private string _cryptoSoftPath = string.Empty;
+
+    [ObservableProperty]
+    private long _maxLargeFileSize = 0;
+
+    [ObservableProperty]
+    private LogFormat _selectedLogFormat = LogFormat.JSON;
+
+    public ObservableCollection<LogFormat> LogFormats { get; }
+    
+    public bool DialogResult { get; private set; }
+    
+    public event EventHandler? CloseRequested;
+
+    public SettingsViewModel()
+    {
+        LogFormats = new ObservableCollection<LogFormat>(Enum.GetValues<LogFormat>());
+        LoadSettings();
+    }
+
+    [RelayCommand]
+    private void AddExtension()
+    {
+        if (!string.IsNullOrWhiteSpace(NewExtension))
+        {
+            var ext = NewExtension.Trim();
+            if (!ext.StartsWith("."))
+                ext = "." + ext;
+
+            if (!ExtensionsToEncrypt.Contains(ext))
+            {
+                ExtensionsToEncrypt.Add(ext);
+                NewExtension = string.Empty;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveExtension()
+    {
+        if (SelectedExtension != null)
+        {
+            ExtensionsToEncrypt.Remove(SelectedExtension);
+            SelectedExtension = null;
+        }
+    }
+
+    [RelayCommand]
+    private async Task BrowseCryptoSoft()
+    {
+        var dialog = new Avalonia.Platform.Storage.FilePickerOpenOptions
+        {
+            Title = "Select CryptoSoft.exe",
+            AllowMultiple = false,
+            FileTypeFilter = new[]
+            {
+                new Avalonia.Platform.Storage.FilePickerFileType("Executable Files")
+                {
+                    Patterns = new[] { "*.exe" }
+                }
+            }
+        };
+
+        var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.MainWindow
+            : null;
+
+        if (topLevel != null)
+        {
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(dialog);
+            if (files.Count > 0)
+            {
+                CryptoSoftPath = files[0].Path.LocalPath;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void Save()
+    {
+        SaveSettings();
+        DialogResult = true;
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void Cancel()
+    {
+        DialogResult = false;
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void LoadSettings()
+    {
+        ExtensionsToEncrypt.Clear();
+        foreach (var ext in AppConfig.GetExtensionsToEncrypt())
+        {
+            ExtensionsToEncrypt.Add(ext);
+        }
+
+        BusinessSoftwareName = AppConfig.GetBusinessSoftwareName();
+        CryptoSoftPath = AppConfig.GetCryptoSoftPath();
+        MaxLargeFileSize = AppConfig.GetMaxLargeFileSize();
+        SelectedLogFormat = AppConfig.GetLogFormat();
+    }
+
+    private void SaveSettings()
+    {
+        AppConfig.SetExtensionsToEncrypt(ExtensionsToEncrypt.ToList());
+        AppConfig.SetBusinessSoftwareName(BusinessSoftwareName);
+        AppConfig.SetCryptoSoftPath(CryptoSoftPath);
+        AppConfig.SetMaxLargeFileSize(MaxLargeFileSize);
+        AppConfig.SetLogFormat(SelectedLogFormat);
+    }
+}

@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EasySave.GUI.ViewModels"
+        x:Class="EasySave.GUI.Views.JobEditorWindow"
+        x:DataType="vm:JobEditorViewModel"
+        Title="{Binding Localization[JobEditor]}"
+        Width="600" Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="false">
+
+    <Design.DataContext>
+        <vm:JobEditorViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
+        
+        <!-- Job Name -->
+        <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,15">
+            <TextBlock Text="{Binding Localization[JobName]}" FontWeight="Bold"/>
+            <TextBox Text="{Binding Name}" Watermark="Enter job name..."/>
+        </StackPanel>
+
+        <!-- Source Path -->
+        <StackPanel Grid.Row="1" Spacing="5" Margin="0,0,0,15">
+            <TextBlock Text="{Binding Localization[SourcePath]}" FontWeight="Bold"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" 
+                         Text="{Binding SourcePath}" 
+                         Watermark="C:\Source\Folder or \\server\share\folder"/>
+                <Button Grid.Column="1" 
+                        Content="{Binding Localization[Browse]}" 
+                        Command="{Binding BrowseSourceCommand}"
+                        Margin="5,0,0,0"
+                        MinWidth="80"
+                        Padding="10,5"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Target Path -->
+        <StackPanel Grid.Row="2" Spacing="5" Margin="0,0,0,15">
+            <TextBlock Text="{Binding Localization[TargetPath]}" FontWeight="Bold"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" 
+                         Text="{Binding TargetPath}" 
+                         Watermark="C:\Backup\Folder or \\server\share\backup"/>
+                <Button Grid.Column="1" 
+                        Content="{Binding Localization[Browse]}" 
+                        Command="{Binding BrowseTargetCommand}"
+                        Margin="5,0,0,0"
+                        MinWidth="80"
+                        Padding="10,5"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Backup Type -->
+        <StackPanel Grid.Row="3" Spacing="5" Margin="0,0,0,15">
+            <TextBlock Text="{Binding Localization[BackupType]}" FontWeight="Bold"/>
+            <ComboBox ItemsSource="{Binding BackupTypes}"
+                      SelectedItem="{Binding SelectedBackupType}"
+                      HorizontalAlignment="Stretch"/>
+        </StackPanel>
+
+        <!-- Validation Error -->
+        <TextBlock Grid.Row="4" 
+                   Text="{Binding ValidationError}"
+                   Foreground="Red"
+                   IsVisible="{Binding ValidationError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                   Margin="0,0,0,10"/>
+
+        <!-- Spacer -->
+        <Border Grid.Row="5"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="6" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Spacing="10">
+            <Button Content="{Binding Localization[Save]}" 
+                    Command="{Binding SaveCommand}"
+                    MinWidth="100"
+                    Padding="15,5"
+                    IsDefault="True"/>
+            <Button Content="{Binding Localization[Cancel]}" 
+                    Command="{Binding CancelCommand}"
+                    MinWidth="100"
+                    Padding="15,5"/>
+        </StackPanel>
+    </Grid>
+</Window>
