@@ -93,20 +93,21 @@ public partial class SettingsViewModel : ViewModelBase
             }
         };
 
-        var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-            ? desktop.MainWindow
+        // Get the SettingsWindow instead of MainWindow
+        var window = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.Windows.FirstOrDefault(w => w is Views.SettingsWindow)
             : null;
 
-        if (topLevel != null)
+        if (window != null)
         {
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(dialog);
+            var files = await window.StorageProvider.OpenFilePickerAsync(dialog);
             if (files.Count > 0)
             {
                 CryptoSoftPath = files[0].Path.LocalPath;
             }
             
-            // Bring window back to focus
-            topLevel.Activate();
+            // Bring Settings window back to focus
+            window.Activate();
         }
     }
 

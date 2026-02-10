@@ -86,20 +86,21 @@ public partial class JobEditorViewModel : ViewModelBase
             AllowMultiple = false
         };
 
-        var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-            ? desktop.MainWindow
+        // Get the JobEditorWindow instead of MainWindow
+        var window = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.Windows.FirstOrDefault(w => w is Views.JobEditorWindow)
             : null;
 
-        if (topLevel != null)
+        if (window != null)
         {
-            var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(dialog);
+            var folders = await window.StorageProvider.OpenFolderPickerAsync(dialog);
             if (folders.Count > 0)
             {
                 SourcePath = folders[0].Path.LocalPath;
             }
             
-            // Bring window back to focus
-            topLevel.Activate();
+            // Bring JobEditor window back to focus
+            window.Activate();
         }
     }
 
@@ -112,20 +113,21 @@ public partial class JobEditorViewModel : ViewModelBase
             AllowMultiple = false
         };
 
-        var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-            ? desktop.MainWindow
+        // Get the JobEditorWindow instead of MainWindow
+        var window = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.Windows.FirstOrDefault(w => w is Views.JobEditorWindow)
             : null;
 
-        if (topLevel != null)
+        if (window != null)
         {
-            var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(dialog);
+            var folders = await window.StorageProvider.OpenFolderPickerAsync(dialog);
             if (folders.Count > 0)
             {
                 TargetPath = folders[0].Path.LocalPath;
             }
             
-            // Bring window back to focus
-            topLevel.Activate();
+            // Bring JobEditor window back to focus
+            window.Activate();
         }
     }
 
