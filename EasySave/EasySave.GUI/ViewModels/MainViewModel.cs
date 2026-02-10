@@ -208,8 +208,9 @@ public partial class MainViewModel : ViewModelBase
                     StatusMessage = $"Failed: {job.Name} - Access denied: {ex.Message}";
                     await Task.Delay(2000); // Show error for 2 seconds
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
                 {
+                    // Catch all backup-related exceptions (network, file system, etc.)
                     failCount++;
                     StatusMessage = $"Failed: {job.Name} - {ex.Message}";
                     await Task.Delay(2000); // Show error for 2 seconds
@@ -222,8 +223,9 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = $"Configuration or I/O error: {ex.Message}";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
         {
+            // Unexpected error during job preparation or service initialization
             StatusMessage = $"Unexpected error: {ex.Message}";
         }
         finally
@@ -268,8 +270,9 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = $"Access denied: {ex.Message}";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
         {
+            // Catch unexpected errors during backup execution
             StatusMessage = $"Unexpected error: {ex.Message}";
         }
         finally
