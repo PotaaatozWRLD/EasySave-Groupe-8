@@ -97,6 +97,9 @@ public partial class JobEditorViewModel : ViewModelBase
             {
                 SourcePath = folders[0].Path.LocalPath;
             }
+            
+            // Bring window back to focus
+            topLevel.Activate();
         }
     }
 
@@ -120,6 +123,9 @@ public partial class JobEditorViewModel : ViewModelBase
             {
                 TargetPath = folders[0].Path.LocalPath;
             }
+            
+            // Bring window back to focus
+            topLevel.Activate();
         }
     }
 

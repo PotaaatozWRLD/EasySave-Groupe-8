@@ -20,7 +20,7 @@ public class LanguageService : ILanguageService
     public LanguageService()
     {
         // Use existing language files from Console project
-        _languagesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Languages");
+        _languagesPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "Languages");
         
         // Load default language
         LoadLanguage("en");
@@ -47,7 +47,7 @@ public class LanguageService : ILanguageService
     {
         try
         {
-            string filePath = Path.Combine(_languagesPath, $"lang.{languageCode}.json");
+            string filePath = Path.Join(_languagesPath, $"lang.{languageCode}.json");
             
             if (!File.Exists(filePath))
                 return false;
@@ -61,9 +61,13 @@ public class LanguageService : ILanguageService
                 return true;
             }
         }
-        catch
+        catch (IOException)
         {
-            // Fallback to empty translations
+            // File I/O error: fallback to empty translations
+        }
+        catch (JsonException)
+        {
+            // JSON parsing error: fallback to empty translations
         }
 
         return false;

@@ -46,11 +46,11 @@ public partial class MainViewModel : ViewModelBase
     {
 
         // Initialize paths (same as Console app)
-        _appDataPath = Path.Combine(
+        _appDataPath = Path.Join(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "ProSoft", "EasySave");
-        _logPath = Path.Combine(_appDataPath, "Logs");
-        _statePath = Path.Combine(_appDataPath, "state.json");
+        _logPath = Path.Join(_appDataPath, "Logs");
+        _statePath = Path.Join(_appDataPath, "state.json");
 
         Directory.CreateDirectory(_appDataPath);
         Directory.CreateDirectory(_logPath);
@@ -149,9 +149,17 @@ public partial class MainViewModel : ViewModelBase
             StatusMessage = $"Job '{SelectedJob.Name}' deleted";
             SelectedJob = null;
         }
-        catch (Exception ex)
+        catch (ArgumentOutOfRangeException ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+            StatusMessage = $"Error deleting job: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            StatusMessage = $"Error deleting job: {ex.Message}";
+        }
+        catch (IOException ex)
+        {
+            StatusMessage = $"Error deleting job: {ex.Message}";
         }
     }
 
@@ -188,6 +196,18 @@ public partial class MainViewModel : ViewModelBase
                     await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware));
                     successCount++;
                 }
+                catch (IOException ex)
+                {
+                    failCount++;
+                    StatusMessage = $"Failed: {job.Name} - I/O error: {ex.Message}";
+                    await Task.Delay(2000); // Show error for 2 seconds
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    failCount++;
+                    StatusMessage = $"Failed: {job.Name} - Access denied: {ex.Message}";
+                    await Task.Delay(2000); // Show error for 2 seconds
+                }
                 catch (Exception ex)
                 {
                     failCount++;
@@ -198,9 +218,13 @@ public partial class MainViewModel : ViewModelBase
             
             StatusMessage = $"Completed: {successCount} succeeded, {failCount} failed";
         }
+        catch (IOException ex)
+        {
+            StatusMessage = $"Configuration or I/O error: {ex.Message}";
+        }
         catch (Exception ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+            StatusMessage = $"Unexpected error: {ex.Message}";
         }
         finally
         {
@@ -236,9 +260,17 @@ public partial class MainViewModel : ViewModelBase
 
             StatusMessage = $"All {Jobs.Count} jobs completed successfully";
         }
+        catch (IOException ex)
+        {
+            StatusMessage = $"I/O error: {ex.Message}";
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            StatusMessage = $"Access denied: {ex.Message}";
+        }
         catch (Exception ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+            StatusMessage = $"Unexpected error: {ex.Message}";
         }
         finally
         {

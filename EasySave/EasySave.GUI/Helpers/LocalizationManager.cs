@@ -47,8 +47,14 @@ public class LocalizationManager : INotifyPropertyChanged
             {
                 return _resourceManager.GetString(key, _currentCulture) ?? $"[{key}]";
             }
-            catch
+            catch (System.Resources.MissingManifestResourceException)
             {
+                // Resource file not found: return fallback
+                return $"[{key}]";
+            }
+            catch (InvalidOperationException)
+            {
+                // ResourceManager is in an invalid state: return fallback
                 return $"[{key}]";
             }
         }

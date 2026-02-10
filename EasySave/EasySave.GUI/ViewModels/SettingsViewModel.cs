@@ -104,6 +104,9 @@ public partial class SettingsViewModel : ViewModelBase
             {
                 CryptoSoftPath = files[0].Path.LocalPath;
             }
+            
+            // Bring window back to focus
+            topLevel.Activate();
         }
     }
 
