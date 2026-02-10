@@ -69,14 +69,6 @@ public static class BusinessSoftwareDetector
             return false;
         }
 
-        foreach (var processName in processNames)
-        {
-            if (IsRunning(processName))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return processNames.Any(IsRunning);
     }
 }
