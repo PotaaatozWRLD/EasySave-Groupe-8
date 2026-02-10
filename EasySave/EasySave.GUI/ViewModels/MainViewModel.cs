@@ -143,10 +143,14 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
+            // Save job name before clearing selection
+            string jobName = SelectedJob.Name;
             int index = Jobs.IndexOf(SelectedJob);
+            
             JobManager.DeleteJob(index);
             Jobs.Remove(SelectedJob);
-            StatusMessage = $"Job '{SelectedJob.Name}' deleted";
+            
+            StatusMessage = $"Job '{jobName}' deleted";
             SelectedJob = null;
         }
         catch (ArgumentOutOfRangeException ex)
