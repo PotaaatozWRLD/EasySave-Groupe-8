@@ -184,12 +184,6 @@ public class BackupServiceTests
     [Fact]
     public void ExecuteBackup_v2_ShouldThrowException_WhenBusinessSoftwareIsRunning()
     {
-        // Skip on non-Windows platforms (calc.exe is Windows-only)
-        if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-        {
-            return;
-        }
-
         // Arrange
         string tempLogDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         string tempSourceDir = Path.Combine(tempLogDir, "Source");
@@ -207,41 +201,35 @@ public class BackupServiceTests
         var service = new BackupService(logger);
         var job = new BackupJob("Test Backup", tempSourceDir, tempTargetDir, BackupType.Full);
 
-        // Start calculator to simulate business software
-        System.Diagnostics.Process? calcProcess = null;
+        // Start dotnet process to simulate business software (cross-platform)
+        System.Diagnostics.Process? testProcess = null;
         try
         {
-            calcProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            testProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = "calc.exe",
-                UseShellExecute = true,
-                CreateNoWindow = false
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
             });
             
             // Wait for process to start
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(500);
 
             // Act & Assert - Should throw when business software is running
             var exception = Assert.Throws<InvalidOperationException>(() => 
-                service.ExecuteBackup(job, "CalculatorApp"));
+                service.ExecuteBackup(job, "dotnet"));
             
-            Assert.Contains("CalculatorApp", exception.Message);
+            Assert.Contains("dotnet", exception.Message);
             Assert.Contains("is currently running", exception.Message);
         }
         finally
         {
             // Cleanup
-            var calculators = System.Diagnostics.Process.GetProcessesByName("CalculatorApp");
-            foreach (var calc in calculators)
-            {
-                try
-                {
-                    calc.Kill();
-                    calc.WaitForExit(1000);
-                    calc.Dispose();
-                }
-                catch { /* Ignore cleanup errors */ }
-            }
+            testProcess?.Kill();
+            testProcess?.WaitForExit(1000);
+            testProcess?.Dispose();
             
             Directory.Delete(tempLogDir, true);
         }

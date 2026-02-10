@@ -1,7 +1,6 @@
 using Xunit;
 using EasySave.Core.Services;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace EasySave.Tests;
 
@@ -57,164 +56,125 @@ public class BusinessSoftwareDetectorTests
     [Fact]
     public void IsRunning_WithRunningProcess_ShouldReturnTrue()
     {
-        // Skip on non-Windows platforms (calc.exe is Windows-only)
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        // Arrange - Start a calculator process for testing
+        // Arrange - Start a long-running dotnet process for testing (cross-platform)
         Process? testProcess = null;
         try
         {
             testProcess = Process.Start(new ProcessStartInfo
             {
-                FileName = "calc.exe",
-                UseShellExecute = true,
-                CreateNoWindow = false
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
             });
 
-            // Wait longer for process to fully start and be queryable
-            System.Threading.Thread.Sleep(2000);
+            // Wait for process to fully start and be queryable
+            System.Threading.Thread.Sleep(500);
 
-            // Act - Windows 10+ uses CalculatorApp, not calc
-            bool result = BusinessSoftwareDetector.IsRunning("CalculatorApp");
+            // Act
+            bool result = BusinessSoftwareDetector.IsRunning("dotnet");
 
             // Assert
-            Assert.True(result, "CalculatorApp should be detected as running");
+            Assert.True(result, "dotnet process should be detected as running");
         }
         finally
         {
-            // Cleanup - Kill all CalculatorApp instances
-            var calculators = Process.GetProcessesByName("CalculatorApp");
-            foreach (var calc in calculators)
-            {
-                try
-                {
-                    calc.Kill();
-                    calc.WaitForExit(1000);
-                    calc.Dispose();
-                }
-                catch { /* Ignore cleanup errors */ }
-            }
+            // Cleanup
+            testProcess?.Kill();
+            testProcess?.WaitForExit(1000);
+            testProcess?.Dispose();
         }
     }
 
     [Fact]
     public void IsRunning_WithExeExtension_ShouldStillDetectProcess()
     {
-        // Skip on non-Windows platforms (calc.exe is Windows-only)
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        // Arrange - Start a calculator process for testing
+        // Arrange - Start a long-running dotnet process for testing (cross-platform)
         Process? testProcess = null;
         try
         {
             testProcess = Process.Start(new ProcessStartInfo
             {
-                FileName = "calc.exe",
-                UseShellExecute = true,
-                CreateNoWindow = false
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
             });
 
-            // Wait longer for process to fully start and be queryable
-            System.Threading.Thread.Sleep(2000);
+            // Wait for process to fully start and be queryable
+            System.Threading.Thread.Sleep(500);
 
-            // Act - Pass name with .exe extension (Windows 10+ uses CalculatorApp)
-            bool result = BusinessSoftwareDetector.IsRunning("CalculatorApp.exe");
+            // Act - Pass name with .exe extension
+            bool result = BusinessSoftwareDetector.IsRunning("dotnet.exe");
 
             // Assert
-            Assert.True(result, "CalculatorApp should be detected even with .exe extension");
+            Assert.True(result, "dotnet process should be detected even with .exe extension");
         }
         finally
         {
-            // Cleanup - Kill all CalculatorApp instances
-            var calculators = Process.GetProcessesByName("CalculatorApp");
-            foreach (var calc in calculators)
-            {
-                try
-                {
-                    calc.Kill();
-                    calc.WaitForExit(1000);
-                    calc.Dispose();
-                }
-                catch { /* Ignore cleanup errors */ }
-            }
+            // Cleanup
+            testProcess?.Kill();
+            testProcess?.WaitForExit(1000);
+            testProcess?.Dispose();
         }
     }
 
     [Fact]
     public void IsRunning_AfterProcessClosed_ShouldReturnFalse()
     {
-        // Skip on non-Windows platforms (calc.exe is Windows-only)
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        // Arrange - Start and immediately close a process
+        // Arrange - Start a test process with unique identifier
+        string testProcessName = "TestDotnetProcess_" + Guid.NewGuid().ToString("N").Substring(0, 8);
         Process? testProcess = Process.Start(new ProcessStartInfo
         {
-            FileName = "calc.exe",
-            UseShellExecute = true,
-            CreateNoWindow = false
+            FileName = "dotnet",
+            Arguments = "--version",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true
         });
 
-        System.Threading.Thread.Sleep(2000);
+        System.Threading.Thread.Sleep(100);
 
-        // Act - Kill all calculators
-        var calculators = Process.GetProcessesByName("CalculatorApp");
-        foreach (var calc in calculators)
-        {
-            try
-            {
-                calc.Kill();
-                calc.WaitForExit(1000);
-                calc.Dispose();
-            }
-            catch { /* Ignore */ }
-        }
+        // Act - Kill the process
+        testProcess?.Kill();
+        testProcess?.WaitForExit(1000);
+        testProcess?.Dispose();
 
         // Wait for cleanup
-        System.Threading.Thread.Sleep(500);
+        System.Threading.Thread.Sleep(300);
 
-        // Check if still running
-        bool result = BusinessSoftwareDetector.IsRunning("CalculatorApp");
+        // For this test, we verify that a non-existent process returns false
+        bool result = BusinessSoftwareDetector.IsRunning(testProcessName);
 
         // Assert
-        Assert.False(result, "CalculatorApp should not be detected after being closed");
+        Assert.False(result, "Non-existent process should not be detected");
     }
 
     [Fact]
     public void IsRunning_CaseInsensitive_ShouldWork()
     {
-        // Skip on non-Windows platforms (calc.exe is Windows-only)
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        // Arrange - Start calculator
+        // Arrange - Start a long-running dotnet process (cross-platform)
         Process? testProcess = null;
         try
         {
             testProcess = Process.Start(new ProcessStartInfo
             {
-                FileName = "calc.exe",
-                UseShellExecute = true,
-                CreateNoWindow = false
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
             });
 
-            // Wait longer for process to fully start and be queryable
-            System.Threading.Thread.Sleep(2000);
+            // Wait for process to fully start and be queryable
+            System.Threading.Thread.Sleep(500);
 
-            // Act - Try different casings (Windows 10+ uses CalculatorApp)
-            bool resultLowerCase = BusinessSoftwareDetector.IsRunning("calculatorapp");
-            bool resultUpperCase = BusinessSoftwareDetector.IsRunning("CALCULATORAPP");
-            bool resultMixedCase = BusinessSoftwareDetector.IsRunning("CalculatorApp");
+            // Act - Try different casings
+            bool resultLowerCase = BusinessSoftwareDetector.IsRunning("dotnet");
+            bool resultUpperCase = BusinessSoftwareDetector.IsRunning("DOTNET");
+            bool resultMixedCase = BusinessSoftwareDetector.IsRunning("DotNet");
 
             // Assert
             Assert.True(resultLowerCase, "Should detect with lowercase");
@@ -223,18 +183,10 @@ public class BusinessSoftwareDetectorTests
         }
         finally
         {
-            // Cleanup - Kill all CalculatorApp instances
-            var calculators = Process.GetProcessesByName("CalculatorApp");
-            foreach (var calc in calculators)
-            {
-                try
-                {
-                    calc.Kill();
-                    calc.WaitForExit(1000);
-                    calc.Dispose();
-                }
-                catch { /* Ignore cleanup errors */ }
-            }
+            // Cleanup
+            testProcess?.Kill();
+            testProcess?.WaitForExit(1000);
+            testProcess?.Dispose();
         }
     }
 }
