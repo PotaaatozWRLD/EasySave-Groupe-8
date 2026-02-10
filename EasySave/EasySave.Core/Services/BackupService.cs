@@ -21,12 +21,23 @@ public class BackupService
 
     /// <summary>
     /// Executes a backup job with full progress tracking.
+    /// v2.0: Prevents backup if business software is running.
     /// </summary>
     /// <param name="job">The backup job to execute</param>
-    public void ExecuteBackup(BackupJob job)
+    /// <param name="businessSoftwareName">Optional name of business software to check (v2.0). If running, backup will be blocked.</param>
+    /// <exception cref="InvalidOperationException">Thrown when business software is running and backup cannot proceed.</exception>
+    public void ExecuteBackup(BackupJob job, string? businessSoftwareName = null)
     {
         try
         {
+            // v2.0: Check if business software is running
+            if (!string.IsNullOrWhiteSpace(businessSoftwareName) && 
+                BusinessSoftwareDetector.IsRunning(businessSoftwareName))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot start backup '{job.Name}': Business software '{businessSoftwareName}' is currently running. Please close it and try again.");
+            }
+
             // Calculate total files and size before starting
             var (totalFiles, totalSize) = CalculateTotalFilesAndSize(job.SourcePath);
             
