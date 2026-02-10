@@ -27,7 +27,13 @@ public partial class SettingsViewModel : ViewModelBase
     private string? _selectedExtension;
 
     [ObservableProperty]
-    private string _businessSoftwareName = string.Empty;
+    private ObservableCollection<string> _businessSoftwareNames = new();
+
+    [ObservableProperty]
+    private string _newBusinessSoftware = string.Empty;
+
+    [ObservableProperty]
+    private string? _selectedBusinessSoftware;
 
     [ObservableProperty]
     private string _cryptoSoftPath = string.Empty;
@@ -74,6 +80,34 @@ public partial class SettingsViewModel : ViewModelBase
         {
             ExtensionsToEncrypt.Remove(SelectedExtension);
             SelectedExtension = null;
+        }
+    }
+
+    [RelayCommand]
+    private void AddBusinessSoftware()
+    {
+        if (!string.IsNullOrWhiteSpace(NewBusinessSoftware))
+        {
+            var software = NewBusinessSoftware.Trim();
+            // Remove .exe if provided
+            if (software.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                software = software[..^4];
+
+            if (!BusinessSoftwareNames.Contains(software))
+            {
+                BusinessSoftwareNames.Add(software);
+                NewBusinessSoftware = string.Empty;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveBusinessSoftware()
+    {
+        if (SelectedBusinessSoftware != null)
+        {
+            BusinessSoftwareNames.Remove(SelectedBusinessSoftware);
+            SelectedBusinessSoftware = null;
         }
     }
 
@@ -134,7 +168,12 @@ public partial class SettingsViewModel : ViewModelBase
             ExtensionsToEncrypt.Add(ext);
         }
 
-        BusinessSoftwareName = AppConfig.GetBusinessSoftwareName();
+        BusinessSoftwareNames.Clear();
+        foreach (var software in AppConfig.GetBusinessSoftwareNames())
+        {
+            BusinessSoftwareNames.Add(software);
+        }
+
         CryptoSoftPath = AppConfig.GetCryptoSoftPath();
         MaxLargeFileSize = AppConfig.GetMaxLargeFileSize();
         SelectedLogFormat = AppConfig.GetLogFormat();
@@ -143,7 +182,7 @@ public partial class SettingsViewModel : ViewModelBase
     private void SaveSettings()
     {
         AppConfig.SetExtensionsToEncrypt(ExtensionsToEncrypt.ToList());
-        AppConfig.SetBusinessSoftwareName(BusinessSoftwareName);
+        AppConfig.SetBusinessSoftwareNames(BusinessSoftwareNames.ToList());
         AppConfig.SetCryptoSoftPath(CryptoSoftPath);
         AppConfig.SetMaxLargeFileSize(MaxLargeFileSize);
         AppConfig.SetLogFormat(SelectedLogFormat);

@@ -190,7 +190,8 @@ public partial class MainViewModel : ViewModelBase
             string cryptoSoftPath = AppConfig.GetCryptoSoftPath();
             List<string> extensionsToEncrypt = AppConfig.GetExtensionsToEncrypt();
             var backupService = new BackupService(_logger, cryptoSoftPath, extensionsToEncrypt);
-            string? businessSoftware = AppConfig.GetBusinessSoftwareName();
+            List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
+            string? businessSoftware = businessSoftwareList.Count > 0 ? string.Join(";", businessSoftwareList) : null;
             
             foreach (var job in SelectedJobs.ToList())
             {
@@ -256,7 +257,8 @@ public partial class MainViewModel : ViewModelBase
             string cryptoSoftPath = AppConfig.GetCryptoSoftPath();
             List<string> extensionsToEncrypt = AppConfig.GetExtensionsToEncrypt();
             var backupService = new BackupService(_logger, cryptoSoftPath, extensionsToEncrypt);
-            string? businessSoftware = AppConfig.GetBusinessSoftwareName();
+            List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
+            string? businessSoftware = businessSoftwareList.Count > 0 ? string.Join(";", businessSoftwareList) : null;
             
             foreach (var job in Jobs)
             {

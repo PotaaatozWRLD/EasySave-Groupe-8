@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 
 namespace EasySave.Core.Services;
 
@@ -54,5 +55,20 @@ public static class BusinessSoftwareDetector
             // Win32 error accessing process list, assume not running
             return false;
         }
+    }
+
+    /// <summary>
+    /// Checks if any process from the specified list is currently running.
+    /// </summary>
+    /// <param name="processNames">A list of process names to check.</param>
+    /// <returns>True if at least one process is running, false otherwise.</returns>
+    public static bool IsAnyRunning(IEnumerable<string> processNames)
+    {
+        if (processNames == null || !processNames.Any())
+        {
+            return false;
+        }
+
+        return processNames.Any(IsRunning);
     }
 }

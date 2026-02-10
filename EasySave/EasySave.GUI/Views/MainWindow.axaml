@@ -8,8 +8,10 @@
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="ProSoft EasySave v2.0"
-        Width="1000" Height="600"
-        MinWidth="800" MinHeight="500">
+        Width="1000" Height="650"
+        MinWidth="900" MinHeight="600"
+        Background="{DynamicResource BackgroundColor}"
+        WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
         <vm:MainViewModel/>
@@ -17,103 +19,178 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
         <!-- Top Menu Bar -->
-        <Menu Grid.Row="0">
-            <MenuItem Header="{Binding Localization[Menu_File]}">
-                <MenuItem Header="{Binding Localization[Menu_NewJob]}" Command="{Binding CreateJobCommand}"/>
-                <Separator/>
-                <MenuItem Header="{Binding Localization[Menu_Settings]}" Command="{Binding OpenSettingsCommand}"/>
-                <Separator/>
-                <MenuItem Header="{Binding Localization[Menu_Exit]}" Command="{Binding ExitCommand}"/>
-            </MenuItem>
-            <MenuItem Header="{Binding Localization[Menu_Jobs]}">
-                <MenuItem Header="{Binding Localization[Menu_ExecuteSelected]}" Command="{Binding ExecuteSelectedJobCommand}"/>
-                <MenuItem Header="{Binding Localization[Menu_ExecuteAll]}" Command="{Binding ExecuteAllJobsCommand}"/>
-            </MenuItem>
-            <MenuItem Header="{Binding Localization[Menu_Language]}">
-                <MenuItem Header="{Binding Localization[Menu_SwitchLanguage]}" Command="{Binding SwitchLanguageCommand}"/>
-            </MenuItem>
-        </Menu>
+        <Border Grid.Row="0" Background="White" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,3,0,3">
+            <Menu>
+                <MenuItem Header="{Binding Localization[Menu_Settings]}" Command="{Binding OpenSettingsCommand}" Padding="15,6"/>
+                <MenuItem Header="{Binding Localization[Menu_SwitchLanguage]}" Command="{Binding SwitchLanguageCommand}" Padding="15,6"/>
+                <MenuItem Header="{Binding Localization[Menu_Exit]}" Command="{Binding ExitCommand}" Padding="15,6"/>
+            </Menu>
+        </Border>
 
         <!-- Main Content Area -->
-        <Grid Grid.Row="1" ColumnDefinitions="2*,*" Margin="10">
+        <Grid Grid.Row="1" ColumnDefinitions="350,*" Margin="20" Background="Transparent">
             <!-- Left: Job List -->
-            <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Padding="5" Margin="0,0,5,0">
-                <Grid RowDefinitions="Auto,*,Auto">
-                    <TextBlock Grid.Row="0" Text="{Binding Localization[BackupJobs]}" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                    
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Jobs}"
+            <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="0,0,20,0">
+                <TextBlock Grid.Row="0" Classes="H2" Text="{Binding Localization[BackupJobs]}"/>
+                
+                <Border Grid.Row="1" Classes="Card" Padding="0">
+                    <ListBox ItemsSource="{Binding Jobs}"
                              SelectedItem="{Binding SelectedJob}"
                              SelectionMode="Multiple"
                              Name="JobsListBox"
-                             MinHeight="200">
+                             Background="Transparent"
+                             BorderThickness="0">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Name}"/>
+                                <Grid ColumnDefinitions="Auto, *" Margin="5">
+                                    <TextBlock Grid.Column="0" Text="📄" Margin="0,0,10,0" VerticalAlignment="Center" FontSize="16"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Type}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                </Border>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                        <Button Content="{Binding Localization[NewJob]}" Command="{Binding CreateJobCommand}" MinWidth="100" Padding="10,5" Margin="5"/>
-                        <Button Content="{Binding Localization[Edit]}" Command="{Binding EditJobCommand}" MinWidth="100" Padding="10,5" Margin="5"/>
-                        <Button Content="{Binding Localization[Delete]}" Command="{Binding DeleteJobCommand}" MinWidth="100" Padding="10,5" Margin="5"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                <!-- Action Buttons -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,15,0,0">
+                    <Button ToolTip.Tip="{Binding Localization[NewJob]}" Command="{Binding CreateJobCommand}" Classes="Primary" Padding="12">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="➕"/>
+                            <TextBlock Text="{Binding Localization[NewJob]}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button ToolTip.Tip="{Binding Localization[Edit]}" Command="{Binding EditJobCommand}" Padding="12">
+                        <TextBlock Text="✏️"/>
+                    </Button>
+                    <Button ToolTip.Tip="{Binding Localization[Delete]}" Command="{Binding DeleteJobCommand}" Padding="12" Foreground="#D13438">
+                        <TextBlock Text="🗑️"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
 
             <!-- Right: Job Details & Actions -->
-            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="5" Margin="5,0,0,0">
+            <Border Grid.Column="1" Classes="Card">
                 <Grid RowDefinitions="Auto,*,Auto">
-                    <TextBlock Grid.Row="0" Text="{Binding Localization[JobDetails]}" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-
-                    <StackPanel Grid.Row="1" IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <TextBlock Text="{Binding Localization[Name]}" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding SelectedJob.Name}" Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="{Binding Localization[Source]}" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding SelectedJob.SourcePath}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="{Binding Localization[Target]}" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding SelectedJob.TargetPath}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                        
-                        <TextBlock Text="{Binding Localization[Type]}" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding SelectedJob.Type}" Margin="0,0,0,10"/>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,20">
+                        <TextBlock Text="📂" FontSize="24"/>
+                        <TextBlock Classes="H1" Text="{Binding Localization[JobDetails]}" Margin="0,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="1" 
-                               Text="{Binding Localization[SelectJobMessage]}" 
-                               VerticalAlignment="Center" 
-                               HorizontalAlignment="Center"
-                               Foreground="Gray"
-                               IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNull}}"/>
+                    <!-- Details Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="20">
+                            
+                            <!-- Name Section -->
+                            <StackPanel>
+                                <TextBlock Classes="Label" Text="{Binding Localization[Name]}"/>
+                                <SelectableTextBlock Text="{Binding SelectedJob.Name}" FontSize="16" FontWeight="SemiBold"/>
+                            </StackPanel>
 
-                    <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="10">
-                        <Button Content="{Binding Localization[ExecuteSelectedJob]}" 
-                                Command="{Binding ExecuteSelectedJobCommand}"
+                            <Separator Background="{DynamicResource BorderBrush}" Height="1"/>
+
+                            <!-- Source & Target -->
+                            <Grid ColumnDefinitions="*,20,*">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="Label" Text="{Binding Localization[Source]}"/>
+                                    <Border Background="#F9F9F9" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Text="Lr" FontFamily="Segoe MDL2 Assets" Margin="0,2,8,0" VerticalAlignment="Top" Foreground="{DynamicResource TextSecondary}"/>
+                                            <SelectableTextBlock Grid.Column="1" Text="{Binding SelectedJob.SourcePath}" TextWrapping="Wrap"/>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                                
+                                <TextBlock Grid.Column="1" Text="➔" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource TextSecondary}" Classes="Emoji"/>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Classes="Label" Text="{Binding Localization[Target]}"/>
+                                    <Border Background="#F9F9F9" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Text="Eb" FontFamily="Segoe MDL2 Assets" Margin="0,2,8,0" VerticalAlignment="Top" Foreground="{DynamicResource TextSecondary}"/>
+                                            <SelectableTextBlock Grid.Column="1" Text="{Binding SelectedJob.TargetPath}" TextWrapping="Wrap"/>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Type -->
+                            <StackPanel>
+                                <TextBlock Classes="Label" Text="{Binding Localization[Type]}"/>
+                                <Border Background="{DynamicResource PrimaryColor}" CornerRadius="12" HorizontalAlignment="Left" Padding="12,4">
+                                    <TextBlock Text="{Binding SelectedJob.Type}" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                                </Border>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Empty State -->
+                    <StackPanel Grid.Row="1" 
+                                IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNull}}"
+                                VerticalAlignment="Center" 
+                                HorizontalAlignment="Center"
+                                Spacing="5"
+                                Opacity="0.5">
+                        <TextBlock Text="👈" FontSize="40" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding Localization[SelectJobMessage]}" FontSize="18"/>
+                    </StackPanel>
+
+                    <!-- Bottom Action Buttons -->
+                    <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="10" Margin="0,20,0,0">
+                        <Button Command="{Binding ExecuteSelectedJobCommand}"
+                                IsEnabled="{Binding !IsExecuting}"
+                                Classes="Primary"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Height="45"
+                                Padding="0">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <TextBlock Text="▶️"/>
+                                <TextBlock Text="{Binding Localization[ExecuteSelectedJob]}" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Command="{Binding ExecuteAllJobsCommand}"
                                 IsEnabled="{Binding !IsExecuting}"
                                 HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"/>
-                        <Button Content="{Binding Localization[ExecuteAllJobs]}" 
-                                Command="{Binding ExecuteAllJobsCommand}"
-                                IsEnabled="{Binding !IsExecuting}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"/>
+                                HorizontalContentAlignment="Center"
+                                Height="40">
+                             <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="🚀"/>
+                                <TextBlock Text="{Binding Localization[ExecuteAllJobs]}"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
         <!-- Bottom Status Bar -->
-        <Border Grid.Row="2" Background="#F0F0F0" BorderBrush="Gray" BorderThickness="0,1,0,0" Padding="10,5">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" VerticalAlignment="Center"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="{Binding Localization.CurrentCulture}" VerticalAlignment="Center" FontWeight="Bold"/>
+        <Border Grid.Row="2" Background="White" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="15,8">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="ℹ️" VerticalAlignment="Center" IsVisible="{Binding !IsExecuting}"/>
+                    <TextBlock Text="⏳" VerticalAlignment="Center" IsVisible="{Binding IsExecuting}"/>
+                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" FontWeight="Medium"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15">
+                    <Border Background="#F0F0F0" CornerRadius="10" Padding="10,2">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                             <TextBlock Text="🌐" FontSize="12" VerticalAlignment="Center"/>
+                             <TextBlock Text="{Binding Localization.CurrentCulture}" VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+                    
                     <ProgressBar IsIndeterminate="True" 
                                  IsVisible="{Binding IsExecuting}"
-                                 Width="100"
-                                 Height="15"/>
+                                 Width="150"
+                                 Height="4"
+                                 VerticalAlignment="Center"
+                                 Foreground="{DynamicResource PrimaryColor}"/>
                 </StackPanel>
             </Grid>
         </Border>

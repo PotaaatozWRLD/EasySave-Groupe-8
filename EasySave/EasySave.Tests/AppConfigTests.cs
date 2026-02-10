@@ -192,11 +192,11 @@ public class AppConfigTests : IDisposable
         // Arrange
         AppConfig.SetBusinessSoftwareName("notepad");
         
-        // Act - Reset to empty
+        // Act - Reset to empty using deprecated method
         AppConfig.SetBusinessSoftwareName(string.Empty);
         string actualName = AppConfig.GetBusinessSoftwareName();
 
-        // Assert
+        // Assert - Should return empty when set to empty
         Assert.Equal(string.Empty, actualName);
     }
 
