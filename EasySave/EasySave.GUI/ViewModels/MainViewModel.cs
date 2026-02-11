@@ -249,7 +249,7 @@ public partial class MainViewModel : ViewModelBase
         }
 
         IsExecuting = true;
-        StatusMessage = "Executing all jobs...";
+        StatusMessage = $"Executing all {Jobs.Count} job(s)...";
 
         try
         {
@@ -260,25 +260,43 @@ public partial class MainViewModel : ViewModelBase
             List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
             string? businessSoftware = businessSoftwareList.Count > 0 ? string.Join(";", businessSoftwareList) : null;
             
-            foreach (var job in Jobs)
+            int successCount = 0;
+            int failCount = 0;
+            int totalJobs = Jobs.Count;
+
+            foreach (var job in Jobs.ToList())
             {
-                StatusMessage = $"Executing: {job.Name}...";
-                await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware));
+                try
+                {
+                    StatusMessage = $"Executing: {job.Name} ({successCount + failCount + 1}/{totalJobs})...";
+                    await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware));
+                    successCount++;
+                }
+                catch (IOException ex)
+                {
+                    failCount++;
+                    StatusMessage = $"Failed: {job.Name} - I/O error: {ex.Message}";
+                    await Task.Delay(1000);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    failCount++;
+                    StatusMessage = $"Failed: {job.Name} - Access denied: {ex.Message}";
+                    await Task.Delay(1000);
+                }
+                catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
+                {
+                    failCount++;
+                    StatusMessage = $"Failed: {job.Name} - {ex.Message}";
+                    await Task.Delay(1000);
+                }
             }
 
-            StatusMessage = $"All {Jobs.Count} jobs completed successfully";
-        }
-        catch (IOException ex)
-        {
-            StatusMessage = $"I/O error: {ex.Message}";
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            StatusMessage = $"Access denied: {ex.Message}";
+            StatusMessage = $"Completed: {successCount} succeeded, {failCount} failed";
         }
         catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
         {
-            // Catch unexpected errors during backup execution
+            // Unexpected error during service initialization
             StatusMessage = $"Unexpected error: {ex.Message}";
         }
         finally

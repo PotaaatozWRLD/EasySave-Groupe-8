@@ -3,102 +3,167 @@
              x:Class="EasySave.GUI.App"
              xmlns:local="using:EasySave.GUI"
              RequestedThemeVariant="Light">
-             <!-- Set to Light theme by default for a clean look -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
-  
+
     <Application.Resources>
+        <!-- Color Palette -->
         <SolidColorBrush x:Key="PrimaryColor">#0078D4</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryHoverColor">#106EBE</SolidColorBrush>
-        <SolidColorBrush x:Key="BackgroundColor">#F3F3F3</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryPressedColor">#005A9E</SolidColorBrush>
+        <SolidColorBrush x:Key="BackgroundColor">#F5F5F5</SolidColorBrush>
         <SolidColorBrush x:Key="CardBackground">#FFFFFF</SolidColorBrush>
-        <SolidColorBrush x:Key="TextPrimary">#333333</SolidColorBrush>
-        <SolidColorBrush x:Key="TextSecondary">#666666</SolidColorBrush>
-        <SolidColorBrush x:Key="BorderBrush">#E0E0E0</SolidColorBrush>
+        <SolidColorBrush x:Key="TextPrimary">#2C2C2C</SolidColorBrush>
+        <SolidColorBrush x:Key="TextSecondary">#737373</SolidColorBrush>
+        <SolidColorBrush x:Key="BorderBrush">#E1E1E1</SolidColorBrush>
+        <SolidColorBrush x:Key="DangerColor">#DC3545</SolidColorBrush>
+        <SolidColorBrush x:Key="DangerHoverColor">#C82333</SolidColorBrush>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
-        
-        <!-- Global Button Style -->
+
+        <!-- BUTTON STYLES - REFAIT PROPREMENT -->
+
+        <!-- Base Button Style -->
         <Style Selector="Button">
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
-        
-        <!-- Primary Action Button Style -->
+
+        <!-- Button Hover State -->
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="BorderBrush" Value="#D0D0D0"/>
+        </Style>
+
+        <!-- Button Pressed State -->
+        <Style Selector="Button:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E5E5E5"/>
+            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+        </Style>
+
+        <!-- Primary Button -->
         <Style Selector="Button.Primary">
             <Setter Property="Background" Value="{DynamicResource PrimaryColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+
         <Style Selector="Button.Primary:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource PrimaryHoverColor}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
-        <!-- Card Style -->
+        <Style Selector="Button.Primary:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource PrimaryPressedColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- Danger Button -->
+        <Style Selector="Button.Danger">
+            <Setter Property="Background" Value="{DynamicResource DangerColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="Button.Danger:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerHoverColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <Style Selector="Button.Danger:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#B02030"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- CARD STYLE -->
         <Style Selector="Border.Card">
             <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-            <Setter Property="BoxShadow" Value="0 2 4 0 #10000000"/>
-            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
         </Style>
 
-        <!-- ListBox Items Style -->
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Margin" Value="0,2"/>
+        <!-- LISTBOX STYLES -->
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
         </Style>
-        
-        <!-- Prevent ListBox selection from changing Foreground of children -->
+
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="4,2"/>
+        </Style>
+
         <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource PrimaryColor}"/>
         </Style>
-        
-        <!-- Keep TextBlock colors when ListBoxItem is selected -->
+
         <Style Selector="ListBoxItem:selected TextBlock">
             <Setter Property="Foreground" Value="White"/>
         </Style>
-        
-        <!-- Emoji style to preserve colors -->
-        <Style Selector="TextBlock.Emoji">
-            <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol, Arial"/>
+
+        <!-- TEXTBOX STYLES -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
-        
-        <!-- Don't change emoji colors on hover or selection -->
-        <Style Selector="Button:pointerover TextBlock.Emoji">
-            <Setter Property="Foreground" Value="{x:Null}"/>
+
+        <Style Selector="TextBox:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryColor}"/>
         </Style>
-        
-        <!-- Header Style -->
+
+        <!-- COMBOBOX STYLES -->
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <!-- TYPOGRAPHY -->
         <Style Selector="TextBlock.H1">
-            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontSize" Value="28"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryColor}"/>
             <Setter Property="Margin" Value="0,0,0,16"/>
         </Style>
-        
+
         <Style Selector="TextBlock.H2">
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="20"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
         <Style Selector="TextBlock.Label">
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
         </Style>
     </Application.Styles>
 </Application>
