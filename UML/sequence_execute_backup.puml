@@ -56,7 +56,7 @@ deactivate BS
 ' Initialize state
 BS -> Log : UpdateState(ACTIVE, 0%)
 activate Log
-Log -> FS : WriteAllText(state.json)
+Log -> FS : WriteAllText(state.json/xml)
 activate FS
 deactivate FS
 deactivate Log
@@ -69,7 +69,7 @@ loop For each file in directory
     ' Update state before copying
     BS -> Log : UpdateState(ACTIVE, progress%)
     activate Log
-    Log -> FS : WriteAllText(state.json)
+    Log -> FS : WriteAllText(state.json/xml)
     deactivate Log
     
     alt Full backup OR (Differential AND source newer)
@@ -131,8 +131,9 @@ loop For each file in directory
         note right
             v2.0: LogEntry now includes
             EncryptionTime field
+            Format: JSON or XML (v1.1)
         end note
-        Log -> FS : AppendAllText(YYYY-MM-DD.json)
+        Log -> FS : AppendAllText(YYYY-MM-DD.json/xml)
         activate FS
         deactivate FS
         deactivate Log
@@ -149,7 +150,7 @@ deactivate BS
 ' Mark as completed
 BS -> Log : UpdateState(END, 100%)
 activate Log
-Log -> FS : WriteAllText(state.json)
+Log -> FS : WriteAllText(state.json/xml)
 deactivate Log
 
 BS --> Prog : backup completed

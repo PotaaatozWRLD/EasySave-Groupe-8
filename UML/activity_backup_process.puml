@@ -116,7 +116,9 @@ partition "For each job to execute" {
                             :Write log entry;
                             note right
                                 TransferTime > 0
+                                EncryptionTime (v2.0)
                                 ErrorMessage = null
+                                Format: JSON/XML (v1.1)
                             end note
                         else (no - error)
                             :Write error log entry;
