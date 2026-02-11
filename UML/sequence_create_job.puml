@@ -1,4 +1,4 @@
-@startuml EasySave_Sequence_Create_Job
+@startuml EasySave_Sequence_Create_Job_v2.0
 !theme plain
 autonumber
 
@@ -67,52 +67,45 @@ end
 Prog -> JM : AddJob(name, source, target, type)
 activate JM
 
-alt Jobs.Count < MaxJobs (5)
-    JM -> JM : Jobs.Add(new BackupJob(...))
-    
-    JM -> JM : SaveJobs()
-    activate JM
-    
-    ' Create directory if needed
-    JM -> FS : GetDirectoryName(JobsFilePath)
+note right
+    v2.0: No job limit (unlimited jobs allowed)
+end note
+
+JM -> JM : Jobs.Add(new BackupJob(...))
+
+JM -> JM : SaveJobs()
+activate JM
+
+' Create directory if needed
+JM -> FS : GetDirectoryName(JobsFilePath)
+activate FS
+FS --> JM : directory
+deactivate FS
+
+alt directory doesn't exist
+    JM -> FS : CreateDirectory(directory)
     activate FS
-    FS --> JM : directory
     deactivate FS
-    
-    alt directory doesn't exist
-        JM -> FS : CreateDirectory(directory)
-        activate FS
-        deactivate FS
-    end
-    
-    ' Serialize and save
-    JM -> JM : JsonSerializer.Serialize(Jobs)
-    JM -> FS : WriteAllText(jobs.json, json)
-    activate FS
-    note right
-        Location: %AppData%\ProSoft\EasySave\jobs.json
-    end note
-    deactivate FS
-    
-    deactivate JM
-    
-    JM --> Prog : success
-    deactivate JM
-    
-    Prog -> Con : WriteLine("Job created successfully")
-    activate Con
-    Con --> User : success message
-    deactivate Con
-    
-else Jobs.Count >= 5
-    JM --> Prog : throw InvalidOperationException
-    deactivate JM
-    
-    Prog -> Con : WriteLine("Cannot add more than 5 jobs")
-    activate Con
-    Con --> User : error message
-    deactivate Con
 end
+
+' Serialize and save
+JM -> JM : JsonSerializer.Serialize(Jobs)
+JM -> FS : WriteAllText(jobs.json, json)
+activate FS
+note right
+    Location: %AppData%\ProSoft\EasySave\jobs.json
+end note
+deactivate FS
+
+deactivate JM
+
+JM --> Prog : success
+deactivate JM
+
+Prog -> Con : WriteLine("Job created successfully")
+activate Con
+Con --> User : success message
+deactivate Con
 
 Prog -> Con : ReadKey()
 activate Con

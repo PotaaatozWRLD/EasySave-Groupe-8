@@ -1,4 +1,4 @@
-@startuml EasySave_Class_Diagram
+@startuml EasySave_Class_Diagram_v2.0
 !theme plain
 skinparam classAttributeIconSize 0
 
@@ -41,6 +41,37 @@ package "EasySave.Console" {
         + {static} GetLanguage() : string
         + {static} HasLanguageConfigured() : bool
         + {static} SetLanguage(language : string) : void
+        + {static} GetLogFormat() : LogFormat
+        + {static} SetLogFormat(format : LogFormat) : void
+    }
+}
+
+' =============== GUI LAYER (v2.0) ===============
+package "EasySave.GUI" {
+    class MainViewModel {
+        - _jobs : ObservableCollection<BackupJob>
+        - _logger : ILogger
+        + CreateJob() : void
+        + ExecuteJob(job : BackupJob) : void
+        + DeleteJob(job : BackupJob) : void
+    }
+    
+    class JobEditorViewModel {
+        + Job : BackupJob
+        + SaveCommand : ICommand
+        + CancelCommand : ICommand
+    }
+    
+    class LocalizationManager {
+        - {static} _instance : LocalizationManager
+        - {static} _lock : object
+        - _strings : Dictionary<string, string>
+        - _currentLanguage : string
+        - LocalizationManager()
+        + {static} Instance : LocalizationManager <<get>>
+        + CurrentLanguage : string <<get>>
+        + GetString(key : string) : string
+        + ChangeLanguage(culture : string) : void
     }
 }
 
@@ -57,6 +88,9 @@ package "EasySave.Core" {
             + SourcePath : string
             + TargetPath : string
             + Type : BackupType
+            + CreatedDate : DateTime?
+            + LastExecutionDate : DateTime?
+            + Description : string?
             + BackupJob(name, sourcePath, targetPath, type)
         }
     }
@@ -64,7 +98,6 @@ package "EasySave.Core" {
     package "Services" {
         class JobManager {
             - {static} JobsFilePath : string
-            - {static} MaxJobs : int = 5
             + {static} Jobs : List<BackupJob>
             + {static} LoadJobs() : void
             + {static} SaveJobs() : void
@@ -75,11 +108,27 @@ package "EasySave.Core" {
 
         class BackupService {
             - _logger : ILogger
+            - _encryptionService : EncryptionService?
+            - _extensionsToEncrypt : List<string>
             + BackupService(logger : ILogger)
+            + BackupService(logger : ILogger, cryptoSoftPath : string, extensionsToEncrypt : List<string>)
             + ExecuteBackup(job : BackupJob) : void
+            + ExecuteBackup(job : BackupJob, businessSoftwareName : string) : void
             - CalculateTotalFilesAndSize(sourceDir : string) : (int, long)
             - ProcessDirectory(sourceDir, targetDir, job, filesProcessed, bytesProcessed, totalFiles, totalSize) : void
             - IsSourceNewer(sourceFile, targetFile) : bool
+        }
+        
+        class EncryptionService {
+            - _cryptoSoftPath : string
+            + EncryptionService(cryptoSoftPath : string)
+            + EncryptFile(sourceFile : string, targetFile : string) : long
+            + {static} ShouldEncrypt(filePath : string, extensions : List<string>) : bool
+        }
+        
+        class BusinessSoftwareDetector <<static>> {
+            + {static} IsAnyRunning(processNames : List<string>) : bool
+            + {static} IsRunning(processName : string) : bool
         }
     }
 
@@ -104,6 +153,23 @@ package "EasyLog" {
         + WriteLog(logEntry : LogEntry) : void
         + UpdateState(stateEntry : StateEntry) : void
     }
+    
+    class XmlLogger {
+        - _logDirectory : string
+        - _stateFilePath : string
+        + XmlLogger(logDirectory, stateFilePath)
+        + WriteLog(logEntry : LogEntry) : void
+        + UpdateState(stateEntry : StateEntry) : void
+    }
+    
+    class LoggerFactory <<static>> {
+        + {static} CreateLogger(format : LogFormat, logDirectory : string, stateFilePath : string) : ILogger
+    }
+    
+    enum LogFormat {
+        Json
+        Xml
+    }
 
     class LogEntry {
         + JobName : string
@@ -112,6 +178,7 @@ package "EasyLog" {
         + FileName : string
         + FileSize : long
         + TransferTime : long
+        + EncryptionTime : long
         + ErrorMessage : string?
         + Timestamp : DateTime
     }
@@ -144,25 +211,49 @@ Program --> BackupService : creates
 
 LanguageManager --> AppConfig : uses
 
+' GUI relationships (v2.0)
+MainViewModel --> BackupService : uses
+MainViewModel --> JobManager : uses
+MainViewModel --> ILogger : uses
+MainViewModel --> BackupJob : manages
+JobEditorViewModel --> BackupJob : edits
+LocalizationManager --> AppConfig : uses
+
+' Core services relationships (v2.0)
 BackupService --> ILogger : depends on
 BackupService --> BackupJob : uses
 BackupService --> PathHelper : uses
 BackupService --> LogEntry : creates
 BackupService --> StateEntry : creates
+BackupService --> EncryptionService : uses
+BackupService --> BusinessSoftwareDetector : uses
+
+EncryptionService ..> BackupService : used by
 
 JobManager --> BackupJob : manages
 JobManager ..> BackupType : uses
 
 BackupJob --> BackupType : has
 
+' Logger relationships (v2.0)
+LoggerFactory ..> JsonLogger : creates
+LoggerFactory ..> XmlLogger : creates
+LoggerFactory ..> LogFormat : uses
+AppConfig --> LogFormat : contains
+
 JsonLogger ..|> ILogger : implements
 JsonLogger --> LogEntry : uses
 JsonLogger --> StateEntry : uses
 
+XmlLogger ..|> ILogger : implements
+XmlLogger --> LogEntry : uses
+XmlLogger --> StateEntry : uses
+
 StateEntry --> JobState : has
 
 note right of JobManager
-  Maximum 5 jobs allowed
+  v2.0: Unlimited jobs
+  (v1.0/v1.1: max 5)
   Saves to %AppData%\ProSoft\EasySave\jobs.json
 end note
 
@@ -170,6 +261,7 @@ note right of BackupService
   Supports Full and Differential backups
   Calculates progress in real-time
   Converts paths to UNC format
+  v2.0: Encryption & business software check
 end note
 
 note right of JsonLogger
@@ -178,9 +270,37 @@ note right of JsonLogger
   Located in %AppData%\ProSoft\EasySave\
 end note
 
+note right of XmlLogger
+  v1.1: Alternative to JSON format
+  Same structure as JsonLogger
+  User-selectable format
+end note
+
 note right of LanguageManager
   Singleton pattern
   Supports EN and FR
+end note
+
+note right of LocalizationManager
+  v2.0: GUI-specific localization
+  Singleton pattern (like LanguageManager)
+end note
+
+note right of EncryptionService
+  v2.0: Calls CryptoSoft.exe
+  for priority file extensions
+  (.docx, .xlsx, etc.)
+end note
+
+note right of BusinessSoftwareDetector
+  v2.0: Prevents backups when
+  configured software is running
+end note
+
+note right of MainViewModel
+  v2.0: WPF/Avalonia GUI
+  MVVM pattern
+  ObservableCollection for live updates
 end note
 
 @enduml
