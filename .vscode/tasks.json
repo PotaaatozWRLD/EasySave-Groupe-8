@@ -11,6 +11,18 @@
 				"EasySave/EasySave.Console/EasySave.Console.csproj"
 			],
 			"isBackground": false
+		},
+		{
+			"label": "Run EasySave.GUI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"EasySave/EasySave.GUI/EasySave.GUI.csproj"
+			],
+			"isBackground": false,
+			"group": "test"
 		}
 	]
 }

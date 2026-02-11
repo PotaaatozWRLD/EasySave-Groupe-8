@@ -13,20 +13,63 @@ namespace EasySave.Core.Services;
 public class BackupService
 {
     private readonly ILogger _logger;
+    private readonly EncryptionService? _encryptionService;
+    private readonly List<string> _extensionsToEncrypt;
 
     public BackupService(ILogger logger)
     {
         _logger = logger;
+        _extensionsToEncrypt = new List<string>();
+        _encryptionService = null;
+    }
+    
+    /// <summary>
+    /// Initializes BackupService with encryption support (v2.0).
+    /// </summary>
+    /// <param name="logger">Logger instance for writing logs.</param>
+    /// <param name="cryptoSoftPath">Path to CryptoSoft.exe executable.</param>
+    /// <param name="extensionsToEncrypt">List of file extensions to encrypt (e.g., ".docx", ".xlsx").</param>
+    public BackupService(ILogger logger, string cryptoSoftPath, List<string> extensionsToEncrypt)
+    {
+        _logger = logger;
+        _extensionsToEncrypt = extensionsToEncrypt ?? new List<string>();
+        
+        if (!string.IsNullOrWhiteSpace(cryptoSoftPath) && File.Exists(cryptoSoftPath))
+        {
+            _encryptionService = new EncryptionService(cryptoSoftPath);
+        }
     }
 
     /// <summary>
     /// Executes a backup job with full progress tracking.
+    /// v2.0: Prevents backup if business software is running.
     /// </summary>
     /// <param name="job">The backup job to execute</param>
-    public void ExecuteBackup(BackupJob job)
+    /// <param name="businessSoftwareName">Optional name of business software to check (v2.0). If running, backup will be blocked.</param>
+    /// <exception cref="InvalidOperationException">Thrown when business software is running and backup cannot proceed.</exception>
+    public void ExecuteBackup(BackupJob job, string? businessSoftwareName = null)
     {
         try
         {
+            // v2.0: Check if business software is running
+            // Support both single name (legacy) and multiple names
+            var businessSoftwareList = new List<string>();
+            if (!string.IsNullOrWhiteSpace(businessSoftwareName))
+            {
+                // Check if it's a semicolon-separated list
+                businessSoftwareList = businessSoftwareName.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+            }
+            
+            if (businessSoftwareList.Count > 0 && BusinessSoftwareDetector.IsAnyRunning(businessSoftwareList))
+            {
+                string softwareList = string.Join(", ", businessSoftwareList);
+                throw new InvalidOperationException(
+                    $"Cannot start backup '{job.Name}': One or more business software applications ({softwareList}) are currently running. Please close them and try again.");
+            }
+
             // Calculate total files and size before starting
             var (totalFiles, totalSize) = CalculateTotalFilesAndSize(job.SourcePath);
             
@@ -203,16 +246,49 @@ public class BackupService
                     (job.Type == BackupType.Differential && IsSourceNewer(filePath, targetFilePath)))
                 {
                     var stopwatch = Stopwatch.StartNew();
+                    long encryptionTime = 0;
 
-                    using (var sourceStream = File.OpenRead(filePath))
-                    using (var targetStream = File.Create(targetFilePath))
+                    // v2.0: Check if file should be encrypted
+                    bool shouldEncrypt = _encryptionService != null && 
+                                        EncryptionService.ShouldEncrypt(filePath, _extensionsToEncrypt);
+
+                    if (shouldEncrypt)
                     {
-                        sourceStream.CopyTo(targetStream);
+                        // Copy to temporary file first
+                        string tempTarget = targetFilePath + ".temp";
+                        using (var sourceStream = File.OpenRead(filePath))
+                        using (var targetStream = File.Create(tempTarget))
+                        {
+                            sourceStream.CopyTo(targetStream);
+                        }
+
+                        // Encrypt the temporary file
+                        encryptionTime = _encryptionService!.EncryptFile(tempTarget, targetFilePath);
+                        
+                        // Delete temporary file
+                        try { File.Delete(tempTarget); } 
+                        catch (IOException) { /* Ignore cleanup errors */ }
+                        catch (UnauthorizedAccessException) { /* Ignore cleanup errors */ }
+                        
+                        // If encryption failed, copy the original file
+                        if (encryptionTime < 0)
+                        {
+                            File.Copy(filePath, targetFilePath, true);
+                        }
+                    }
+                    else
+                    {
+                        // No encryption - direct copy
+                        using (var sourceStream = File.OpenRead(filePath))
+                        using (var targetStream = File.Create(targetFilePath))
+                        {
+                            sourceStream.CopyTo(targetStream);
+                        }
                     }
 
                     stopwatch.Stop();
 
-                    // Log the successful copy
+                    // Log the successful copy with encryption time
                     _logger.WriteLog(new LogEntry
                     {
                         JobName = job.Name,
@@ -221,6 +297,7 @@ public class BackupService
                         FileName = fileName,
                         FileSize = fileSize,
                         TransferTime = stopwatch.ElapsedMilliseconds,
+                        EncryptionTime = encryptionTime, // v2.0: Track encryption time
                         ErrorMessage = null,
                         Timestamp = DateTime.Now
                     });

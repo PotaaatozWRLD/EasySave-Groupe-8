@@ -1,0 +1,182 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EasySave.GUI.ViewModels"
+        x:Class="EasySave.GUI.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="{Binding Localization[Settings]}"
+        Width="750" Height="650"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource BackgroundColor}">
+
+    <Design.DataContext>
+        <vm:SettingsViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="30" RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="{Binding Localization[Settings]}" Classes="H2" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+
+        <!-- Settings Content -->
+        <ScrollViewer Grid.Row="1" Padding="0,0,15,0">
+            <StackPanel Spacing="15">
+
+                <!-- Encryption Extensions -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Localization[FileExtensionsToEncrypt]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding NewExtension}"
+                                     Watermark=".txt"
+                                     Margin="0,0,8,0"
+                                     Height="38"/>
+                            <Button Grid.Column="1"
+                                    Content="{Binding Localization[Add]}"
+                                    Command="{Binding AddExtensionCommand}"
+                                    Classes="Primary"
+                                    Margin="0,0,8,0"
+                                    Height="38"
+                                    Padding="20,0"/>
+                            <Button Grid.Column="2"
+                                    Content="{Binding Localization[Remove]}"
+                                    Command="{Binding RemoveExtensionCommand}"
+                                    Height="38"
+                                    Padding="20,0"/>
+                        </Grid>
+
+                        <ListBox ItemsSource="{Binding ExtensionsToEncrypt}"
+                                 SelectedItem="{Binding SelectedExtension}"
+                                 Height="100"
+                                 Background="#F9F9F9"
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 BorderThickness="1"
+                                 CornerRadius="4"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Business Software Detection -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Localization[BusinessSoftwareDetection]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[ProcessNameToMonitor]}"/>
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding NewBusinessSoftware}"
+                                         Watermark="e.g., notepad, excel"
+                                         Height="38"
+                                         Margin="0,0,8,0"/>
+                                <Button Grid.Column="1"
+                                        Content="{Binding Localization[Add]}"
+                                        Command="{Binding AddBusinessSoftwareCommand}"
+                                        Classes="Primary"
+                                        Height="38"
+                                        Margin="0,0,8,0"
+                                        Padding="20,0"/>
+                                <Button Grid.Column="2"
+                                        Content="{Binding Localization[Remove]}"
+                                        Command="{Binding RemoveBusinessSoftwareCommand}"
+                                        Height="38"
+                                        Padding="20,0"/>
+                            </Grid>
+
+                            <!-- List of business software -->
+                            <ListBox ItemsSource="{Binding BusinessSoftwareNames}"
+                                     SelectedItem="{Binding SelectedBusinessSoftware}"
+                                     MinHeight="80"
+                                     MaxHeight="150"
+                                     Margin="0,8,0,0"
+                                     IsVisible="{Binding BusinessSoftwareNames.Count}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- CryptoSoft Configuration -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Localization[CryptoSoftEncryptionTool]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[PathToCryptoSoft]}"/>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding CryptoSoftPath}"
+                                         Watermark="C:\Path\To\CryptoSoft.exe"
+                                         Height="38"/>
+                                <Button Grid.Column="1"
+                                        Content="{Binding Localization[Browse]}"
+                                        Command="{Binding BrowseCryptoSoftCommand}"
+                                        Margin="10,0,0,0"
+                                        Height="38"
+                                        Padding="20,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Large File Threshold -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Localization[LargeFileThreshold]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[MaxFileSizeForParallel]}"/>
+                            <NumericUpDown Value="{Binding MaxLargeFileSize}"
+                                           Minimum="0"
+                                           Maximum="9999999999"
+                                           Increment="1048576"
+                                           FormatString="N0"
+                                           Height="38"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Log Format -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Localization[LogFormat]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <ComboBox ItemsSource="{Binding LogFormats}"
+                                  SelectedItem="{Binding SelectedLogFormat}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="38"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons - REFAIT PROPREMENT -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="12"
+                    Margin="0,24,0,0">
+            <Button Content="{Binding Localization[Cancel]}"
+                    Command="{Binding CancelCommand}"
+                    Height="42"
+                    Padding="32,0"/>
+
+            <Button Content="{Binding Localization[Save]}"
+                    Classes="Primary"
+                    Command="{Binding SaveCommand}"
+                    IsDefault="True"
+                    Height="42"
+                    Padding="32,0"/>
+        </StackPanel>
+    </Grid>
+</Window>

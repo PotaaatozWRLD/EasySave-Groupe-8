@@ -1,0 +1,271 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EasySave.GUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+        x:Class="EasySave.GUI.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="ProSoft EasySave v2.0"
+        Width="1200" Height="700"
+        MinWidth="1000" MinHeight="650"
+        Background="{DynamicResource BackgroundColor}"
+        WindowStartupLocation="CenterScreen">
+
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+        <!-- Top Menu Bar -->
+        <Border Grid.Row="0" Background="White" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,3,0,3">
+            <Menu>
+                <MenuItem Header="{Binding Localization[Menu_Settings]}" Command="{Binding OpenSettingsCommand}" Padding="15,6"/>
+                <MenuItem Header="{Binding Localization[Menu_SwitchLanguage]}" Command="{Binding SwitchLanguageCommand}" Padding="15,6"/>
+                <MenuItem Header="{Binding Localization[Menu_Exit]}" Command="{Binding ExitCommand}" Padding="15,6"/>
+            </Menu>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" ColumnDefinitions="350,*" Margin="20" Background="Transparent">
+            <!-- Left: Job List -->
+            <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="0,0,20,0">
+                <TextBlock Grid.Row="0" Classes="H2" Text="{Binding Localization[BackupJobs]}"/>
+
+                <Border Grid.Row="1" Classes="Card" Padding="0">
+                    <ListBox ItemsSource="{Binding Jobs}"
+                             SelectedItem="{Binding SelectedJob}"
+                             SelectionMode="Multiple"
+                             Name="JobsListBox"
+                             Background="Transparent"
+                             BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="5" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Type}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <!-- Action Buttons - REFAIT PROPREMENT -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,20,0,0" IsEnabled="{Binding !IsExecuting}">
+                    <Button Content="{Binding Localization[NewJob]}"
+                            Command="{Binding CreateJobCommand}"
+                            Classes="Primary"
+                            Height="38"
+                            Padding="20,0"/>
+                    <Button Content="{Binding Localization[Edit]}"
+                            Command="{Binding EditJobCommand}"
+                            Height="38"
+                            Padding="20,0"/>
+                    <Button Content="{Binding Localization[Delete]}"
+                            Command="{Binding DeleteJobCommand}"
+                            Classes="Danger"
+                            Height="38"
+                            Padding="20,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Right: Job Details & Actions -->
+            <Border Grid.Column="1" Classes="Card">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,20">
+                        <TextBlock Classes="H1" Text="{Binding Localization[JobDetails]}" Margin="0,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Details Content - AMELIORE -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="24">
+
+                            <!-- Job Name Card -->
+                            <Border Background="{DynamicResource PrimaryColor}" CornerRadius="8" Padding="16,12">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Localization[Name]}" FontSize="11" Foreground="White" Opacity="0.9" Margin="0,0,0,4"/>
+                                    <TextBlock Text="{Binding SelectedJob.Name}" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Source & Target with Better Arrow -->
+                            <Grid ColumnDefinitions="*,60,*">
+                                <!-- Source -->
+                                <Border Grid.Column="0" Background="#F8F9FA" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Background="{DynamicResource PrimaryColor}" CornerRadius="4" Padding="6,4">
+                                                <TextBlock Text="SOURCE" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <SelectableTextBlock Text="{Binding SelectedJob.SourcePath}"
+                                                             TextWrapping="Wrap"
+                                                             FontSize="13"
+                                                             Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Arrow -->
+                                <Viewbox Grid.Column="1" Width="40" Height="40">
+                                    <Canvas Width="24" Height="24">
+                                        <Path Data="M12,4L20,12L12,20L12,16L4,16L4,8L12,8L12,4Z"
+                                              Fill="{DynamicResource PrimaryColor}"
+                                              Stretch="Uniform"/>
+                                    </Canvas>
+                                </Viewbox>
+
+                                <!-- Target -->
+                                <Border Grid.Column="2" Background="#F8F9FA" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Background="#28A745" CornerRadius="4" Padding="6,4">
+                                                <TextBlock Text="TARGET" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <SelectableTextBlock Text="{Binding SelectedJob.TargetPath}"
+                                                             TextWrapping="Wrap"
+                                                             FontSize="13"
+                                                             Foreground="{DynamicResource TextPrimary}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Backup Type & Additional Info -->
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                                <!-- Backup Type -->
+                                <Border Grid.Column="0" Background="#F8F9FA" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="{Binding Localization[Type]}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                        <Border Background="{DynamicResource PrimaryColor}"
+                                                CornerRadius="6"
+                                                HorizontalAlignment="Left"
+                                                Padding="12,6">
+                                            <TextBlock Text="{Binding SelectedJob.Type}"
+                                                       Foreground="White"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="13"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Status Info -->
+                                <Border Grid.Column="1" Background="#F8F9FA" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="STATUS"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Text="Ready to Execute"
+                                                   FontSize="13"
+                                                   FontWeight="Medium"
+                                                   Foreground="#28A745"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Job Information Grid avec données réelles -->
+                            <Border Background="#F8F9FA" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14">
+                                <StackPanel Spacing="16">
+                                    <!-- Created Date -->
+                                    <Grid ColumnDefinitions="140,*">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="Created:"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding SelectedJob.CreatedDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}', FallbackValue='N/A'}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                    </Grid>
+
+                                    <!-- Last Execution -->
+                                    <Grid ColumnDefinitions="140,*">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="Last Execution:"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding SelectedJob.LastExecutionDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}', FallbackValue='Never'}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                    </Grid>
+
+                                    <!-- Description -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Description:"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                        <TextBox Text="{Binding SelectedJob.Description, FallbackValue='No description provided'}"
+                                                 TextWrapping="Wrap"
+                                                 AcceptsReturn="True"
+                                                 MinHeight="60"
+                                                 MaxHeight="120"
+                                                 FontSize="12"
+                                                 Watermark="Add a description for this backup job..."/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Empty State -->
+                    <StackPanel Grid.Row="1"
+                                IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNull}}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Spacing="5"
+                                Opacity="0.5">
+                        <TextBlock Text="{Binding Localization[SelectJobMessage]}" FontSize="18" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Bottom Action Buttons - REFAIT PROPREMENT -->
+                    <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="12" Margin="0,24,0,0">
+                        <Button Content="{Binding Localization[ExecuteSelectedJob]}"
+                                Command="{Binding ExecuteSelectedJobCommand}"
+                                IsEnabled="{Binding !IsExecuting}"
+                                Classes="Primary"
+                                HorizontalAlignment="Stretch"
+                                Height="46"/>
+
+                        <Button Content="{Binding Localization[ExecuteAllJobs]}"
+                                Command="{Binding ExecuteAllJobsCommand}"
+                                IsEnabled="{Binding !IsExecuting}"
+                                HorizontalAlignment="Stretch"
+                                Height="42"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Border Grid.Row="2" Background="White" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="15,8">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" FontWeight="Medium"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15">
+                    <Border Background="#F0F0F0" CornerRadius="10" Padding="10,2">
+                        <TextBlock Text="{Binding Localization.CurrentCulture}" VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                    </Border>
+
+                    <ProgressBar IsIndeterminate="True"
+                                 IsVisible="{Binding IsExecuting}"
+                                 Width="150"
+                                 Height="4"
+                                 VerticalAlignment="Center"
+                                 Foreground="{DynamicResource PrimaryColor}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>
