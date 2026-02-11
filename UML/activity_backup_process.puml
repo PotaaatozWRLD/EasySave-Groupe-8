@@ -29,6 +29,22 @@ partition "For each job to execute" {
         
         partition "Execute Backup" {
             
+            ' v2.0: Pre-execution checks
+            partition "Pre-execution Checks (v2.0)" {
+                if (Business software configured?) then (yes)
+                    :Check if business software is running;
+                    if (Business software running?) then (yes)
+                        :Display error: Cannot run backup;
+                        note right
+                            v2.0: Blocks backup if
+                            business software active
+                        end note
+                        :End backup;
+                        stop
+                    endif
+                endif
+            }
+            
             ' Pre-calculation phase
             :Calculate total files and size;
             note right
@@ -71,8 +87,22 @@ partition "For each job to execute" {
                     
                     if (File needs backup?) then (yes)
                         :Start timer;
-                        :Read source file;
-                        :Write to target file;
+                        
+                        ' v2.0: Encryption logic
+                        if (Encryption configured AND file extension in priority list?) then (yes)
+                            :Copy to temporary file;
+                            :Call CryptoSoft.exe to encrypt;
+                            note right
+                                v2.0: Encryption for
+                                priority extensions
+                                (.docx, .xlsx, etc.)
+                            end note
+                            :Delete temporary file;
+                            :Record encryption time;
+                        else (no)
+                            :Direct copy (no encryption);
+                        endif
+                        
                         :Stop timer;
                         
                         ' Convert paths to UNC format
@@ -125,6 +155,13 @@ partition "For each job to execute" {
             end note
             
             :Display success message;
+            note left
+                v2.0 enhancements:
+                - Encryption support
+                - Business software check
+                - Unlimited jobs
+                - XML/JSON logging
+            end note
         }
         
     else (no)

@@ -1,4 +1,4 @@
-@startuml EasySave_Use_Case_Diagram
+@startuml EasySave_Use_Case_Diagram_v2.0
 !theme plain
 left to right direction
 
@@ -7,7 +7,7 @@ actor "User" as User
 actor "System Administrator" as Admin
 
 ' =============== SYSTEM BOUNDARY ===============
-rectangle "EasySave v1.0" {
+rectangle "EasySave v2.0" {
     
     ' Job Management
     package "Job Management" {
@@ -17,7 +17,8 @@ rectangle "EasySave v1.0" {
         usecase "Delete Backup Job" as UC4
         
         note right of UC1
-            Maximum 5 jobs allowed
+            v2.0: Unlimited jobs
+            (v1.0/v1.1: limited to 5)
             Define: name, source, target, type
         end note
     }
@@ -42,10 +43,12 @@ rectangle "EasySave v1.0" {
         
         note right of UC8
             Copy all files
+            v2.0: With optional encryption
         end note
         
         note right of UC9
             Copy only modified files
+            v2.0: With optional encryption
         end note
     }
     
@@ -66,9 +69,39 @@ rectangle "EasySave v1.0" {
         usecase "Check Backup State" as UC14
         
         note right of UC13
-            JSON format
+            v1.1: JSON or XML format
             UNC paths
             Daily files
+        end note
+    }
+    
+    ' v2.0: Settings & Configuration
+    package "Settings & Configuration (v2.0)" {
+        usecase "Configure Encryption" as UC15
+        usecase "Set Priority Extensions" as UC16
+        usecase "Configure Business Software" as UC17
+        usecase "Choose Log Format\n(JSON/XML)" as UC18
+        
+        note right of UC15
+            v2.0: Specify CryptoSoft.exe path
+            and file extensions to encrypt
+        end note
+        
+        note right of UC17
+            v2.0: Block backups when
+            specific software is running
+        end note
+    }
+    
+    ' v2.0: GUI Interface
+    package "GUI Interface (v2.0)" {
+        usecase "Use Graphical Interface" as UC19
+        usecase "Drag & Drop Files" as UC20
+        usecase "View Real-Time State" as UC21
+        
+        note right of UC19
+            v2.0: Alternative to CLI
+            WPF/Avalonia interface
         end note
     }
 }
@@ -78,6 +111,8 @@ rectangle "External Systems" {
     usecase "Write to Local Disk" as EXT1
     usecase "Write to External Disk" as EXT2
     usecase "Write to Network Drive" as EXT3
+    usecase "Encrypt with CryptoSoft" as EXT4
+    usecase "Check Running Processes" as EXT5
 }
 
 ' =============== RELATIONSHIPS ===============
@@ -94,10 +129,19 @@ User --> UC10
 User --> UC12
 User --> UC13
 
+' v2.0: User actions
+User --> UC15
+User --> UC16
+User --> UC17
+User --> UC18
+User --> UC19
+
 ' Admin actions
 Admin --> UC14
 Admin --> UC13
 Admin --> UC11
+Admin --> UC17
+Admin --> UC18
 
 ' Include relationships
 UC5 ..> UC8 : <<include>>
@@ -114,6 +158,20 @@ UC9 ..> UC12 : <<include>>
 UC8 ..> UC14 : <<include>>
 UC9 ..> UC14 : <<include>>
 
+' v2.0: GUI includes
+UC19 ..> UC1 : <<include>>
+UC19 ..> UC2 : <<include>>
+UC19 ..> UC5 : <<include>>
+UC19 ..> UC21 : <<include>>
+
+' v2.0: Encryption extends backup
+UC8 ..> UC15 : <<extend>>
+UC9 ..> UC15 : <<extend>>
+
+' v2.0: Business software check
+UC5 ..> UC17 : <<extend>>
+UC6 ..> UC17 : <<extend>>
+
 ' External systems
 UC8 --> EXT1
 UC8 --> EXT2
@@ -121,5 +179,10 @@ UC8 --> EXT3
 UC9 --> EXT1
 UC9 --> EXT2
 UC9 --> EXT3
+
+' v2.0: External systems
+UC8 --> EXT4
+UC9 --> EXT4
+UC17 --> EXT5
 
 @enduml
