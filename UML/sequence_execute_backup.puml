@@ -1,4 +1,4 @@
-@startuml EasySave_Sequence_Execute_Backup
+@startuml EasySave_Sequence_Execute_Backup_v2.0
 !theme plain
 autonumber
 
@@ -6,6 +6,8 @@ actor User
 participant "Program" as Prog
 participant "JobManager" as JM
 participant "BackupService" as BS
+participant "BusinessSoftwareDetector" as BSD
+participant "EncryptionService" as ES
 participant "PathHelper" as PH
 participant "ILogger" as Log
 participant "FileSystem" as FS
@@ -18,8 +20,24 @@ activate JM
 JM --> Prog : BackupJob
 deactivate JM
 
-Prog -> BS : ExecuteBackup(job)
+Prog -> BS : ExecuteBackup(job, businessSoftwareName)
 activate BS
+
+' v2.0: Business software check
+alt Business software configured
+    BS -> BSD : IsAnyRunning(softwareList)
+    activate BSD
+    BSD --> BS : isRunning
+    deactivate BSD
+    
+    alt Business software is running
+        BS --> Prog : throw Exception("Business software active")
+        Prog --> User : Display error message
+        deactivate BS
+        deactivate Prog
+        stop
+    end
+end
 
 ' Calculate total files and size
 BS -> BS : CalculateTotalFilesAndSize(sourcePath)
@@ -55,18 +73,46 @@ loop For each file in directory
     deactivate Log
     
     alt Full backup OR (Differential AND source newer)
-        ' Copy file
-        BS -> FS : OpenRead(sourceFile)
-        activate FS
-        FS --> BS : sourceStream
-        deactivate FS
+        BS -> BS : Start timer
         
-        BS -> FS : Create(targetFile)
-        activate FS
-        FS --> BS : targetStream
-        deactivate FS
+        ' v2.0: Encryption logic
+        alt File extension in priority list
+            ' Copy to temporary file
+            BS -> FS : Copy to temp file
+            activate FS
+            FS --> BS : tempFilePath
+            deactivate FS
+            
+            ' Encrypt file
+            BS -> ES : EncryptFile(tempFile, targetFile)
+            activate ES
+            note right
+                v2.0: Calls CryptoSoft.exe
+            end note
+            ES --> BS : encryptionTime (ms)
+            deactivate ES
+            
+            ' Delete temporary file
+            BS -> FS : Delete(tempFile)
+            activate FS
+            deactivate FS
+            
+        else Direct copy (no encryption)
+            ' Copy file directly
+            BS -> FS : OpenRead(sourceFile)
+            activate FS
+            FS --> BS : sourceStream
+            deactivate FS
+            
+            BS -> FS : Create(targetFile)
+            activate FS
+            FS --> BS : targetStream
+            deactivate FS
+            
+            BS -> FS : CopyTo(targetStream)
+        end
         
-        BS -> FS : CopyTo(targetStream)
+        BS -> BS : Stop timer
         
         ' Convert to UNC format
         BS -> PH : ToUncPath(sourcePath)
@@ -79,9 +125,13 @@ loop For each file in directory
         PH --> BS : uncTargetPath
         deactivate PH
         
-        ' Log success
-        BS -> Log : WriteLog(logEntry)
+        ' Log success (v2.0: includes EncryptionTime)
+        BS -> Log : WriteLog(logEntry with EncryptionTime)
         activate Log
+        note right
+            v2.0: LogEntry now includes
+            EncryptionTime field
+        end note
         Log -> FS : AppendAllText(YYYY-MM-DD.json)
         activate FS
         deactivate FS

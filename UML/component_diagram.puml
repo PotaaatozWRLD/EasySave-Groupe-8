@@ -1,10 +1,11 @@
-@startuml EasySave_Component_Diagram
+@startuml EasySave_Component_Diagram_v2.0
 !theme plain
 
 ' =============== EXTERNAL SYSTEMS ===============
 cloud "User Environment" {
     actor User
     file "Console\nTerminal" as Terminal
+    file "GUI\nApplication" as GUIApp
 }
 
 cloud "File System" {
@@ -13,7 +14,8 @@ cloud "File System" {
         file "jobs.json" as JobsFile
         file "state.json" as StateFile
         folder "Logs" as LogsFolder {
-            file "2026-02-05.json" as DailyLog
+            file "2026-02-11.json" as DailyLogJSON
+            file "2026-02-11.xml" as DailyLogXML
             file "..." as MoreLogs
         }
     }
@@ -32,14 +34,36 @@ cloud "File System" {
     }
 }
 
+' v2.0: External encryption software
+cloud "External Software" {
+    [CryptoSoft.exe] as CryptoSoft
+    note right of CryptoSoft
+        v2.0: External encryption tool
+        Encrypts priority files
+        (.docx, .xlsx, etc.)
+    end note
+}
+
 ' =============== APPLICATION COMPONENTS ===============
 package "EasySave Application" {
     
     [EasySave.Console.exe] as Console
     note right of Console
-        Main application
+        Main application (v1.0)
         Command-line interface
         Entry point
+    end note
+    
+    ' v2.0: GUI Component
+    component "EasySave.GUI" as GUI {
+        [MainViewModel]
+        [JobEditorViewModel]
+        [LocalizationManager]
+    }
+    note right of GUI
+        v2.0: WPF/Avalonia GUI
+        MVVM pattern
+        Alternative to CLI
     end note
     
     component "Presentation Layer" {
@@ -52,11 +76,15 @@ package "EasySave Application" {
         [JobManager] as JobMgr
         [BackupService] as BackupSvc
         [PathHelper] as PathHelp
+        [EncryptionService] as EncSvc
+        [BusinessSoftwareDetector] as BizSoft
+        [LoggerFactory] as LogFact
     }
     
     component "EasyLog.dll" as LogDLL {
         interface "ILogger" as ILog
         [JsonLogger] as JsonLog
+        [XmlLogger] as XmlLog
         [LogEntry] as LogEnt
         [StateEntry] as StateEnt
     }
@@ -65,6 +93,7 @@ package "EasySave Application" {
         [BackupJob] as Job
         [BackupType] as Type
         [JobState] as State
+        [LogFormat] as LogFmt
     }
 }
 
@@ -72,7 +101,9 @@ package "EasySave Application" {
 
 ' User interactions
 User --> Terminal : interacts
+User --> GUIApp : interacts (v2.0)
 Terminal --> Console : executes
+GUIApp --> GUI : launches
 
 ' Console dependencies
 Console --> Prog : contains
@@ -81,11 +112,22 @@ Prog --> Config : uses
 Prog --> JobMgr : uses
 Prog --> BackupSvc : creates
 
+' v2.0: GUI dependencies
+GUI --> MainViewModel : contains
+GUI --> JobEditorViewModel : contains
+GUI --> LocalizationManager : contains
+MainViewModel --> BackupSvc : uses
+MainViewModel --> JobMgr : uses
+MainViewModel --> ILog : creates
+
 ' Language management
 LangMgr --> Config : reads language preference
 LangMgr --> LangEN : loads
 LangMgr --> LangFR : loads
 LangMgr --> ConfigFile : reads
+LocalizationManager --> Config : reads
+LocalizationManager --> LangEN : loads
+LocalizationManager --> LangFR : loads
 
 ' Job management
 JobMgr --> Job : manages
@@ -98,13 +140,35 @@ BackupSvc --> Job : uses
 BackupSvc --> PathHelp : uses
 BackupSvc --> LogEnt : creates
 BackupSvc --> StateEnt : creates
+BackupSvc --> EncSvc : uses
+BackupSvc --> BizSoft : uses
+
+' v2.0: Encryption service
+EncSvc --> CryptoSoft : invokes
+BackupSvc --> EncSvc : uses
+
+' v2.0: Business software detection
+BizSoft --> User : checks OS processes
+
+' v2.0: Logger factory
+LogFact --> JsonLog : creates
+LogFact --> XmlLog : creates
+LogFact --> LogFmt : uses
+Config --> LogFmt : contains
 
 ' Logging
 JsonLog ..|> ILog : implements
 JsonLog --> LogEnt : writes
 JsonLog --> StateEnt : writes
-JsonLog --> DailyLog : writes
+JsonLog --> DailyLogJSON : writes
 JsonLog --> StateFile : writes
+
+XmlLog ..|> ILog : implements
+XmlLog --> LogEnt : writes
+XmlLog --> StateEnt : writes
+XmlLog --> DailyLogXML : writes
+XmlLog --> StateFile : writes
+
 LogEnt --> State : uses
 
 ' File system operations
@@ -116,15 +180,17 @@ Config --> ConfigFile : reads/writes
 note bottom of LogDLL
     <b>EasyLog.dll</b>
     - Reusable logging library
-    - JSON format with indentation
+    - v1.1: XML format support
+    - v2.0: LoggerFactory pattern
     - Real-time state updates
-    - Daily log files
+    - Daily log files (JSON/XML)
     - Separate Git project
 end note
 
 note bottom of JobMgr
     <b>Job Management</b>
-    - Maximum 5 jobs
+    v2.0: Unlimited jobs
+    (v1.0/v1.1: max 5)
     - Persistent storage
     - CRUD operations
 end note
@@ -135,6 +201,20 @@ note bottom of BackupSvc
     - Recursive directory processing
     - Progress calculation
     - UNC path conversion
+    v2.0: Encryption & business check
+end note
+
+note bottom of EncSvc
+    <b>Encryption Service (v2.0)</b>
+    Calls CryptoSoft.exe for
+    priority file extensions
+    Measures encryption time
+end note
+
+note bottom of BizSoft
+    <b>Business Software Detector (v2.0)</b>
+    Prevents backups when
+    configured software is running
 end note
 
 note bottom of AppData
@@ -147,6 +227,7 @@ end note
 ' =============== DEPLOYMENT ===============
 node ".NET Runtime 10.0" as Runtime {
     Console -down-> Runtime : requires
+    GUI -down-> Runtime : requires
 }
 
 @enduml
