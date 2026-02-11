@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Shared;
 using EasySave.GUI.Helpers;
+using EasySave.ConsoleApp.Languages;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -82,7 +83,7 @@ public partial class JobEditorViewModel : ViewModelBase
     {
         var dialog = new Avalonia.Platform.Storage.FolderPickerOpenOptions
         {
-            Title = "Select Source Folder",
+            Title = LanguageManager.Instance.GetString("Browse_Source_Title"),
             AllowMultiple = false
         };
 
@@ -109,7 +110,7 @@ public partial class JobEditorViewModel : ViewModelBase
     {
         var dialog = new Avalonia.Platform.Storage.FolderPickerOpenOptions
         {
-            Title = "Select Target Folder",
+            Title = LanguageManager.Instance.GetString("Browse_Target_Title"),
             AllowMultiple = false
         };
 

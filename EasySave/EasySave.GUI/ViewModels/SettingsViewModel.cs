@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using EasySave.ConsoleApp.Config;
 using EasyLog;
 using EasySave.GUI.Helpers;
+using EasySave.ConsoleApp.Languages;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -116,7 +117,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         var dialog = new Avalonia.Platform.Storage.FilePickerOpenOptions
         {
-            Title = "Select CryptoSoft.exe",
+            Title = LanguageManager.Instance.GetString("Browse_CryptoSoft_Title"),
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
