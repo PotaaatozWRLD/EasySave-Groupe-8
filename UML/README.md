@@ -178,25 +178,56 @@ All diagrams must be delivered **24 hours before** the Livrable 1 deadline.
 
 ## ✅ Compliance Check
 
-| Diagram | Required | Included | Version | Notes |
-|---------|----------|----------|---------|-------|
-| Class Diagram | ✅ | ✅ | v2.0 | Complete architecture with v2.0 features |
-| Sequence Diagram (Execute) | ✅ | ✅ | v2.0 | With encryption & business check |
-| Sequence Diagram (Create) | ✅ | ✅ | v2.0 | Unlimited jobs |
-| Component Diagram | ✅ | ✅ | v2.0 | GUI + CryptoSoft integration |
-| Activity Diagram | ⚠️ | ✅ | v2.0 | Complete workflow with v2.0 |
-| Use Case Diagram | ⚠️ | ✅ | v2.0 | All v2.0 features |
+| Diagram | Required | Included | Version | Last Updated | Notes |
+|---------|----------|----------|---------|--------------|-------|
+| Class Diagram | ✅ | ✅ | **v2.0** | Feb 11, 2026 | Complete architecture with all v2.0 features |
+| Sequence Diagram (Execute) | ✅ | ✅ | **v2.0** | Feb 11, 2026 | Encryption & business software check |
+| Sequence Diagram (Create) | ✅ | ✅ | **v2.0** | Feb 11, 2026 | Unlimited jobs |
+| Component Diagram | ✅ | ✅ | **v2.0** | Feb 11, 2026 | GUI + CryptoSoft integration |
+| Activity Diagram | ⚠️ | ✅ | **v2.0** | Feb 11, 2026 | Complete workflow with v2.0 checks |
+| Use Case Diagram | ⚠️ | ✅ | **v2.0** | Feb 11, 2026 | All v2.0 use cases documented |
+
+**Legend:**
+- ✅ Required by specifications
+- ⚠️ Recommended (included for completeness)
+
+---
+
+## 📚 Version History
+
+### v2.0 (February 11, 2026)
+- ✅ Added encryption support with CryptoSoft.exe
+- ✅ Added business software detection
+- ✅ Removed 5-job limitation (unlimited jobs)
+- ✅ Added GUI with Avalonia framework
+- ✅ Enhanced BackupJob model with dates and description
+- ✅ Updated all 6 diagrams to reflect v2.0 architecture
+- ✅ Extended AppConfig with encryption and business software settings
+
+### v1.1 (February 8, 2026)
+- ✅ Added XML logging format support
+- ✅ Added LoggerFactory pattern
+- ✅ Extended AppConfig with log format management
+
+### v1.0 (February 5, 2026)
+- ✅ Initial release
+- ✅ 6 UML diagrams (class, sequence×2, component, activity, use case)
+- ✅ JSON logging support
+- ✅ Full/Differential backup types
+- ✅ Maximum 5 jobs
 
 ---
 
 ## 📧 Contact
 
 For questions about these diagrams:
-- Project: EasySave v1.0
+- Project: EasySave v2.0
 - Company: ProSoft
 - Team: Groupe 8
 
 ---
 
-**Generated for Livrable 2 - EasySave Version 2.0**
-**Date: February 11, 2026**
+**Generated for Livrable 2 - EasySave Version 2.0**  
+**Date:** February 11, 2026  
+**Team:** ProSoft - Groupe 8  
+**Contributors:** Axel Ruffin, Jalil Lalouani, Kenan HUREMOVIC

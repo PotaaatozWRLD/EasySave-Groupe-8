@@ -37,12 +37,23 @@ package "EasySave.Console" {
         - {static} _config : AppConfig
         - {static} _configPath : string
         + Language : string
+        + LogFormatString : string
+        + ExtensionsToEncrypt : List<string>
+        + BusinessSoftwareNames : List<string>
+        + CryptoSoftPath : string
         - {static} Load() : void
+        - {static} Save() : void
         + {static} GetLanguage() : string
         + {static} HasLanguageConfigured() : bool
         + {static} SetLanguage(language : string) : void
         + {static} GetLogFormat() : LogFormat
         + {static} SetLogFormat(format : LogFormat) : void
+        + {static} GetExtensionsToEncrypt() : List<string>
+        + {static} SetExtensionsToEncrypt(extensions : List<string>) : void
+        + {static} GetBusinessSoftwareNames() : List<string>
+        + {static} SetBusinessSoftwareNames(processNames : List<string>) : void
+        + {static} GetCryptoSoftPath() : string
+        + {static} SetCryptoSoftPath(path : string) : void
     }
 }
 
@@ -64,14 +75,14 @@ package "EasySave.GUI" {
     
     class LocalizationManager {
         - {static} _instance : LocalizationManager
-        - {static} _lock : object
-        - _strings : Dictionary<string, string>
-        - _currentLanguage : string
+        - _resourceManager : ResourceManager
+        - _currentCulture : CultureInfo
         - LocalizationManager()
         + {static} Instance : LocalizationManager <<get>>
-        + CurrentLanguage : string <<get>>
-        + GetString(key : string) : string
+        + CurrentCulture : string <<get>>
+        + this[key : string] : string <<get>>
         + ChangeLanguage(culture : string) : void
+        + ToggleLanguage() : void
     }
 }
 
@@ -105,6 +116,11 @@ package "EasySave.Core" {
             + {static} DeleteJob(index : int) : void
             + {static} GetJob(index : int) : BackupJob
         }
+        
+        note right of JobManager
+            v2.0: Unlimited jobs
+            (v1.0/v1.1: max 5 jobs)
+        end note
 
         class BackupService {
             - _logger : ILogger
@@ -167,8 +183,8 @@ package "EasyLog" {
     }
     
     enum LogFormat {
-        Json
-        Xml
+        JSON
+        XML
     }
 
     class LogEntry {
