@@ -47,6 +47,12 @@ public class LanguageManager
 
     public string GetString(string key)
     {
+        // Always reload language from config to ensure up-to-date language (workaround for GUI bug)
+        string language = AppConfig.GetLanguage();
+        if (language != _currentLanguage)
+        {
+            LoadLanguage(language);
+        }
         return _strings.TryGetValue(key, out string? value) ? value : $"[{key}]";
     }
 

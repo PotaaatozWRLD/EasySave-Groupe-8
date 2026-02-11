@@ -182,4 +182,10 @@
   <data name="LogFormat" xml:space="preserve">
     <value>Log Format</value>
   </data>
+  <data name="Decrypt_Title" xml:space="preserve">
+    <value>Select files to decrypt</value>
+  </data>
+  <data name="Logs_Opened" xml:space="preserve">
+    <value>Open Logs Folder</value>
+  </data>
 </root>

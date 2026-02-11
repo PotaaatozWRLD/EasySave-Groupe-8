@@ -48,5 +48,22 @@
   "LogFormat_Title": "LOG FORMAT SELECTION",
   "LogFormat_Default": "default, v1.0 compatible",
   "LogFormat_Changed": "Log format changed to",
-  "LogFormat_RestartRequired": "The application will use the new format on next run. Press any key to continue..."
+  "LogFormat_RestartRequired": "The application will use the new format on next run. Press any key to continue...",
+  "Decrypt_Title": "Select files to decrypt",
+  "Decrypt_NoFileSelected": "No file selected",
+  "Decrypt_CryptoSoftNotFound": "CryptoSoft not found",
+  "Decrypt_Success": "{0} file(s) decrypted successfully",
+  "Decrypt_Error": "{0} successful, {1} error(s)",
+  "Decrypt_ErrorGeneric": "Decryption error: {0}",
+  "Logs_Opened": "Logs folder opened",
+  "Logs_Error": "Error opening logs: {0}",
+  "Error_WindowNotFound": "Error: Main window not found",
+  "Job_Created": "Job created successfully",
+  "Job_NoSelected": "No job selected",
+  "Job_NoJobsToExecute": "No jobs to execute",
+  "Job_ExecutingAll": "Executing all {0} job(s)...",
+  "Settings_Saved": "Settings saved successfully",
+  "Browse_Source_Title": "Select Source Folder",
+  "Browse_Target_Title": "Select Target Folder",
+  "Browse_CryptoSoft_Title": "Select CryptoSoft.exe"
 }
