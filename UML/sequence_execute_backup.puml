@@ -29,12 +29,11 @@ alt Business software configured
     BSD --> BS : result (bool)
     deactivate BSD
     
-    alt result is true
+    break result is true
         BS --> VM : throw InvalidOperationException
         VM --> User : Show Error "Software Running"
         deactivate BS
         deactivate VM
-        stop
     end
 end
 
