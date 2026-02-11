@@ -4,6 +4,7 @@ using EasySave.Core.Services;
 using EasySave.Shared;
 using EasySave.GUI.Helpers;
 using EasySave.ConsoleApp.Config;
+using EasySave.ConsoleApp.Languages;
 using EasyLog;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,122 @@ namespace EasySave.GUI.ViewModels;
 /// </summary>
 public partial class MainViewModel : ViewModelBase
 {
+    [RelayCommand]
+    private async Task DecryptFileAsync()
+    {
+        try
+        {
+            // Ouvre une boîte de dialogue pour sélectionner le fichier à décrypter (API moderne)
+            var window = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop ? desktop.MainWindow : null;
+            if (window == null)
+            {
+                StatusMessage = LanguageManager.Instance.GetString("Error_WindowNotFound");
+                return;
+            }
+            
+            var files = await window.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = LanguageManager.Instance.GetString("Decrypt_Title"),
+                AllowMultiple = true
+            });
+            
+            if (files.Count == 0)
+            {
+                StatusMessage = LanguageManager.Instance.GetString("Decrypt_NoFileSelected");
+                return;
+            }
+            
+            string cryptoSoftPath = AppConfig.GetCryptoSoftPath();
+            if (!File.Exists(cryptoSoftPath))
+            {
+                StatusMessage = LanguageManager.Instance.GetString("Decrypt_CryptoSoftNotFound");
+                return;
+            }
+
+            int successCount = 0;
+            int errorCount = 0;
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    string inputFile = file.Path.LocalPath;
+                    string tempFile = inputFile + ".tmp";
+
+                    // Appel CryptoSoft.exe pour décrypter (XOR roundtrip - le XOR est réversible)
+                    var process = new System.Diagnostics.Process();
+                    process.StartInfo.FileName = cryptoSoftPath;
+                    process.StartInfo.Arguments = $"\"{inputFile}\" \"{tempFile}\"";
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.RedirectStandardError = true;
+                    process.Start();
+                    await Task.Run(() => process.WaitForExit());
+                    
+                    if (process.ExitCode == 0 && File.Exists(tempFile))
+                    {
+                        File.Delete(inputFile);
+                        File.Move(tempFile, inputFile);
+                        successCount++;
+                    }
+                    else
+                    {
+                        if (File.Exists(tempFile)) File.Delete(tempFile);
+                        errorCount++;
+                    }
+                }
+                catch
+                {
+                    errorCount++;
+                }
+            }
+
+            if (errorCount == 0)
+                StatusMessage = string.Format(LanguageManager.Instance.GetString("Decrypt_Success"), successCount);
+            else
+                StatusMessage = string.Format(LanguageManager.Instance.GetString("Decrypt_Error"), successCount, errorCount);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = string.Format(LanguageManager.Instance.GetString("Decrypt_ErrorGeneric"), ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenLogsFolder()
+    {
+        try
+        {
+            var logsPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ProSoft", "EasySave", "Logs");
+            if (!Directory.Exists(logsPath))
+                Directory.CreateDirectory(logsPath);
+
+            if (OperatingSystem.IsWindows())
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = logsPath,
+                    UseShellExecute = true
+                });
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                System.Diagnostics.Process.Start("xdg-open", logsPath);
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                System.Diagnostics.Process.Start("open", logsPath);
+            }
+            
+            StatusMessage = LanguageManager.Instance.GetString("Logs_Opened");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = string.Format(LanguageManager.Instance.GetString("Logs_Error"), ex.Message);
+        }
+    }
+//
     public LocalizationManager Localization => LocalizationManager.Instance;
     private readonly string _appDataPath;
     private readonly string _logPath;
@@ -91,7 +208,7 @@ public partial class MainViewModel : ViewModelBase
                 var newJob = editorViewModel.CreateJob();
                 JobManager.AddJob(newJob.Name, newJob.SourcePath, newJob.TargetPath, newJob.Type);
                 Jobs.Add(newJob);
-                StatusMessage = "Job created successfully";
+                StatusMessage = LanguageManager.Instance.GetString("Job_Created");
             }
         };
         
@@ -103,7 +220,7 @@ public partial class MainViewModel : ViewModelBase
     {
         if (SelectedJob == null)
         {
-            StatusMessage = "No job selected";
+            StatusMessage = LanguageManager.Instance.GetString("Job_NoSelected");
             return;
         }
 
@@ -137,7 +254,7 @@ public partial class MainViewModel : ViewModelBase
     {
         if (SelectedJob == null)
         {
-            StatusMessage = "No job selected";
+            StatusMessage = LanguageManager.Instance.GetString("Job_NoSelected");
             return;
         }
 
@@ -244,12 +361,12 @@ public partial class MainViewModel : ViewModelBase
     {
         if (Jobs.Count == 0 || _logger == null)
         {
-            StatusMessage = "No jobs to execute";
+            StatusMessage = LanguageManager.Instance.GetString("Job_NoJobsToExecute");
             return;
         }
 
         IsExecuting = true;
-        StatusMessage = $"Executing all {Jobs.Count} job(s)...";
+        StatusMessage = string.Format(LanguageManager.Instance.GetString("Job_ExecutingAll"), Jobs.Count);
 
         try
         {
@@ -316,7 +433,7 @@ public partial class MainViewModel : ViewModelBase
             if (settingsViewModel.DialogResult)
             {
                 InitializeServices();
-                StatusMessage = "Settings saved successfully";
+                StatusMessage = LanguageManager.Instance.GetString("Settings_Saved");
             }
         };
         
