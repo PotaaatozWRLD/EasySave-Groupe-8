@@ -3,159 +3,97 @@
 autonumber
 
 actor User
-participant "Program" as Prog
-participant "JobManager" as JM
+participant "MainViewModel" as VM
 participant "BackupService" as BS
 participant "BusinessSoftwareDetector" as BSD
 participant "EncryptionService" as ES
-participant "PathHelper" as PH
 participant "ILogger" as Log
-participant "FileSystem" as FS
+participant "CryptoSoft" as CS
 
-User -> Prog : Run backup (job index)
-activate Prog
+User -> VM : Click "Execute Job"
+activate VM
 
-Prog -> JM : GetJob(index)
-activate JM
-JM --> Prog : BackupJob
-deactivate JM
+VM -> VM : Initialize BackupService
+note right
+    Injects Logger, CryptoSoftPath,
+    ExtensionsToEncrypt
+end note
 
-Prog -> BS : ExecuteBackup(job, businessSoftwareName)
+VM -> BS : ExecuteBackup(job, businessSoftwareName)
 activate BS
 
-' v2.0: Business software check
+' Business Software Check
 alt Business software configured
-    BS -> BSD : IsAnyRunning(softwareList)
+    BS -> BSD : IsAnyRunning(businessSoftwarelist)
     activate BSD
-    BSD --> BS : isRunning
+    BSD --> BS : result (bool)
     deactivate BSD
     
-    alt Business software is running
-        BS --> Prog : throw Exception("Business software active")
-        Prog --> User : Display error message
+    break result is true
+        BS --> VM : throw InvalidOperationException
+        VM --> User : Show Error "Software Running"
         deactivate BS
-        deactivate Prog
-        stop
+        deactivate VM
     end
 end
 
-' Calculate total files and size
-BS -> BS : CalculateTotalFilesAndSize(sourcePath)
-activate BS
-BS -> FS : GetFiles(sourceDir)
-activate FS
-FS --> BS : files[]
-deactivate FS
-BS -> FS : GetDirectories(sourceDir)
-activate FS
-FS --> BS : subdirs[]
-deactivate FS
-BS --> BS : (totalFiles, totalSize)
-deactivate BS
-
-' Initialize state
+' Start Backup
 BS -> Log : UpdateState(ACTIVE, 0%)
 activate Log
-Log -> FS : WriteAllText(state.json)
-activate FS
-deactivate FS
 deactivate Log
 
-' Process directory
-BS -> BS : ProcessDirectory(source, target, job)
+BS -> BS : ProcessDirectory(source, target)
 activate BS
 
-loop For each file in directory
-    ' Update state before copying
-    BS -> Log : UpdateState(ACTIVE, progress%)
+loop For each file
+    BS -> Log : UpdateState(ACTIVE, progress)
     activate Log
-    Log -> FS : WriteAllText(state.json)
     deactivate Log
-    
-    alt Full backup OR (Differential AND source newer)
-        BS -> BS : Start timer
+
+    alt Full Backup OR (Differential AND New/Modified)
         
-        ' v2.0: Encryption logic
-        alt File extension in priority list
-            ' Copy to temporary file
-            BS -> FS : Copy to temp file
-            activate FS
-            FS --> BS : tempFilePath
-            deactivate FS
-            
-            ' Encrypt file
-            BS -> ES : EncryptFile(tempFile, targetFile)
+        ' Check Encryption
+        BS -> ES : ShouldEncrypt(file, extensions)
+        activate ES
+        ES --> BS : shouldEncrypt
+        deactivate ES
+        
+        alt shouldEncrypt is true
+            BS -> ES : EncryptFile(source, target)
             activate ES
-            note right
-                v2.0: Calls CryptoSoft.exe
-            end note
-            ES --> BS : encryptionTime (ms)
+            ES -> CS : Process.Start(CryptoSoft.exe)
+            activate CS
+            CS --> ES : Exit Code 0
+            deactivate CS
+            ES --> BS : encryptionTime
             deactivate ES
-            
-            ' Delete temporary file
-            BS -> FS : Delete(tempFile)
-            activate FS
-            deactivate FS
-            
-        else Direct copy (no encryption)
-            ' Copy file directly
-            BS -> FS : OpenRead(sourceFile)
-            activate FS
-            FS --> BS : sourceStream
-            deactivate FS
-            
-            BS -> FS : Create(targetFile)
-            activate FS
-            FS --> BS : targetStream
-            deactivate FS
-            
-            BS -> FS : CopyTo(targetStream)
+        else
+            BS -> BS : File.Copy(source, target)
         end
         
-        BS -> BS : Stop timer
-        
-        ' Convert to UNC format
-        BS -> PH : ToUncPath(sourcePath)
-        activate PH
-        PH --> BS : uncSourcePath
-        deactivate PH
-        
-        BS -> PH : ToUncPath(targetPath)
-        activate PH
-        PH --> BS : uncTargetPath
-        deactivate PH
-        
-        ' Log success (v2.0: includes EncryptionTime)
-        BS -> Log : WriteLog(logEntry with EncryptionTime)
+        BS -> Log : WriteLog(entry)
         activate Log
         note right
-            v2.0: LogEntry now includes
-            EncryptionTime field
+             Entry includes:
+             - TransferTime
+             - EncryptionTime
+             - Status
         end note
-        Log -> FS : AppendAllText(YYYY-MM-DD.json)
-        activate FS
-        deactivate FS
         deactivate Log
+        
     end
 end
 
-' Process subdirectories recursively
-loop For each subdirectory
-    BS -> BS : ProcessDirectory(subDir, targetSubDir, job)
-end
-
 deactivate BS
 
-' Mark as completed
 BS -> Log : UpdateState(END, 100%)
 activate Log
-Log -> FS : WriteAllText(state.json)
 deactivate Log
 
-BS --> Prog : backup completed
+BS --> VM : Complete
 deactivate BS
 
-Prog --> User : Display success message
-deactivate Prog
+VM --> User : Show Success Message
+deactivate VM
 
 @enduml

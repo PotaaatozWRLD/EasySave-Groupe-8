@@ -3,186 +3,57 @@
 
 start
 
-:User launches EasySave;
+:User initiates Backup;
 
-if (Command line arguments?) then (yes)
-    :Parse job indexes from arguments;
-    note right
-        Supports formats:
-        - Single: "1"
-        - Range: "1-3"
-        - List: "1;3;5"
-    end note
+if (Configuration loaded?) then (yes)
+    :Get Backup Jobs;
 else (no)
-    :Show interactive menu;
-    :User selects language (EN/FR);
-    :Display main menu;
-    :User selects "Run Job" option;
-    :User enters job index/indexes;
+    :Load Configuration;
 endif
 
-partition "For each job to execute" {
-    :Retrieve BackupJob from JobManager;
-    
-    if (Job exists?) then (yes)
-        :Create BackupService instance;
-        
-        partition "Execute Backup" {
-            
-            ' v2.0: Pre-execution checks
-            partition "Pre-execution Checks (v2.0)" {
-                if (Business software configured?) then (yes)
-                    :Check if business software is running;
-                    if (Business software running?) then (yes)
-                        :Display error: Cannot run backup;
-                        note right
-                            v2.0: Blocks backup if
-                            business software active
-                        end note
-                        :End backup;
-                        stop
-                    endif
-                endif
-            }
-            
-            ' Pre-calculation phase
-            :Calculate total files and size;
-            note right
-                Recursively count all files
-                in source directory tree
-            end note
-            
-            :Initialize progress counters;
-            :filesProcessed = 0;
-            :bytesProcessed = 0;
-            
-            ' Initialize state
-            :Update state.json;
-            note right
-                State: ACTIVE
-                Progression: 0%
-            end note
-            
-            ' Processing phase
-            partition "Process Directory (Recursive)" {
-                :Get all files in current directory;
-                
-                repeat
-                    :Pick next file;
-                    
-                    ' Calculate progress
-                    :Calculate progression percentage;
-                    :Update state.json with progress;
-                    
-                    ' Determine if file needs backup
-                    if (Backup type?) then (Full)
-                        :File needs backup;
-                    else (Differential)
-                        if (Target file exists AND source is newer?) then (yes)
-                            :File needs backup;
-                        else (no)
-                            :Skip file (already up to date);
-                        endif
-                    endif
-                    
-                    if (File needs backup?) then (yes)
-                        :Start timer;
-                        
-                        ' v2.0: Encryption logic
-                        if (Encryption configured AND file extension in priority list?) then (yes)
-                            :Copy to temporary file;
-                            :Call CryptoSoft.exe to encrypt;
-                            note right
-                                v2.0: Encryption for
-                                priority extensions
-                                (.docx, .xlsx, etc.)
-                            end note
-                            :Delete temporary file;
-                            :Record encryption time;
-                        else (no)
-                            :Direct copy (no encryption);
-                        endif
-                        
-                        :Stop timer;
-                        
-                        ' Convert paths to UNC format
-                        :Convert source path to UNC;
-                        :Convert target path to UNC;
-                        note right
-                            C:\Folder -> \\localhost\C$\Folder
-                        end note
-                        
-                        if (Copy successful?) then (yes)
-                            :Write log entry;
-                            note right
-                                TransferTime > 0
-                                ErrorMessage = null
-                            end note
-                        else (no - error)
-                            :Write error log entry;
-                            note right
-                                TransferTime = -1
-                                ErrorMessage set
-                            end note
-                        endif
-                    endif
-                    
-                    :Update progress counters;
-                    :filesProcessed++;
-                    :bytesProcessed += fileSize;
-                    
-                repeat while (More files in directory?) is (yes)
-                ->no;
-                
-                :Get all subdirectories;
-                
-                repeat
-                    :Pick next subdirectory;
-                    :Process subdirectory recursively;
-                    note right
-                        Same process for
-                        each subdirectory
-                    end note
-                repeat while (More subdirectories?) is (yes)
-                ->no;
-            }
-            
-            ' Completion phase
-            :Update state.json;
-            note right
-                State: END
-                Progression: 100%
-            end note
-            
-            :Display success message;
-            note left
-                v2.0 enhancements:
-                - Encryption support
-                - Business software check
-                - Unlimited jobs
-                - XML/JSON logging
-            end note
-        }
-        
-    else (no)
-        :Display error message;
-        note right
-            "Job not found"
-        end note
-    endif
-}
+:Select Job(s);
 
-if (More jobs to execute?) then (yes)
-    :Continue to next job;
-    detach
-else (no)
-    if (Interactive mode?) then (yes)
-        :Wait for key press;
-        :Return to main menu;
-        detach
-    else (no - CLI mode)
+if (Business Software Check configured?) then (yes)
+    :Check if processes are running;
+    if (Processes running?) then (yes)
+        :Display Error;
+        :Abort Backup;
         stop
     endif
 endif
+
+:Create BackupService;
+
+partition "Execute Backup" {
+    :Calculate Total Files & Size;
+    :Initialize Logger (State: ACTIVE);
+    
+    while (More files?) is (yes)
+        :Get Next File;
+        
+        if (Backup Type is Full OR (Differential AND File Changed)) then (yes)
+            if (File Extension in Encryption List?) then (yes)
+                :Encrypt File (CryptoSoft);
+                note right
+                   Uses external process
+                   Measure encryption time
+                end note
+            else (no)
+                :Copy File System;
+            endif
+            
+            :Log Operation (JSON/XML);
+            :Update State (Progress);
+        else (no)
+            :Skip File;
+        endif
+    endwhile (no)
+    
+    :Update State (END);
+}
+
+:Display Completion Message;
+
+stop
 
 @enduml
