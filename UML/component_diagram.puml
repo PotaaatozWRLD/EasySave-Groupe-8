@@ -140,12 +140,11 @@ BackupSvc --> Job : uses
 BackupSvc --> PathHelp : uses
 BackupSvc --> LogEnt : creates
 BackupSvc --> StateEnt : creates
-BackupSvc --> EncSvc : uses
-BackupSvc --> BizSoft : uses
+BackupSvc --> EncSvc : uses (v2.0)
+BackupSvc --> BizSoft : uses (v2.0)
 
 ' v2.0: Encryption service
 EncSvc --> CryptoSoft : invokes
-BackupSvc --> EncSvc : uses
 
 ' v2.0: Business software detection
 BizSoft --> User : checks OS processes
