@@ -46,8 +46,9 @@ public class BackupService
     /// </summary>
     /// <param name="job">The backup job to execute</param>
     /// <param name="businessSoftwareName">Optional name of business software to check (v2.0). If running, backup will be blocked.</param>
+    /// <param name="progress">Optional progress reporter for UI updates (0-100)</param>
     /// <exception cref="InvalidOperationException">Thrown when business software is running and backup cannot proceed.</exception>
-    public void ExecuteBackup(BackupJob job, string? businessSoftwareName = null)
+    public void ExecuteBackup(BackupJob job, string? businessSoftwareName = null, IProgress<(int filesProcessed, int totalFiles)>? progress = null)
     {
         try
         {
@@ -91,7 +92,7 @@ public class BackupService
             // Start the backup process
             int filesProcessed = 0;
             long bytesProcessed = 0;
-            ProcessDirectory(job.SourcePath, job.TargetPath, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize);
+            ProcessDirectory(job.SourcePath, job.TargetPath, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress);
             
             // Mark as completed
             _logger.UpdateState(new StateEntry
@@ -205,7 +206,7 @@ public class BackupService
     /// </summary>
     private void ProcessDirectory(string sourceDir, string targetDir, BackupJob job, 
                                   ref int filesProcessed, ref long bytesProcessed, 
-                                  int totalFiles, long totalSize)
+                                  int totalFiles, long totalSize, IProgress<(int filesProcessed, int totalFiles)>? progress = null)
     {
         // Ensure the target directory exists
         if (!Directory.Exists(targetDir))
@@ -306,6 +307,9 @@ public class BackupService
                 // Update progress counters
                 filesProcessed++;
                 bytesProcessed += fileSize;
+                
+                // Report progress to UI if callback provided
+                progress?.Report((filesProcessed, totalFiles));
             }
             catch (IOException ex)
             {
@@ -382,7 +386,7 @@ public class BackupService
         {
             string subDirName = Path.GetFileName(subDir);
             string targetSubDir = Path.Combine(targetDir, subDirName);
-            ProcessDirectory(subDir, targetSubDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize);
+            ProcessDirectory(subDir, targetSubDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress);
         }
     }
 
