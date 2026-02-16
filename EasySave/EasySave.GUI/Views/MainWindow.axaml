@@ -254,17 +254,20 @@
                     <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" FontWeight="Medium"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="15">
-                    <Border Background="#F0F0F0" CornerRadius="10" Padding="10,2">
-                        <TextBlock Text="{Binding Localization.CurrentCulture}" VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
-                    </Border>
-
-                    <ProgressBar IsIndeterminate="True"
-                                 IsVisible="{Binding IsExecuting}"
-                                 Width="150"
-                                 Height="4"
-                                 VerticalAlignment="Center"
-                                 Foreground="{DynamicResource PrimaryColor}"/>
+                <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="5" IsVisible="{Binding IsExecuting}">
+                    <ProgressBar Value="{Binding ProgressPercentage}"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Width="200"
+                                 Height="20"
+                                 Foreground="{DynamicResource PrimaryColor}"
+                                 Background="#E0E0E0"
+                                 CornerRadius="10"/>
+                    <TextBlock Text="{Binding ProgressText}"
+                               HorizontalAlignment="Center"
+                               FontSize="11"
+                               Foreground="#666"
+                               FontWeight="Medium"/>
                 </StackPanel>
             </Grid>
         </Border>

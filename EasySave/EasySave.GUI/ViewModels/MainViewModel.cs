@@ -159,6 +159,12 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isExecuting = false;
 
+    [ObservableProperty]
+    private double _progressPercentage = 0;
+
+    [ObservableProperty]
+    private string _progressText = string.Empty;
+
     public MainViewModel()
     {
 
@@ -295,6 +301,8 @@ public partial class MainViewModel : ViewModelBase
         }
 
         IsExecuting = true;
+        ProgressPercentage = 0;
+        ProgressText = string.Empty;
         int totalJobs = SelectedJobs.Count;
         int successCount = 0;
         int failCount = 0;
@@ -315,7 +323,22 @@ public partial class MainViewModel : ViewModelBase
                 try
                 {
                     StatusMessage = $"Executing: {job.Name} ({successCount + failCount + 1}/{totalJobs})...";
-                    await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware));
+                    
+                    // Create progress callback to update UI
+                    var progressReporter = new Progress<(int filesProcessed, int totalFiles)>(progressData =>
+                    {
+                        var (filesProcessed, totalFiles) = progressData;
+                        // Calculate percentage (0-99, not 100 to show completion differently)
+                        ProgressPercentage = totalFiles > 0 ? Math.Min((filesProcessed * 99.0) / totalFiles, 99) : 0;
+                        ProgressText = $"Processing file {filesProcessed} of {totalFiles}";
+                    });
+                    
+                    await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware, progressReporter));
+                    
+                    // Set to 100% on completion
+                    ProgressPercentage = 100;
+                    ProgressText = "Completed!";
+                    
                     successCount++;
                 }
                 catch (IOException ex)
