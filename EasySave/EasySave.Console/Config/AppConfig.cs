@@ -33,7 +33,17 @@ public class AppConfig
     public string BusinessSoftwareName { get; set; } = string.Empty;
     
     /// <summary>
-    /// v3.0: Maximum file size in bytes for parallel transfer. Default: 0 (no limit).
+    /// v3.0: List of priority file extensions (e.g., ".docx", ".xlsx"). These files are processed first.
+    /// </summary>
+    public List<string> PriorityExtensions { get; set; } = new();
+    
+    /// <summary>
+    /// v3.0: Maximum file size in KB for parallel transfer throttling. Files larger than this transfer one at a time.
+    /// </summary>
+    public long MaxLargeFileSizeKB { get; set; } = 1024; // Default: 1 MB
+    
+    /// <summary>
+    /// [DEPRECATED] v3.0: Use MaxLargeFileSizeKB instead (in KB, not bytes).
     /// </summary>
     public long MaxLargeFileSize { get; set; } = 0;
     
@@ -211,6 +221,54 @@ public class AppConfig
     {
         Load();
         _config!.CryptoSoftPath = path;
+        Save();
+    }
+    
+    /// <summary>
+    /// v3.0: Gets the list of priority file extensions.
+    /// </summary>
+    public static List<string> GetPriorityExtensions()
+    {
+        Load();
+        return _config!.PriorityExtensions;
+    }
+    
+    /// <summary>
+    /// v3.0: Sets the list of priority file extensions.
+    /// </summary>
+    /// <param name="extensions">List of extensions (must start with dot, e.g., ".docx").</param>
+    public static void SetPriorityExtensions(List<string> extensions)
+    {
+        Load();
+        // Validate: all extensions must start with dot
+        foreach (var ext in extensions)
+        {
+            if (!ext.StartsWith("."))
+            {
+                throw new ArgumentException($"Extension '{ext}' must start with a dot (e.g., '.docx')");
+            }
+        }
+        _config!.PriorityExtensions = extensions;
+        Save();
+    }
+    
+    /// <summary>
+    /// v3.0: Gets the maximum large file size threshold in KB for parallel transfers.
+    /// </summary>
+    public static long GetMaxLargeFileSizeKB()
+    {
+        Load();
+        return _config!.MaxLargeFileSizeKB;
+    }
+    
+    /// <summary>
+    /// v3.0: Sets the maximum large file size threshold in KB for parallel transfers.
+    /// </summary>
+    /// <param name="sizeInKB">File size in kilobytes (0 = no limit).</param>
+    public static void SetMaxLargeFileSizeKB(long sizeInKB)
+    {
+        Load();
+        _config!.MaxLargeFileSizeKB = sizeInKB;
         Save();
     }
 
