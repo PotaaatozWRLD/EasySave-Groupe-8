@@ -241,12 +241,10 @@ public class AppConfig
     {
         Load();
         // Validate: all extensions must start with dot
-        foreach (var ext in extensions)
+        var invalidExt = extensions.FirstOrDefault(ext => !ext.StartsWith("."));
+        if (invalidExt != null)
         {
-            if (!ext.StartsWith("."))
-            {
-                throw new ArgumentException($"Extension '{ext}' must start with a dot (e.g., '.docx')");
-            }
+            throw new ArgumentException($"Extension '{invalidExt}' must start with a dot (e.g., '.docx')");
         }
         _config!.PriorityExtensions = extensions;
         Save();
