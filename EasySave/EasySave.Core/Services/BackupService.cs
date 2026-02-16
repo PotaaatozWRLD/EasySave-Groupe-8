@@ -406,10 +406,6 @@ public class BackupService
         {
             string subDirName = Path.GetFileName(subDir);
             string targetSubDir = Path.Combine(targetDir, subDirName);
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-            ProcessDirectory(subDir, targetSubDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize);
-=======
             ProcessDirectory(subDir, targetSubDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress, context);
         }
     }
