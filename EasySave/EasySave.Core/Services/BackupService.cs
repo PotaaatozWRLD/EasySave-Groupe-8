@@ -231,17 +231,51 @@ public class BackupService
             Directory.CreateDirectory(targetDir);
         }
 
-        // Process all files in the directory
-        foreach (var filePath in Directory.GetFiles(sourceDir))
+        // V3.0: Separate files by priority
+        var allFiles = Directory.GetFiles(sourceDir);
+        var priorityFiles = allFiles.Where(f => IsPriorityFile(f)).ToList();
+        var normalFiles = allFiles.Where(f => !IsPriorityFile(f)).ToList();
+
+        // Process priority files first
+        foreach (var filePath in priorityFiles)
         {
             // V3.0: Check if job should pause or has been cancelled
             context?.CheckPauseAndCancellation();
             
-            string fileName = Path.GetFileName(filePath);
-            string targetFilePath = Path.Combine(targetDir, fileName);
+            ProcessSingleFile(filePath, targetDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress);
+        }
 
-            try
-            {
+        // Process normal files (non-priority)
+        foreach (var filePath in normalFiles)
+        {
+            // V3.0: Check if job should pause or has been cancelled
+            context?.CheckPauseAndCancellation();
+            
+            ProcessSingleFile(filePath, targetDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress);
+        }
+
+        // Recursively process subdirectories
+        foreach (var subDir in Directory.GetDirectories(sourceDir))
+        {
+            string subDirName = Path.GetFileName(subDir);
+            string targetSubDir = Path.Combine(targetDir, subDirName);
+            ProcessDirectory(subDir, targetSubDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress, context);
+        }
+    }
+
+    /// <summary>
+    /// V3.0: Processes a single file (extracted from ProcessDirectory for clarity and reuse).
+    /// </summary>
+    private void ProcessSingleFile(string filePath, string targetDir, BackupJob job,
+                                    ref int filesProcessed, ref long bytesProcessed,
+                                    int totalFiles, long totalSize,
+                                    IProgress<(int filesProcessed, int totalFiles)>? progress)
+    {
+        string fileName = Path.GetFileName(filePath);
+        string targetFilePath = Path.Combine(targetDir, fileName);
+
+        try
+        {
                 // Get file size for progress calculation
                 var fileInfo = new FileInfo(filePath);
                 long fileSize = fileInfo.Length;
@@ -400,15 +434,6 @@ public class BackupService
                 bytesProcessed += fileSize;
             }
         }
-
-        // Recursively process subdirectories
-        foreach (var subDir in Directory.GetDirectories(sourceDir))
-        {
-            string subDirName = Path.GetFileName(subDir);
-            string targetSubDir = Path.Combine(targetDir, subDirName);
-            ProcessDirectory(subDir, targetSubDir, job, ref filesProcessed, ref bytesProcessed, totalFiles, totalSize, progress, context);
-        }
-    }
 
     /// <summary>
     /// Executes a backup job with V3.0 JobExecutionContext support (pause/stop controls).
