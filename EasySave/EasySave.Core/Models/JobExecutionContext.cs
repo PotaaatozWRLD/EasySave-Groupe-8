@@ -64,6 +64,7 @@ public class JobExecutionContext
     public void Pause()
     {
         State = JobExecutionState.Paused;
+        Job.State = "Paused";
         PauseEvent.Reset(); // Blocks execution
     }
 
@@ -73,6 +74,7 @@ public class JobExecutionContext
     public void Resume()
     {
         State = JobExecutionState.Running;
+        Job.State = "Active";
         PauseEvent.Set(); // Allows execution to continue
     }
 
@@ -82,7 +84,9 @@ public class JobExecutionContext
     public void Stop()
     {
         State = JobExecutionState.Stopped;
+        Job.State = "Stopped";
         CancellationTokenSource.Cancel();
+        PauseEvent.Set(); // Unblock if paused so it can check cancellation
     }
 
     /// <summary>

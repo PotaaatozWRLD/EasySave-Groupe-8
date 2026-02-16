@@ -16,73 +16,158 @@ public class ParallelBackupCoordinator
     private readonly List<string> _extensionsToEncrypt;
     private readonly ConcurrentDictionary<string, JobExecutionContext> _activeJobs;
 
-    public ParallelBackupCoordinator(ILogger logger, string cryptoSoftPath, List<string> extensionsToEncrypt)
+    private readonly BusinessSoftwareMonitor? _monitor;
+
+    public ParallelBackupCoordinator(ILogger logger, string cryptoSoftPath, List<string> extensionsToEncrypt, List<string>? businessSoftware = null)
     {
         _logger = logger;
         _cryptoSoftPath = cryptoSoftPath;
         _extensionsToEncrypt = extensionsToEncrypt;
         _activeJobs = new ConcurrentDictionary<string, JobExecutionContext>();
+
+        // V3.0: Initialize business software monitor if configured
+        if (businessSoftware != null && businessSoftware.Count > 0)
+        {
+            _monitor = new BusinessSoftwareMonitor(businessSoftware);
+            _monitor.SoftwareStarted += OnBusinessSoftwareStarted;
+            _monitor.SoftwareStopped += OnBusinessSoftwareStopped;
+        }
     }
 
+    private void OnBusinessSoftwareStarted(object? sender, EventArgs e)
+    {
+        _logger.WriteLog(new LogEntry 
+        { 
+            JobName = "SYSTEM", 
+            ErrorMessage = "Business software detected. Pausing all jobs." 
+        });
+        PauseAllJobs();
+    }
+
+    private void OnBusinessSoftwareStopped(object? sender, EventArgs e)
+    {
+        _logger.WriteLog(new LogEntry 
+        { 
+            JobName = "SYSTEM", 
+            ErrorMessage = "Business software closed. Resuming all jobs." 
+        });
+        ResumeAllJobs();
+    }
+
+    public event Action<bool>? IsBusyChanged;
+
     /// <summary>
-    /// Executes multiple backup jobs in parallel.
-    /// V3.0: Jobs run concurrently instead of sequentially.
+    /// Starts execution of the provided jobs. 
+    /// Can be called multiple times to add jobs to the running pool.
     /// </summary>
-    public async Task ExecuteJobsInParallelAsync(
+    public async Task StartJobsAsync(
         IEnumerable<BackupJob> jobs,
-        string? businessSoftware = null,
         IProgress<(string jobName, int filesProcessed, int totalFiles)>? progress = null)
     {
-        var jobTasks = new List<Task>();
+        var newJobs = jobs.Where(j => !_activeJobs.ContainsKey(j.Name)).ToList();
 
-        foreach (var job in jobs)
+        if (newJobs.Count == 0) return;
+
+        bool wasEmpty = _activeJobs.IsEmpty;
+
+        // Ensure monitor is running if we have active jobs
+        StartMonitorIfNeeded();
+
+        foreach (var job in newJobs)
         {
             // Create execution context for this job
             var context = new JobExecutionContext(job);
-            _activeJobs.TryAdd(job.Name, context);
-
-            // Start job execution in parallel
-            var jobTask = Task.Run(async () =>
+            if (_activeJobs.TryAdd(job.Name, context))
             {
-                try
+                // Checks if business software is already running at start
+                if (_monitor != null && _monitor.IsBusinessSoftwareRunning)
                 {
-                    var backupService = new BackupService(_logger, _cryptoSoftPath, _extensionsToEncrypt);
-                    
-                    // Create progress reporter for this specific job
-                    var jobProgress = new Progress<(int filesProcessed, int totalFiles)>(p =>
-                    {
-                        context.UpdateProgress(p.filesProcessed, p.totalFiles);
-                        progress?.Report((job.Name, p.filesProcessed, p.totalFiles));
-                    });
+                    context.Pause();
+                }
 
-                    // Execute backup with context for pause/stop support
-                    await ExecuteSingleJobAsync(backupService, context, businessSoftware, jobProgress);
-                    
-                    context.State = JobExecutionState.Completed;
-                }
-                catch (OperationCanceledException)
-                {
-                    // Job was stopped
-                    context.State = JobExecutionState.Stopped;
-                }
-                catch (Exception)
-                {
-                    // Job failed
-                    context.State = JobExecutionState.Failed;
-                    throw;
-                }
-                finally
-                {
-                    // Cleanup
-                    _activeJobs.TryRemove(job.Name, out _);
-                }
-            });
+                job.State = "Active"; 
+                job.Progress = 0;
 
-            jobTasks.Add(jobTask);
+                // Fire and forget (task tracked internally)
+                _ = Task.Run(async () => await RunJobAsync(job, context, progress));
+            }
+        }
+        
+        if (wasEmpty && !_activeJobs.IsEmpty)
+        {
+            IsBusyChanged?.Invoke(true);
         }
 
-        // Wait for all jobs to complete
-        await Task.WhenAll(jobTasks);
+        // We don't await completion here, we return so UI is free
+        await Task.CompletedTask;
+    }
+
+    private async Task RunJobAsync(BackupJob job, JobExecutionContext context, IProgress<(string jobName, int filesProcessed, int totalFiles)>? progress)
+    {
+        try
+        {
+            var backupService = new BackupService(_logger, _cryptoSoftPath, _extensionsToEncrypt);
+            
+            var jobProgress = new Progress<(int filesProcessed, int totalFiles)>(p =>
+            {
+                context.UpdateProgress(p.filesProcessed, p.totalFiles);
+                int percent = p.totalFiles > 0 ? (int)((p.filesProcessed * 100.0) / p.totalFiles) : 0;
+                job.Progress = percent;
+                progress?.Report((job.Name, p.filesProcessed, p.totalFiles));
+            });
+
+            await ExecuteSingleJobAsync(backupService, context, null, jobProgress);
+            
+            context.State = JobExecutionState.Completed;
+            job.State = "Completed";
+            job.Progress = 100;
+        }
+        catch (OperationCanceledException)
+        {
+            context.State = JobExecutionState.Stopped;
+            job.State = "Stopped";
+        }
+        catch (Exception ex)
+        {
+            context.State = JobExecutionState.Failed;
+            job.State = "Error";
+            _logger.WriteLog(new LogEntry { JobName = job.Name, ErrorMessage = ex.Message });
+        }
+        finally
+        {
+            _activeJobs.TryRemove(job.Name, out _);
+            if (_activeJobs.IsEmpty)
+            {
+                IsBusyChanged?.Invoke(false);
+            }
+            StopMonitorIfNoJobs();
+        }
+    }
+
+    private readonly object _monitorLock = new();
+    private void StartMonitorIfNeeded()
+    {
+        lock (_monitorLock)
+        {
+            if (_monitor != null && !_monitor.IsBusinessSoftwareRunning) // Assuming simple check, acts as start trigger check
+            {
+                // Monitor is always instantiated in ctor if config present
+                // We just need to ensure it's "active". 
+                // In this design, Monitor runs its timer always if instantiated.
+                // Or we can Start/Stop the monitor's internal timer if we exposed that.
+                // For now, BusinessSoftwareMonitor runs consistently if created.
+                // If we want to optimize, we would add Start()/Stop() to BusinessSoftwareMonitor.
+                // But simplified: Monitor events are always subscribed.
+            }
+            
+            // Re-subscribe if we unsubscribed? 
+            // Better: Just keep it alive. The overhead is minimal (one timer).
+        }
+    }
+
+    private void StopMonitorIfNoJobs()
+    {
+        // If we wanted to stop the monitor when no jobs are running.
     }
 
     /// <summary>

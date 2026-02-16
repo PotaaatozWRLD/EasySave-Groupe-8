@@ -53,6 +53,21 @@ public class AppConfig
     public string CryptoSoftPath { get; set; } = "CryptoSoft\\bin\\Release\\net10.0\\CryptoSoft.exe";
     
     /// <summary>
+    /// v3.0: Docker Log Server IP. Default: 127.0.0.1 (localhost).
+    /// </summary>
+    public string LogServerIp { get; set; } = "127.0.0.1";
+
+    /// <summary>
+    /// v3.0: Docker Log Server Port. Default: 9000.
+    /// </summary>
+    public int LogServerPort { get; set; } = 9000;
+
+    /// <summary>
+    /// v3.0: Enable network logging to Docker server. Default: false.
+    /// </summary>
+    public bool EnableNetworkLogging { get; set; } = false;
+    
+    /// <summary>
     /// Gets the log format as LogFormat enum.
     /// </summary>
     public LogFormat LogFormat => Enum.TryParse<LogFormat>(LogFormatString, true, out var format) ? format : LogFormat.JSON;
@@ -268,6 +283,35 @@ public class AppConfig
         Load();
         _config!.MaxLargeFileSizeKB = sizeInKB;
         Save();
+    }
+
+    /// <summary>
+    /// Gets whether network logging is enabled (V3.0)
+    /// </summary>
+    public static bool GetEnableNetworkLogging()
+    {
+        Load();
+        // Default to true if not specified in V3.0 context for demo purposes, 
+        // or strictly follow config. For now, let's respect the config default (false)
+        return _config!.EnableNetworkLogging;
+    }
+
+    /// <summary>
+    /// Gets the log server IP (V3.0)
+    /// </summary>
+    public static string GetLogServerIp()
+    {
+        Load();
+        return string.IsNullOrWhiteSpace(_config!.LogServerIp) ? "127.0.0.1" : _config.LogServerIp;
+    }
+
+    /// <summary>
+    /// Gets the log server Port (V3.0)
+    /// </summary>
+    public static int GetLogServerPort()
+    {
+        Load();
+        return _config!.LogServerPort > 0 ? _config.LogServerPort : 9000;
     }
 
     public static bool HasLanguageConfigured()

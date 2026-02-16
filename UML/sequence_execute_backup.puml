@@ -1,99 +1,99 @@
-@startuml EasySave_Sequence_Execute_Backup_v2.0
+@startuml EasySave_Sequence_Parallel_Backup_v3.0
 !theme plain
 autonumber
 
 actor User
 participant "MainViewModel" as VM
-participant "BackupService" as BS
-participant "BusinessSoftwareDetector" as BSD
-participant "EncryptionService" as ES
-participant "ILogger" as Log
-participant "CryptoSoft" as CS
+participant "ParallelCoordinator" as Coord
+participant "BusinessMonitor" as Monitor
+participant "BackupService" as Svc
+participant "LargeFileThrottle" as Throttle
+participant "EncryptionService" as Crypto
+participant "CompositeLogger" as Log
 
-User -> VM : Click "Execute Job"
+User -> VM : Click "Execute All Jobs"
 activate VM
 
-VM -> VM : Initialize BackupService
-note right
-    Injects Logger, CryptoSoftPath,
-    ExtensionsToEncrypt
-end note
+VM -> Coord : ExecuteJobsInParallelAsync(jobs)
+activate Coord
 
-VM -> BS : ExecuteBackup(job, businessSoftwareName)
-activate BS
+Coord -> Monitor : StartMonitoring()
+activate Monitor
+Monitor --> Coord : Monitoring Active
+deactivate Monitor
 
-' Business Software Check
-alt Business software configured
-    BS -> BSD : IsAnyRunning(businessSoftwarelist)
-    activate BSD
-    BSD --> BS : result (bool)
-    deactivate BSD
+par For Each Job (Parallel Task)
+    Coord -> Coord : Create JobExecutionContext
     
-    break result is true
-        BS --> VM : throw InvalidOperationException
-        VM --> User : Show Error "Software Running"
-        deactivate BS
-        deactivate VM
-    end
-end
-
-' Start Backup
-BS -> Log : UpdateState(ACTIVE, 0%)
-activate Log
-deactivate Log
-
-BS -> BS : ProcessDirectory(source, target)
-activate BS
-
-loop For each file
-    BS -> Log : UpdateState(ACTIVE, progress)
-    activate Log
-    deactivate Log
-
-    alt Full Backup OR (Differential AND New/Modified)
-        
-        ' Check Encryption
-        BS -> ES : ShouldEncrypt(file, extensions)
-        activate ES
-        ES --> BS : shouldEncrypt
-        deactivate ES
-        
-        alt shouldEncrypt is true
-            BS -> ES : EncryptFile(source, target)
-            activate ES
-            ES -> CS : Process.Start(CryptoSoft.exe)
-            activate CS
-            CS --> ES : Exit Code 0
-            deactivate CS
-            ES --> BS : encryptionTime
-            deactivate ES
-        else
-            BS -> BS : File.Copy(source, target)
+    Coord -> Svc : ExecuteBackupWithContext(job, context)
+    activate Svc
+    
+    Svc -> Svc : Scan Files
+    
+    loop For Each File
+        ' Business Logic Check
+        alt Business Software Detected
+            Monitor -> Coord : Raise SoftwareStarted
+            Coord -> Coord : PauseAllJobs()
+            Coord -> Svc : Pause() via Context
+            Svc -> Svc : Wait(PauseEvent)
+            
+            ... Software Closes ...
+            
+            Monitor -> Coord : Raise SoftwareStopped
+            Coord -> Coord : ResumeAllJobs()
+            Coord -> Svc : Resume() via Context
+            Svc -> Svc : Continue
         end
         
-        BS -> Log : WriteLog(entry)
+        ' Priority Handling
+        Svc -> Svc : Check Priority Files
+        note right: If non-priority file,\nwait for priority queues to clear
+        
+        ' Large File Throttling
+        alt File Size > Limit
+            Svc -> Throttle : WaitAsync()
+            activate Throttle
+            Throttle --> Svc : Grant Access
+            deactivate Throttle
+        end
+        
+        ' Process File
+        alt Should Encrypt
+            Svc -> Crypto : EncryptFile()
+            activate Crypto
+            Crypto -> Crypto : Mutex.WaitOne()
+            Crypto -> "CryptoSoft.exe" : Process.Start()
+            "CryptoSoft.exe" --> Crypto : Exit
+            Crypto -> Crypto : Mutex.Release()
+            Crypto --> Svc : Done
+            deactivate Crypto
+        else
+            Svc -> Svc : File.Copy()
+        end
+        
+        ' Release Throttle
+        alt File Size > Limit
+            Svc -> Throttle : Release()
+        end
+        
+        Svc -> Log : WriteLog(entry)
         activate Log
-        note right
-             Entry includes:
-             - TransferTime
-             - EncryptionTime
-             - Status
-        end note
+        Log -> "File.json" : Write()
+        Log -> "Docker(TCP)" : Send()
         deactivate Log
         
     end
+    
+    Svc --> Coord : Job Complete
+    deactivate Svc
 end
 
-deactivate BS
+Coord -> Monitor : StopMonitoring()
+Coord --> VM : All Jobs Complete
+deactivate Coord
 
-BS -> Log : UpdateState(END, 100%)
-activate Log
-deactivate Log
-
-BS --> VM : Complete
-deactivate BS
-
-VM --> User : Show Success Message
+VM --> User : Update UI "Completed"
 deactivate VM
 
 @enduml

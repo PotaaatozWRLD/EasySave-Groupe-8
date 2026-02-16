@@ -45,8 +45,20 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="5" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding State}" FontSize="10" 
+                                                   Foreground="{DynamicResource TextSecondary}" 
+                                                   VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                    </Grid>
+                                    
                                     <TextBlock Text="{Binding Type}" FontSize="11" Foreground="{DynamicResource TextSecondary}"/>
+                                    
+                                    <ProgressBar Value="{Binding Progress}" 
+                                                 Minimum="0" Maximum="100" 
+                                                 Height="4" Margin="0,5,0,0"
+                                                 Foreground="{DynamicResource PrimaryColor}"
+                                                 IsVisible="{Binding State, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -230,18 +242,44 @@
 
                     <!-- Bottom Action Buttons - REFAIT PROPREMENT -->
                     <StackPanel Grid.Row="2" Orientation="Vertical" Spacing="12" Margin="0,24,0,0">
-                        <Button Content="{Binding Localization[ExecuteSelectedJob]}"
-                                Command="{Binding ExecuteSelectedJobCommand}"
-                                IsEnabled="{Binding !IsExecuting}"
-                                Classes="Primary"
-                                HorizontalAlignment="Stretch"
-                                Height="46"/>
+                        
+                        <!-- Execution Buttons -->
+                        <StackPanel Spacing="12">
+                            <Button Content="{Binding Localization[ExecuteSelectedJob]}"
+                                    Command="{Binding ExecuteSelectedJobCommand}"
+                                    IsEnabled="{Binding !SelectedJob.IsRunning, FallbackValue=False}"
+                                    Classes="Primary"
+                                    HorizontalAlignment="Stretch"
+                                    Height="46"/>
 
-                        <Button Content="{Binding Localization[ExecuteAllJobs]}"
-                                Command="{Binding ExecuteAllJobsCommand}"
-                                IsEnabled="{Binding !IsExecuting}"
-                                HorizontalAlignment="Stretch"
-                                Height="42"/>
+                            <Button Content="{Binding Localization[ExecuteAllJobs]}"
+                                    Command="{Binding ExecuteAllJobsCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Height="42"/>
+                        </StackPanel>
+
+                        <!-- Control Buttons -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Active Job Controls" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextSecondary}" HorizontalAlignment="Center"/>
+                            
+                            <Grid ColumnDefinitions="*,8,*,8,*" IsVisible="{Binding SelectedJob, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <Button Grid.Column="0" Command="{Binding PauseJobCommand}" CommandParameter="{Binding SelectedJob}" 
+                                        IsEnabled="{Binding SelectedJob.CanPause}"
+                                        Classes="Secondary" HorizontalAlignment="Stretch" ToolTip.Tip="Pause Selected">
+                                    <TextBlock Text="⏸" HorizontalAlignment="Center"/>
+                                </Button>
+                                <Button Grid.Column="2" Command="{Binding ResumeJobCommand}" CommandParameter="{Binding SelectedJob}" 
+                                        IsEnabled="{Binding SelectedJob.CanResume}"
+                                        Classes="Secondary" HorizontalAlignment="Stretch" ToolTip.Tip="Resume Selected">
+                                    <TextBlock Text="▶" HorizontalAlignment="Center"/>
+                                </Button>
+                                <Button Grid.Column="4" Command="{Binding StopJobCommand}" CommandParameter="{Binding SelectedJob}" 
+                                        IsEnabled="{Binding SelectedJob.CanStop}"
+                                        Classes="Danger" HorizontalAlignment="Stretch" ToolTip.Tip="Stop Selected">
+                                    <TextBlock Text="⏹" HorizontalAlignment="Center"/>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -254,21 +292,13 @@
                     <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" FontWeight="Medium"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="5" IsVisible="{Binding IsExecuting}">
-                    <ProgressBar Value="{Binding ProgressPercentage}"
-                                 Minimum="0"
-                                 Maximum="100"
-                                 Width="200"
-                                 Height="20"
-                                 Foreground="{DynamicResource PrimaryColor}"
-                                 Background="#E0E0E0"
-                                 CornerRadius="10"/>
-                    <TextBlock Text="{Binding ProgressText}"
-                               HorizontalAlignment="Center"
-                               FontSize="11"
-                               Foreground="#666"
-                               FontWeight="Medium"/>
-                </StackPanel>
+                <!-- Global Controls (Middle) - MOVED TO RIGHT PANEL -->
+                <!-- <StackPanel Grid.Column="1" ... /> -->
+
+                <!-- Global Progress Bar Removed - Replaced by per-job progress -->
+                <!-- <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="5" IsVisible="{Binding IsExecuting}">
+                    <ProgressBar Value="{Binding ProgressPercentage}" ... />
+                </StackPanel> -->
             </Grid>
         </Border>
     </Grid>
