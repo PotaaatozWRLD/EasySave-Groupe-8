@@ -222,16 +222,8 @@ public class BackupService
     /// </summary>
     private void ProcessDirectory(string sourceDir, string targetDir, BackupJob job, 
                                   ref int filesProcessed, ref long bytesProcessed, 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-                                  int totalFiles, long totalSize)
-=======
                                   int totalFiles, long totalSize, IProgress<(int filesProcessed, int totalFiles)>? progress = null,
                                   JobExecutionContext? context = null)
->>>>>>> Stashed changes
-=======
-                                  int totalFiles, long totalSize, IProgress<(int filesProcessed, int totalFiles)>? progress = null)
->>>>>>> ab063d7db3026d7aa9cf412ec4ae92de3a1d1dfb
     {
         // Ensure the target directory exists
         if (!Directory.Exists(targetDir))
