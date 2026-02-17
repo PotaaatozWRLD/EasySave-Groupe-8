@@ -33,7 +33,17 @@ public class AppConfig
     public string BusinessSoftwareName { get; set; } = string.Empty;
     
     /// <summary>
-    /// v3.0: Maximum file size in bytes for parallel transfer. Default: 0 (no limit).
+    /// v3.0: List of priority file extensions (e.g., ".docx", ".xlsx"). These files are processed first.
+    /// </summary>
+    public List<string> PriorityExtensions { get; set; } = new();
+    
+    /// <summary>
+    /// v3.0: Maximum file size in KB for parallel transfer throttling. Files larger than this transfer one at a time.
+    /// </summary>
+    public long MaxLargeFileSizeKB { get; set; } = 1024; // Default: 1 MB
+    
+    /// <summary>
+    /// [DEPRECATED] v3.0: Use MaxLargeFileSizeKB instead (in KB, not bytes).
     /// </summary>
     public long MaxLargeFileSize { get; set; } = 0;
     
@@ -41,6 +51,21 @@ public class AppConfig
     /// v2.0: Path to CryptoSoft.exe executable. Default: relative path to CryptoSoft in project.
     /// </summary>
     public string CryptoSoftPath { get; set; } = "CryptoSoft\\bin\\Release\\net10.0\\CryptoSoft.exe";
+    
+    /// <summary>
+    /// v3.0: Docker Log Server IP. Default: 127.0.0.1 (localhost).
+    /// </summary>
+    public string LogServerIp { get; set; } = "127.0.0.1";
+
+    /// <summary>
+    /// v3.0: Docker Log Server Port. Default: 9000.
+    /// </summary>
+    public int LogServerPort { get; set; } = 9000;
+
+    /// <summary>
+    /// v3.0: Enable network logging to Docker server. Default: false.
+    /// </summary>
+    public bool EnableNetworkLogging { get; set; } = false;
     
     /// <summary>
     /// Gets the log format as LogFormat enum.
@@ -212,6 +237,81 @@ public class AppConfig
         Load();
         _config!.CryptoSoftPath = path;
         Save();
+    }
+    
+    /// <summary>
+    /// v3.0: Gets the list of priority file extensions.
+    /// </summary>
+    public static List<string> GetPriorityExtensions()
+    {
+        Load();
+        return _config!.PriorityExtensions;
+    }
+    
+    /// <summary>
+    /// v3.0: Sets the list of priority file extensions.
+    /// </summary>
+    /// <param name="extensions">List of extensions (must start with dot, e.g., ".docx").</param>
+    public static void SetPriorityExtensions(List<string> extensions)
+    {
+        Load();
+        // Validate: all extensions must start with dot
+        var invalidExt = extensions.FirstOrDefault(ext => !ext.StartsWith("."));
+        if (invalidExt != null)
+        {
+            throw new ArgumentException($"Extension '{invalidExt}' must start with a dot (e.g., '.docx')");
+        }
+        _config!.PriorityExtensions = extensions;
+        Save();
+    }
+    
+    /// <summary>
+    /// v3.0: Gets the maximum large file size threshold in KB for parallel transfers.
+    /// </summary>
+    public static long GetMaxLargeFileSizeKB()
+    {
+        Load();
+        return _config!.MaxLargeFileSizeKB;
+    }
+    
+    /// <summary>
+    /// v3.0: Sets the maximum large file size threshold in KB for parallel transfers.
+    /// </summary>
+    /// <param name="sizeInKB">File size in kilobytes (0 = no limit).</param>
+    public static void SetMaxLargeFileSizeKB(long sizeInKB)
+    {
+        Load();
+        _config!.MaxLargeFileSizeKB = sizeInKB;
+        Save();
+    }
+
+    /// <summary>
+    /// Gets whether network logging is enabled (V3.0)
+    /// </summary>
+    public static bool GetEnableNetworkLogging()
+    {
+        Load();
+        // Default to true if not specified in V3.0 context for demo purposes, 
+        // or strictly follow config. For now, let's respect the config default (false)
+        return _config!.EnableNetworkLogging;
+    }
+
+    /// <summary>
+    /// Gets the log server IP (V3.0)
+    /// </summary>
+    public static string GetLogServerIp()
+    {
+        Load();
+        return string.IsNullOrWhiteSpace(_config!.LogServerIp) ? "127.0.0.1" : _config.LogServerIp;
+    }
+
+    /// <summary>
+    /// Gets the log server Port (V3.0)
+    /// </summary>
+    public static int GetLogServerPort()
+    {
+        Load();
+        return _config!.LogServerPort > 0 ? _config.LogServerPort : 9000;
     }
 
     public static bool HasLanguageConfigured()

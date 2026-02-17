@@ -15,4 +15,8 @@ public class LogEntry
     public long EncryptionTime { get; set; } = 0;            // Time in ms (0=no encryption, >0=success, <0=error) - v2.0
     public string? ErrorMessage { get; set; }                // Null if no error
     public DateTime Timestamp { get; set; } = DateTime.Now; // Auto-set to current time
+
+    // V3.0: Centralized Logging Identity
+    public string MachineName { get; set; } = Environment.MachineName;
+    public string UserName { get; set; } = Environment.UserName;
 }

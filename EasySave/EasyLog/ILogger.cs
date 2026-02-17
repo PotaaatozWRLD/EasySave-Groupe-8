@@ -28,6 +28,7 @@ public class JsonLogger : ILogger
 {
     private readonly string _logDirectory;
     private readonly string _stateFilePath;
+    private readonly object _lock = new();
 
     public JsonLogger(string logDirectory, string stateFilePath)
     {
@@ -42,16 +43,22 @@ public class JsonLogger : ILogger
 
     public void WriteLog(LogEntry logEntry)
     {
-        string logFilePath = Path.Combine(_logDirectory, $"{DateTime.Now:yyyy-MM-dd}.json");
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        var logContent = JsonSerializer.Serialize(logEntry, options);
-        File.AppendAllText(logFilePath, logContent + Environment.NewLine);
+        lock (_lock)
+        {
+            string logFilePath = Path.Combine(_logDirectory, $"{DateTime.Now:yyyy-MM-dd}.json");
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var logContent = JsonSerializer.Serialize(logEntry, options);
+            File.AppendAllText(logFilePath, logContent + Environment.NewLine);
+        }
     }
 
     public void UpdateState(StateEntry stateEntry)
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        var stateContent = JsonSerializer.Serialize(stateEntry, options);
-        File.WriteAllText(_stateFilePath, stateContent);
+        lock (_lock)
+        {
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var stateContent = JsonSerializer.Serialize(stateEntry, options);
+            File.WriteAllText(_stateFilePath, stateContent);
+        }
     }
 }

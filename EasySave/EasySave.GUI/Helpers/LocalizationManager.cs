@@ -75,16 +75,6 @@ public class LocalizationManager : INotifyPropertyChanged
     {
         get
         {
-            // Always reload language from config to ensure up-to-date language (workaround for GUI bug)
-            string lang = GetLanguageFromConfig();
-            if (lang != _currentLanguageCode)
-            {
-                _currentCulture = GetCultureInfo(lang);
-                _currentLanguageCode = lang;
-                CultureInfo.CurrentUICulture = _currentCulture;
-                // Notify all properties changed to refresh all UI bindings
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
-            }
             try
             {
                 var value = _resourceManager.GetString(key, _currentCulture);

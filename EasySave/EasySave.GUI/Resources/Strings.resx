@@ -188,4 +188,46 @@
   <data name="Logs_Opened" xml:space="preserve">
     <value>Open Logs Folder</value>
   </data>
+  <data name="Status_ExecutingParallel" xml:space="preserve">
+    <value>Executing jobs in parallel...</value>
+  </data>
+  <data name="Status_Completed" xml:space="preserve">
+    <value>All jobs completed.</value>
+  </data>
+  <data name="Status_StoppedByUser" xml:space="preserve">
+    <value>Execution stopped by user.</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>Paused: {0}</value>
+  </data>
+  <data name="Status_Resumed" xml:space="preserve">
+    <value>Resumed: {0}</value>
+  </data>
+  <data name="Status_Stopped" xml:space="preserve">
+    <value>Stopped: {0}</value>
+  </data>
+  <data name="Status_AllPaused" xml:space="preserve">
+    <value>All jobs paused</value>
+  </data>
+  <data name="Status_AllResumed" xml:space="preserve">
+    <value>All jobs resumed</value>
+  </data>
+  <data name="Status_StoppingAll" xml:space="preserve">
+    <value>Stopping all jobs...</value>
+  </data>
+  <data name="Progress_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="GlobalControls" xml:space="preserve">
+    <value>Global Execution Controls</value>
+  </data>
+  <data name="PauseAll" xml:space="preserve">
+    <value>Pause All</value>
+  </data>
+  <data name="ResumeAll" xml:space="preserve">
+    <value>Resume All</value>
+  </data>
+  <data name="StopAll" xml:space="preserve">
+    <value>Stop All</value>
+  </data>
 </root>

@@ -1,9 +1,9 @@
-@startuml EasySave_Activity_Backup_Process
+@startuml EasySave_Activity_Backup_Process_v3.0
 !theme plain
 
 start
 
-:User initiates Backup;
+:User initiates "Execute All";
 
 if (Configuration loaded?) then (yes)
     :Get Backup Jobs;
@@ -11,47 +11,70 @@ else (no)
     :Load Configuration;
 endif
 
-:Select Job(s);
+:Initialize ParallelBackupCoordinator;
+:Start BusinessSoftwareMonitor;
 
-if (Business Software Check configured?) then (yes)
-    :Check if processes are running;
-    if (Processes running?) then (yes)
-        :Display Error;
-        :Abort Backup;
-        stop
-    endif
-endif
-
-:Create BackupService;
-
-partition "Execute Backup" {
-    :Calculate Total Files & Size;
-    :Initialize Logger (State: ACTIVE);
+fork
+    :Monitor Business Software;
+    detach
+fork again
+    :Split Jobs into Tasks;
     
-    while (More files?) is (yes)
-        :Get Next File;
+    partition "Parallel Execution" {
+        :Start Job Task;
         
-        if (Backup Type is Full OR (Differential AND File Changed)) then (yes)
-            if (File Extension in Encryption List?) then (yes)
-                :Encrypt File (CryptoSoft);
-                note right
-                   Uses external process
-                   Measure encryption time
-                end note
-            else (no)
-                :Copy File System;
+        while (More files?) is (yes)
+            :Get Next File;
+            
+            ' Business Software Pause
+            while (Business Software Running?) is (yes)
+               :Pause Job;
+               :Wait for Software Close;
+            endwhile (no)
+            :Resume Job;
+
+            ' Priority Handling
+            while (Priority Files Pending in other jobs?) is (yes)
+                if (Current File is Priority?) then (yes)
+                    break
+                else (no)
+                    :Wait (Yield);
+                endif
+            endwhile (no)
+            
+            ' Throttling
+            if (File Size > MaxLargeFileSizeKB?) then (yes)
+                :Acquire Throttle Semaphore;
             endif
             
-            :Log Operation (JSON/XML);
-            :Update State (Progress);
-        else (no)
-            :Skip File;
-        endif
-    endwhile (no)
-    
-    :Update State (END);
-}
+            ' Backup Logic
+            if (Backup Type is Full OR (Differential AND File Changed)) then (yes)
+                if (File Extension in Encryption List?) then (yes)
+                    :Acquire Crypto Mutex;
+                    :Encrypt File (CryptoSoft);
+                    :Release Crypto Mutex;
+                else (no)
+                    :Copy File System;
+                endif
+                
+                :Log Operation (File + Network);
+                :Update State (Progress);
+            else (no)
+                :Skip File;
+            endif
+            
+            ' Release Throttling
+            if (File Size > MaxLargeFileSizeKB?) then (yes)
+                :Release Throttle Semaphore;
+            endif
+            
+        endwhile (no)
+        
+        :Job Complete;
+    }
+end fork
 
+:Stop BusinessSoftwareMonitor;
 :Display Completion Message;
 
 stop

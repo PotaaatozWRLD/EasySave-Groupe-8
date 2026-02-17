@@ -1,0 +1,13 @@
+services:
+  log-server:
+    image: alpine:latest
+    container_name: easysave-log-server
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && echo 'Starting Log Server on port 9000...' && nc -lk -p 9000"
+    ports:
+      - "9000:9000"
+    networks:
+      - easysave-network
+
+networks:
+  easysave-network:
+    driver: bridge

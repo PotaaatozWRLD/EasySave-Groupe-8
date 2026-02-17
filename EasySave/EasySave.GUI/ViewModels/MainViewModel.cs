@@ -186,7 +186,37 @@ public partial class MainViewModel : ViewModelBase
     {
         // Initialize logger with current configuration
         LogFormat logFormat = AppConfig.GetLogFormat();
-        _logger = LoggerFactory.CreateLogger(logFormat, _logPath, _statePath);
+        var fileLogger = LoggerFactory.CreateLogger(logFormat, _logPath, _statePath);
+        
+        // V3.0: Network Logging
+        if (AppConfig.GetEnableNetworkLogging())
+        {
+            try
+            {
+                string ip = AppConfig.GetLogServerIp();
+                int port = AppConfig.GetLogServerPort();
+                var networkLogger = new NetworkLogger(ip, port);
+                
+                // Use CompositeLogger to log to both file and network
+                _logger = new CompositeLogger(new List<ILogger> { fileLogger, networkLogger });
+            }
+            catch (Exception ex)
+            {
+                // Fallback to file logger if network logger fails to initialize
+                _logger = fileLogger;
+                // Log the initialization error
+                _logger.WriteLog(new LogEntry 
+                { 
+                    JobName = "System", 
+                    ErrorMessage = $"Failed to initialize network logger: {ex.Message}",
+                    Timestamp = DateTime.Now
+                });
+            }
+        }
+        else
+        {
+            _logger = fileLogger;
+        }
     }
 
     private void LoadJobs()
@@ -290,159 +320,140 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    private ParallelBackupCoordinator? _coordinator;
+    private readonly object _lock = new();
+
     [RelayCommand]
     private async Task ExecuteSelectedJobAsync()
     {
-        // Execute selected jobs (support multiple selection)
-        if (SelectedJobs.Count == 0 || _logger == null)
+        if (SelectedJobs.Count == 0)
         {
-            StatusMessage = "No job selected";
+            StatusMessage = LanguageManager.Instance.GetString("Job_NoSelected");
             return;
         }
 
-        IsExecuting = true;
-        ProgressPercentage = 0;
-        ProgressText = string.Empty;
-        int totalJobs = SelectedJobs.Count;
-        int successCount = 0;
-        int failCount = 0;
-
-        StatusMessage = $"Executing {totalJobs} job(s)...";
-
-        try
-        {
-            // Create backup service with encryption support
-            string cryptoSoftPath = AppConfig.GetCryptoSoftPath();
-            List<string> extensionsToEncrypt = AppConfig.GetExtensionsToEncrypt();
-            var backupService = new BackupService(_logger, cryptoSoftPath, extensionsToEncrypt);
-            List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
-            string? businessSoftware = businessSoftwareList.Count > 0 ? string.Join(";", businessSoftwareList) : null;
-            
-            foreach (var job in SelectedJobs.ToList())
-            {
-                try
-                {
-                    StatusMessage = $"Executing: {job.Name} ({successCount + failCount + 1}/{totalJobs})...";
-                    
-                    // Create progress callback to update UI
-                    var progressReporter = new Progress<(int filesProcessed, int totalFiles)>(progressData =>
-                    {
-                        var (filesProcessed, totalFiles) = progressData;
-                        // Calculate percentage (0-99, not 100 to show completion differently)
-                        ProgressPercentage = totalFiles > 0 ? Math.Min((filesProcessed * 99.0) / totalFiles, 99) : 0;
-                        ProgressText = $"Processing file {filesProcessed} of {totalFiles}";
-                    });
-                    
-                    await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware, progressReporter));
-                    
-                    // Set to 100% on completion
-                    ProgressPercentage = 100;
-                    ProgressText = "Completed!";
-                    
-                    successCount++;
-                }
-                catch (IOException ex)
-                {
-                    failCount++;
-                    StatusMessage = $"Failed: {job.Name} - I/O error: {ex.Message}";
-                    await Task.Delay(2000); // Show error for 2 seconds
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    failCount++;
-                    StatusMessage = $"Failed: {job.Name} - Access denied: {ex.Message}";
-                    await Task.Delay(2000); // Show error for 2 seconds
-                }
-                catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
-                {
-                    // Catch all backup-related exceptions (network, file system, etc.)
-                    failCount++;
-                    StatusMessage = $"Failed: {job.Name} - {ex.Message}";
-                    await Task.Delay(2000); // Show error for 2 seconds
-                }
-            }
-            
-            StatusMessage = $"Completed: {successCount} succeeded, {failCount} failed";
-        }
-        catch (IOException ex)
-        {
-            StatusMessage = $"Configuration or I/O error: {ex.Message}";
-        }
-        catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
-        {
-            // Unexpected error during job preparation or service initialization
-            StatusMessage = $"Unexpected error: {ex.Message}";
-        }
-        finally
-        {
-            IsExecuting = false;
-        }
+        await ExecuteJobsInternalAsync(SelectedJobs.ToList());
     }
 
     [RelayCommand]
     private async Task ExecuteAllJobsAsync()
     {
-        if (Jobs.Count == 0 || _logger == null)
+        if (Jobs.Count == 0)
         {
             StatusMessage = LanguageManager.Instance.GetString("Job_NoJobsToExecute");
             return;
         }
 
-        IsExecuting = true;
-        StatusMessage = string.Format(LanguageManager.Instance.GetString("Job_ExecutingAll"), Jobs.Count);
+        await ExecuteJobsInternalAsync(Jobs.ToList());
+    }
+
+    private async Task ExecuteJobsInternalAsync(List<BackupJob> jobsToExecute)
+    {
+        if (_logger == null) return;
+        
+        // Ensure coordinator is initialized
+        if (_coordinator == null)
+        {
+            string cryptoSoftPath = AppConfig.GetCryptoSoftPath();
+            List<string> extensionsToEncrypt = AppConfig.GetExtensionsToEncrypt();
+            List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
+            _coordinator = new ParallelBackupCoordinator(_logger, cryptoSoftPath, extensionsToEncrypt, businessSoftwareList);
+            
+            // Subscribe to busy state changes to toggle global control buttons
+            _coordinator.IsBusyChanged += (isBusy) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    IsExecuting = isBusy;
+                    // Also clear global progress when done
+                    if (!isBusy)
+                    {
+                        ProgressPercentage = 0;
+                        ProgressText = "All jobs completed";
+                        StatusMessage = LanguageManager.Instance.GetString("Status_Completed");
+                    }
+                });
+            };
+
+            // Subscribe to Business Software detection
+            _coordinator.BusinessSoftwareDetected += (processName) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"⚠️ PAUSED: Business Software Detected ({processName})";
+                });
+            };
+        }
+
+        // Filter out jobs that are already running
+        var jobsToStart = jobsToExecute.Where(j => !j.IsRunning).ToList();
+        
+        if (jobsToStart.Count == 0) return;
+
+        StatusMessage = string.Format(LanguageManager.Instance.GetString("Job_ExecutingAll"), jobsToStart.Count);
 
         try
         {
-            // Create backup service with encryption support
-            string cryptoSoftPath = AppConfig.GetCryptoSoftPath();
-            List<string> extensionsToEncrypt = AppConfig.GetExtensionsToEncrypt();
-            var backupService = new BackupService(_logger, cryptoSoftPath, extensionsToEncrypt);
-            List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
-            string? businessSoftware = businessSoftwareList.Count > 0 ? string.Join(";", businessSoftwareList) : null;
-            
-            int successCount = 0;
-            int failCount = 0;
-            int totalJobs = Jobs.Count;
-
-            foreach (var job in Jobs.ToList())
+            // Setup progress reporting (legacy, mostly unused now as jobs update themselves)
+            var progress = new Progress<(string jobName, int filesProcessed, int totalFiles)>(data =>
             {
-                try
-                {
-                    StatusMessage = $"Executing: {job.Name} ({successCount + failCount + 1}/{totalJobs})...";
-                    await Task.Run(() => backupService.ExecuteBackup(job, businessSoftware));
-                    successCount++;
-                }
-                catch (IOException ex)
-                {
-                    failCount++;
-                    StatusMessage = $"Failed: {job.Name} - I/O error: {ex.Message}";
-                    await Task.Delay(1000);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    failCount++;
-                    StatusMessage = $"Failed: {job.Name} - Access denied: {ex.Message}";
-                    await Task.Delay(1000);
-                }
-                catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
-                {
-                    failCount++;
-                    StatusMessage = $"Failed: {job.Name} - {ex.Message}";
-                    await Task.Delay(1000);
-                }
-            }
+               // Global progress logic if needed
+            });
 
-            StatusMessage = $"Completed: {successCount} succeeded, {failCount} failed";
+            // Start jobs without blocking the UI thread
+            await _coordinator.StartJobsAsync(jobsToStart, progress);
+            
+            // Note: We don't set IsExecuting = true globally anymore, 
+            // nor do we wait for completion here.
+            // But we might want to flag that *something* is running?
+            // For now, IsExecuting is removed from blocking logic so we can leave it false or unused.
         }
-        catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
+        catch (Exception ex)
         {
-            // Unexpected error during service initialization
-            StatusMessage = $"Unexpected error: {ex.Message}";
+            StatusMessage = $"Error starting execution: {ex.Message}";
         }
-        finally
-        {
-            IsExecuting = false;
-        }
+    }
+
+    [RelayCommand]
+    private void PauseJob(BackupJob job)
+    {
+        _coordinator?.PauseJob(job.Name);
+        StatusMessage = string.Format(LocalizationManager.Instance["Status_Paused"], job.Name);
+    }
+
+    [RelayCommand]
+    private void ResumeJob(BackupJob job)
+    {
+        _coordinator?.ResumeJob(job.Name);
+        StatusMessage = string.Format(LocalizationManager.Instance["Status_Resumed"], job.Name);
+    }
+
+    [RelayCommand]
+    private void StopJob(BackupJob job)
+    {
+        _coordinator?.StopJob(job.Name);
+        StatusMessage = string.Format(LocalizationManager.Instance["Status_Stopped"], job.Name);
+    }
+
+    [RelayCommand]
+    private void PauseAll()
+    {
+        _coordinator?.PauseAllJobs();
+        StatusMessage = LocalizationManager.Instance["Status_AllPaused"];
+    }
+
+    [RelayCommand]
+    private void ResumeAll()
+    {
+        _coordinator?.ResumeAllJobs();
+        StatusMessage = LocalizationManager.Instance["Status_AllResumed"];
+    }
+
+    [RelayCommand]
+    private void StopAll()
+    {
+        _coordinator?.StopAllJobs();
+        StatusMessage = LocalizationManager.Instance["Status_StoppingAll"];
     }
 
     [RelayCommand]

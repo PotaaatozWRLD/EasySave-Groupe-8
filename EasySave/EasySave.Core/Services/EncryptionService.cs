@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading;
 
 namespace EasySave.Core.Services;
 
@@ -36,8 +37,28 @@ public class EncryptionService
     ///   -4: Timeout waiting for CryptoSoft
     ///   -5: Exception during encryption
     /// </returns>
+    // V3.0: Semaphore to ensure only one CryptoSoft instance runs at a time (Mono-Instance requirement)
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    /// <summary>
+    /// Encrypts a file using CryptoSoft.exe.
+    /// V3.0: Serializes access to CryptoSoft using a semaphore.
+    /// </summary>
+    /// <param name="sourceFile">Path to the file to encrypt.</param>
+    /// <param name="targetFile">Path where encrypted file will be saved.</param>
+    /// <returns>
+    /// Encryption time in milliseconds if successful (>0),
+    /// or negative error code if failed:
+    ///   -1: CryptoSoft.exe not found
+    ///   -2: Source file not found
+    ///   -3: CryptoSoft returned error exit code
+    ///   -4: Timeout waiting for CryptoSoft
+    ///   -5: Exception during encryption
+    /// </returns>
     public long EncryptFile(string sourceFile, string targetFile)
     {
+        // Wait for the semaphore to enter the critical section
+        _semaphore.Wait();
         try
         {
             // Validate CryptoSoft.exe exists
@@ -84,6 +105,8 @@ public class EncryptionService
             // Check exit code
             if (process.ExitCode != 0)
             {
+                // V3.0: Handle the "Already Running" exit code specially if needed, 
+                // but Semaphore should prevent this.
                 return -3; // CryptoSoft error
             }
 
@@ -106,6 +129,11 @@ public class EncryptionService
         catch (IOException)
         {
             return -5; // File I/O error
+        }
+        finally
+        {
+            // Always release the semaphore
+            _semaphore.Release();
         }
     }
 

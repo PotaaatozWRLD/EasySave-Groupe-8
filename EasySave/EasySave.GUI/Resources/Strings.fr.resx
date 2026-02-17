@@ -188,4 +188,46 @@
   <data name="Logs_Opened" xml:space="preserve">
     <value>Ouvrir le dossier des logs</value>
   </data>
+  <data name="Status_ExecutingParallel" xml:space="preserve">
+    <value>Exécution des travaux en parallèle...</value>
+  </data>
+  <data name="Status_Completed" xml:space="preserve">
+    <value>Tous les travaux sont terminés.</value>
+  </data>
+  <data name="Status_StoppedByUser" xml:space="preserve">
+    <value>Exécution arrêtée par l'utilisateur.</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>En pause : {0}</value>
+  </data>
+  <data name="Status_Resumed" xml:space="preserve">
+    <value>Repris : {0}</value>
+  </data>
+  <data name="Status_Stopped" xml:space="preserve">
+    <value>Arrêté : {0}</value>
+  </data>
+  <data name="Status_AllPaused" xml:space="preserve">
+    <value>Tous les travaux en pause</value>
+  </data>
+  <data name="Status_AllResumed" xml:space="preserve">
+    <value>Tous les travaux repris</value>
+  </data>
+  <data name="Status_StoppingAll" xml:space="preserve">
+    <value>Arrêt de tous les travaux...</value>
+  </data>
+  <data name="Progress_Completed" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="GlobalControls" xml:space="preserve">
+    <value>Contrôles Globaux</value>
+  </data>
+  <data name="PauseAll" xml:space="preserve">
+    <value>Tout Mettre en Pause</value>
+  </data>
+  <data name="ResumeAll" xml:space="preserve">
+    <value>Tout Reprendre</value>
+  </data>
+  <data name="StopAll" xml:space="preserve">
+    <value>Tout Arrêter</value>
+  </data>
 </root>
