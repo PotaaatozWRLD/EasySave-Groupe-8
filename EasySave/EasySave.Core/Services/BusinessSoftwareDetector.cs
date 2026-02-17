@@ -64,11 +64,28 @@ public static class BusinessSoftwareDetector
     /// <returns>True if at least one process is running, false otherwise.</returns>
     public static bool IsAnyRunning(IEnumerable<string> processNames)
     {
+        return GetFirstRunningProcess(processNames) != null;
+    }
+
+    /// <summary>
+    /// Gets the name of the first process from the list that is currently running.
+    /// </summary>
+    /// <param name="processNames">A list of process names to check.</param>
+    /// <returns>The name of the running process, or null if none are found.</returns>
+    public static string? GetFirstRunningProcess(IEnumerable<string> processNames)
+    {
         if (processNames == null || !processNames.Any())
         {
-            return false;
+            return null;
         }
 
-        return processNames.Any(IsRunning);
+        foreach (var name in processNames)
+        {
+            if (IsRunning(name))
+            {
+                return name;
+            }
+        }
+        return null;
     }
 }

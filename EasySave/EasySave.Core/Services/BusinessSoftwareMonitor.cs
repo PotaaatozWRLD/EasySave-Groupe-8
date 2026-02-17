@@ -24,6 +24,8 @@ public class BusinessSoftwareMonitor : IDisposable
         get { lock(_lock) return _isBusinessSoftwareRunning; }
     }
 
+    public string? DetectedProcessName { get; private set; }
+
     public BusinessSoftwareMonitor(List<string> processNames, int checkIntervalMs = 2000)
     {
         _processNames = processNames ?? new List<string>();
@@ -39,23 +41,26 @@ public class BusinessSoftwareMonitor : IDisposable
     {
         try
         {
-            bool isRunning = BusinessSoftwareDetector.IsAnyRunning(_processNames);
+            string? runningProcess = BusinessSoftwareDetector.GetFirstRunningProcess(_processNames);
+            bool isRunning = !string.IsNullOrEmpty(runningProcess);
             
             lock (_lock)
             {
                 if (isRunning && !_isBusinessSoftwareRunning)
                 {
                     _isBusinessSoftwareRunning = true;
+                    DetectedProcessName = runningProcess;
                     SoftwareStarted?.Invoke(this, EventArgs.Empty);
                 }
                 else if (!isRunning && _isBusinessSoftwareRunning)
                 {
                     _isBusinessSoftwareRunning = false;
+                    DetectedProcessName = null;
                     SoftwareStopped?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
-        catch
+        catch (Exception)
         {
             // Ignore errors during background check to prevent crash
         }

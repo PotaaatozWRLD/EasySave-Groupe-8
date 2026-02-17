@@ -200,10 +200,17 @@ public partial class MainViewModel : ViewModelBase
                 // Use CompositeLogger to log to both file and network
                 _logger = new CompositeLogger(new List<ILogger> { fileLogger, networkLogger });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Fallback to file logger if network logger fails to initialize
                 _logger = fileLogger;
+                // Log the initialization error
+                _logger.WriteLog(new LogEntry 
+                { 
+                    JobName = "System", 
+                    ErrorMessage = $"Failed to initialize network logger: {ex.Message}",
+                    Timestamp = DateTime.Now
+                });
             }
         }
         else
@@ -365,6 +372,15 @@ public partial class MainViewModel : ViewModelBase
                         ProgressText = "All jobs completed";
                         StatusMessage = LanguageManager.Instance.GetString("Status_Completed");
                     }
+                });
+            };
+
+            // Subscribe to Business Software detection
+            _coordinator.BusinessSoftwareDetected += (processName) =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"⚠️ PAUSED: Business Software Detected ({processName})";
                 });
             };
         }

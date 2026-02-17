@@ -36,11 +36,14 @@ public class ParallelBackupCoordinator
 
     private void OnBusinessSoftwareStarted(object? sender, EventArgs e)
     {
+        string processName = _monitor?.DetectedProcessName ?? "Unknown";
         _logger.WriteLog(new LogEntry 
         { 
             JobName = "SYSTEM", 
-            ErrorMessage = "Business software detected. Pausing all jobs." 
+            ErrorMessage = $"Business software detected ({processName}). Pausing all jobs." 
         });
+        
+        BusinessSoftwareDetected?.Invoke(processName);
         PauseAllJobs();
     }
 
@@ -55,6 +58,7 @@ public class ParallelBackupCoordinator
     }
 
     public event Action<bool>? IsBusyChanged;
+    public event Action<string>? BusinessSoftwareDetected;
 
     /// <summary>
     /// Starts execution of the provided jobs. 
@@ -82,6 +86,16 @@ public class ParallelBackupCoordinator
                 // Checks if business software is already running at start
                 if (_monitor != null && _monitor.IsBusinessSoftwareRunning)
                 {
+                    string processName = _monitor.DetectedProcessName ?? "Unknown";
+                    _logger.WriteLog(new LogEntry
+                    {
+                        JobName = job.Name,
+                        ErrorMessage = $"Paused on start: Business software running ({processName})"
+                    });
+                    
+                    // Notify UI only once per batch or just fire it
+                    BusinessSoftwareDetected?.Invoke(processName);
+                    
                     context.Pause();
                 }
 
@@ -127,11 +141,46 @@ public class ParallelBackupCoordinator
             context.State = JobExecutionState.Stopped;
             job.State = "Stopped";
         }
+        catch (IOException ex)
+        {
+            context.State = JobExecutionState.Failed;
+            job.State = "Error";
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = job.Name,
+                ErrorMessage = $"I/O error during backup: {ex.Message}"
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            context.State = JobExecutionState.Failed;
+            job.State = "Error";
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = job.Name,
+                ErrorMessage = $"Access denied during backup: {ex.Message}"
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            context.State = JobExecutionState.Failed;
+            job.State = "Error";
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = job.Name,
+                ErrorMessage = $"Invalid operation during backup: {ex.Message}"
+            });
+        }
         catch (Exception ex)
         {
             context.State = JobExecutionState.Failed;
             job.State = "Error";
             _logger.WriteLog(new LogEntry { JobName = job.Name, ErrorMessage = ex.Message });
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = job.Name,
+                ErrorMessage = $"Unexpected error during backup: {ex}"
+            });
         }
         finally
         {
@@ -201,10 +250,22 @@ public class ParallelBackupCoordinator
     }
 
     /// <summary>
-    /// Resumes a paused job by name
+    /// Resumes a paused job by name, unless blocked by business software
     /// </summary>
     public void ResumeJob(string jobName)
     {
+        if (_monitor != null && _monitor.IsBusinessSoftwareRunning)
+        {
+            string processName = _monitor.DetectedProcessName ?? "Unknown";
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = jobName,
+                ErrorMessage = $"Resume blocked: Business software running ({processName})"
+            });
+            BusinessSoftwareDetected?.Invoke(processName);
+            return;
+        }
+
         if (_activeJobs.TryGetValue(jobName, out var context))
         {
             context.Resume();
@@ -234,10 +295,22 @@ public class ParallelBackupCoordinator
     }
 
     /// <summary>
-    /// Resumes all paused jobs
+    /// Resumes all paused jobs, unless blocked by business software
     /// </summary>
     public void ResumeAllJobs()
     {
+        if (_monitor != null && _monitor.IsBusinessSoftwareRunning)
+        {
+            string processName = _monitor.DetectedProcessName ?? "Unknown";
+            _logger.WriteLog(new LogEntry
+            {
+                JobName = "SYSTEM",
+                ErrorMessage = $"Resume All blocked: Business software running ({processName})"
+            });
+            BusinessSoftwareDetected?.Invoke(processName);
+            return;
+        }
+
         foreach (var context in _activeJobs.Values)
         {
             context.Resume();

@@ -292,8 +292,27 @@
                     <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" FontWeight="Medium"/>
                 </StackPanel>
 
-                <!-- Global Controls (Middle) - MOVED TO RIGHT PANEL -->
-                <!-- <StackPanel Grid.Column="1" ... /> -->
+                <!-- Global Controls (Middle) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" IsVisible="{Binding IsExecuting}">
+                    <Button Command="{Binding PauseAllCommand}" Classes="Secondary" ToolTip.Tip="{Binding Localization[PauseAll]}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="⏸"/>
+                            <TextBlock Text="{Binding Localization[PauseAll]}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ResumeAllCommand}" Classes="Secondary" ToolTip.Tip="{Binding Localization[ResumeAll]}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="▶"/>
+                            <TextBlock Text="{Binding Localization[ResumeAll]}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding StopAllCommand}" Classes="Danger" ToolTip.Tip="{Binding Localization[StopAll]}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="⏹"/>
+                            <TextBlock Text="{Binding Localization[StopAll]}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <!-- Global Progress Bar Removed - Replaced by per-job progress -->
                 <!-- <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="5" IsVisible="{Binding IsExecuting}">
