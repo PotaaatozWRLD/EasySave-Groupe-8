@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
 using Moq;
@@ -52,6 +53,86 @@ namespace EasySave.Tests
             // PauseJob returns void and handles missing jobs gracefully
             var exception = Record.Exception(() => coordinator.PauseJob(jobName));
             Assert.Null(exception);
+        }
+
+        [Fact]
+        public async Task ResumeJob_ShouldBeBlocked_WhenBusinessSoftwareIsRunning()
+        {
+            // Arrange
+            using (var testProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }))
+            {
+                System.Threading.Thread.Sleep(500);
+                try
+                {
+                    var businessSoftware = new List<string> { "dotnet" };
+                    var coordinator = new ParallelBackupCoordinator(_loggerMock.Object, _cryptoSoftPath, _extensionsToEncrypt, businessSoftware);
+                    var jobs = new List<BackupJob>
+                    {
+                        new BackupJob("TestJob_ResumeBlock", "src", "dst", BackupType.Full)
+                    };
+
+                    // Act
+                    coordinator.ResumeJob("TestJob_ResumeBlock");
+
+                    // Assert
+                    // Should log "Resume blocked"
+                    _loggerMock.Verify(l => l.WriteLog(It.Is<LogEntry>(e => e.ErrorMessage.Contains("Resume blocked"))), Times.Once);
+                }
+                finally
+                {
+                    testProcess?.Kill();
+                    testProcess?.WaitForExit(1000);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task StartJobsAsync_ShouldPauseOnStart_WhenBusinessSoftwareIsRunning()
+        {
+            // Arrange
+            using (var testProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = "--info",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }))
+            {
+                System.Threading.Thread.Sleep(500);
+                try
+                {
+                    var businessSoftware = new List<string> { "dotnet" };
+                    var coordinator = new ParallelBackupCoordinator(_loggerMock.Object, _cryptoSoftPath, _extensionsToEncrypt, businessSoftware);
+                    var jobs = new List<BackupJob>
+                    {
+                        new BackupJob("TestJob_PauseStart", "src", "dst", BackupType.Full)
+                    };
+
+                    // Act
+                    await coordinator.StartJobsAsync(jobs);
+                    
+                    // Allow some time for async background tasks (though Pause happens synchronously in StartJobsAsync)
+                    await Task.Delay(100);
+
+                    // Assert
+                    // The job should be in "Paused" state because business software is running
+                    Assert.Equal("Paused", jobs[0].State);
+                    
+                    // Verify log
+                    _loggerMock.Verify(l => l.WriteLog(It.Is<LogEntry>(e => e.ErrorMessage.Contains("Paused on start"))), Times.AtLeastOnce);
+                }
+                finally
+                {
+                    testProcess?.Kill();
+                    testProcess?.WaitForExit(1000);
+                }
+            }
         }
     }
 }

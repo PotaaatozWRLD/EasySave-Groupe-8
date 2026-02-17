@@ -83,6 +83,8 @@ public class ParallelBackupCoordinator
             var context = new JobExecutionContext(job);
             if (_activeJobs.TryAdd(job.Name, context))
             {
+                job.State = "Active";
+
                 // Checks if business software is already running at start
                 if (_monitor != null && _monitor.IsBusinessSoftwareRunning)
                 {
@@ -97,9 +99,7 @@ public class ParallelBackupCoordinator
                     BusinessSoftwareDetected?.Invoke(processName);
                     
                     context.Pause();
-                }
-
-                job.State = "Active"; 
+                } 
                 job.Progress = 0;
 
                 // Fire and forget (task tracked internally)
