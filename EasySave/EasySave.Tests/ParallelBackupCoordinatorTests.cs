@@ -72,17 +72,14 @@ namespace EasySave.Tests
                 {
                     var businessSoftware = new List<string> { "dotnet" };
                     var coordinator = new ParallelBackupCoordinator(_loggerMock.Object, _cryptoSoftPath, _extensionsToEncrypt, businessSoftware);
-                    var jobs = new List<BackupJob>
-                    {
-                        new BackupJob("TestJob_ResumeBlock", "src", "dst", BackupType.Full)
-                    };
+
 
                     // Act
                     coordinator.ResumeJob("TestJob_ResumeBlock");
 
                     // Assert
                     // Should log "Resume blocked"
-                    _loggerMock.Verify(l => l.WriteLog(It.Is<LogEntry>(e => e.ErrorMessage.Contains("Resume blocked"))), Times.Once);
+                    _loggerMock.Verify(l => l.WriteLog(It.Is<LogEntry>(e => (e.ErrorMessage ?? "").Contains("Resume blocked"))), Times.Once);
                 }
                 finally
                 {
@@ -125,7 +122,7 @@ namespace EasySave.Tests
                     Assert.Equal("Paused", jobs[0].State);
                     
                     // Verify log
-                    _loggerMock.Verify(l => l.WriteLog(It.Is<LogEntry>(e => e.ErrorMessage.Contains("Paused on start"))), Times.AtLeastOnce);
+                    _loggerMock.Verify(l => l.WriteLog(It.Is<LogEntry>(e => (e.ErrorMessage ?? "").Contains("Paused on start"))), Times.AtLeastOnce);
                 }
                 finally
                 {
