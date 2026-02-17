@@ -21,25 +21,24 @@ namespace EasySave.Tests
         }
 
         [Fact]
-        public async Task ExecuteJobsInParallelAsync_ShouldStartAllJobs()
+        public async Task StartJobsAsync_ShouldStartAllJobs()
         {
             // Arrange
             var coordinator = new ParallelBackupCoordinator(_loggerMock.Object, _cryptoSoftPath, _extensionsToEncrypt);
-            var jobs = new List<BackupJob>(); // Empty list to test coordinator mechanics without FS dependencies
+            var jobs = new List<BackupJob>
+            {
+                new BackupJob("TestJob", "src", "dst", BackupType.Full)
+            };
 
             // Act
-            // Note: In a real unit test without file system abstraction, we can't easily assert file operations 
-            // without mocking System.IO. However, we can check if the method completes without error 
-            // and if internal state tracking initializes.
-            
-            // To properly test this, we would need to refactor BackupService to be mockable or use a file system abstraction.
-            // For now, we verify instantiation and sanity.
-            
-            var task = coordinator.ExecuteJobsInParallelAsync(jobs);
+            // StartJobsAsync is fire-and-forget but sets state synchronously
+            await coordinator.StartJobsAsync(jobs);
             
             // Assert
-            Assert.NotNull(task);
-            // We don't await task here as it would try to run actual backups on non-existent paths.
+            // We check if the job state was updated to Active, indicating it was accepted by the coordinator
+            // Note: Since we don't mock the filesystem, the background task might fail quickly, 
+            // but the initial state transition to "Active" happens before Task.Run.
+            Assert.Equal("Active", jobs[0].State);
         }
 
         [Fact]
