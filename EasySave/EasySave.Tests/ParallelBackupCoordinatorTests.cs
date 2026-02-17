@@ -58,21 +58,27 @@ namespace EasySave.Tests
         [Fact]
         public async Task ResumeJob_ShouldBeBlocked_WhenBusinessSoftwareIsRunning()
         {
-            // Arrange
-            using (var testProcess = Process.Start(new ProcessStartInfo
+            // Arrange - Use a long-lived process for CI stability
+            var startInfo = new ProcessStartInfo
             {
-                FileName = "dotnet",
-                Arguments = "--info",
+                FileName = "powershell.exe",
+                Arguments = "-Command \"Start-Sleep -Seconds 10\"",
                 UseShellExecute = false,
                 CreateNoWindow = true
-            }))
+            };
+
+            using (var testProcess = Process.Start(startInfo))
             {
-                System.Threading.Thread.Sleep(500);
+                // Wait for process to be fully up
+                await Task.Delay(500);
+                
                 try
                 {
-                    var businessSoftware = new List<string> { "dotnet" };
+                    var businessSoftware = new List<string> { "powershell" };
                     var coordinator = new ParallelBackupCoordinator(_loggerMock.Object, _cryptoSoftPath, _extensionsToEncrypt, businessSoftware);
-
+                    
+                    // Critical: Give the internal monitor time to perform its first check (initial delay 0 but async)
+                    await Task.Delay(1000);
 
                     // Act
                     coordinator.ResumeJob("TestJob_ResumeBlock");
@@ -92,33 +98,48 @@ namespace EasySave.Tests
         [Fact]
         public async Task StartJobsAsync_ShouldPauseOnStart_WhenBusinessSoftwareIsRunning()
         {
-            // Arrange
-            using (var testProcess = Process.Start(new ProcessStartInfo
+            // Arrange - Create real temp directories to avoid "Error" state in BackupService
+            string tempBase = Path.Combine(Path.GetTempPath(), "EasySave_Test_" + Guid.NewGuid().ToString("N"));
+            string src = Path.Combine(tempBase, "src");
+            string dst = Path.Combine(tempBase, "dst");
+            Directory.CreateDirectory(src);
+            Directory.CreateDirectory(dst);
+            File.WriteAllText(Path.Combine(src, "dummy.txt"), "content");
+
+            var startInfo = new ProcessStartInfo
             {
-                FileName = "dotnet",
-                Arguments = "--info",
+                FileName = "powershell.exe",
+                Arguments = "-Command \"Start-Sleep -Seconds 10\"",
                 UseShellExecute = false,
                 CreateNoWindow = true
-            }))
+            };
+
+            using (var testProcess = Process.Start(startInfo))
             {
-                System.Threading.Thread.Sleep(500);
+                await Task.Delay(500);
+                
                 try
                 {
-                    var businessSoftware = new List<string> { "dotnet" };
+                    var businessSoftware = new List<string> { "powershell" };
                     var coordinator = new ParallelBackupCoordinator(_loggerMock.Object, _cryptoSoftPath, _extensionsToEncrypt, businessSoftware);
+                    
+                    // Give monitor time to initialize
+                    await Task.Delay(1000);
+
                     var jobs = new List<BackupJob>
                     {
-                        new BackupJob("TestJob_PauseStart", "src", "dst", BackupType.Full)
+                        new BackupJob("TestJob_PauseStart", src, dst, BackupType.Full)
                     };
 
                     // Act
                     await coordinator.StartJobsAsync(jobs);
                     
-                    // Allow some time for async background tasks (though Pause happens synchronously in StartJobsAsync)
-                    await Task.Delay(100);
+                    // Allow time for state transition
+                    await Task.Delay(500);
 
                     // Assert
                     // The job should be in "Paused" state because business software is running
+                    // If it's "Active" or "Error", it means the block failed.
                     Assert.Equal("Paused", jobs[0].State);
                     
                     // Verify log
@@ -128,6 +149,7 @@ namespace EasySave.Tests
                 {
                     testProcess?.Kill();
                     testProcess?.WaitForExit(1000);
+                    try { Directory.Delete(tempBase, true); } catch { /* cleanup is best effort */ }
                 }
             }
         }

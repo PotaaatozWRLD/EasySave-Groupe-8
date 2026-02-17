@@ -42,27 +42,30 @@ namespace EasySave.Tests
         }
 
         [Fact]
-        public void GetFirstRunningProcess_ShouldReturnProcessName_WhenProcessIsRunning()
+        public async Task GetFirstRunningProcess_ShouldReturnProcessName_WhenProcessIsRunning()
         {
-            // Arrange - Start a dummy process
-            using (var testProcess = Process.Start(new ProcessStartInfo
+            // Arrange - Start a dummy process (PowerShell sleep for stability)
+            var startInfo = new ProcessStartInfo
             {
-                FileName = "dotnet",
-                Arguments = "--info",
+                FileName = "powershell.exe",
+                Arguments = "-Command \"Start-Sleep -Seconds 5\"",
                 UseShellExecute = false,
                 CreateNoWindow = true
-            }))
+            };
+
+            using (var testProcess = Process.Start(startInfo))
             {
-                System.Threading.Thread.Sleep(500);
+                // Give it a moment to start
+                await Task.Delay(500);
                 try
                 {
-                    var processes = new List<string> { "NonExistentProcess", "dotnet" };
+                    var processes = new List<string> { "NonExistentProcess", "powershell" };
 
                     // Act
                     string? result = BusinessSoftwareDetector.GetFirstRunningProcess(processes);
 
                     // Assert
-                    Assert.Equal("dotnet", result);
+                    Assert.Equal("powershell", result);
                 }
                 finally
                 {
