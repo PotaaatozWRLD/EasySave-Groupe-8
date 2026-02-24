@@ -467,6 +467,15 @@ public partial class MainViewModel : ViewModelBase
             if (settingsViewModel.DialogResult)
             {
                 InitializeServices();
+                
+                // V3.0: Update running coordinator with new configuration
+                if (_coordinator != null)
+                {
+                    List<string> extensionsToEncrypt = AppConfig.GetExtensionsToEncrypt();
+                    List<string> businessSoftwareList = AppConfig.GetBusinessSoftwareNames();
+                    _coordinator.UpdateConfiguration(extensionsToEncrypt, businessSoftwareList);
+                }
+                
                 StatusMessage = LanguageManager.Instance.GetString("Settings_Saved");
             }
         };

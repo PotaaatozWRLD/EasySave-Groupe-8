@@ -61,6 +61,44 @@ public class ParallelBackupCoordinator
     public event Action<string>? BusinessSoftwareDetected;
 
     /// <summary>
+    /// V3.0: Updates the coordinator's configuration at runtime.
+    /// This allows live updates for encryption extensions and business software without restart.
+    /// </summary>
+    public void UpdateConfiguration(List<string> extensionsToEncrypt, List<string>? businessSoftware)
+    {
+        _extensionsToEncrypt.Clear();
+        if (extensionsToEncrypt != null)
+        {
+            _extensionsToEncrypt.AddRange(extensionsToEncrypt);
+        }
+
+        if (businessSoftware != null && businessSoftware.Count > 0)
+        {
+            if (_monitor == null)
+            {
+                // Initialize monitor if it didn't exist
+                var monitor = new BusinessSoftwareMonitor(businessSoftware);
+                monitor.SoftwareStarted += OnBusinessSoftwareStarted;
+                monitor.SoftwareStopped += OnBusinessSoftwareStopped;
+                
+                // Use reflection or a private field if needed, but here we can just assign
+                // Since _monitor is private, we can't easily swap it if it's readonly, 
+                // let's check the declaration. It's not readonly.
+                typeof(ParallelBackupCoordinator).GetField("_monitor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(this, monitor);
+            }
+            else
+            {
+                _monitor.UpdateProcessNames(businessSoftware);
+            }
+        }
+        else
+        {
+            // If list is now empty, we might want to "stop" the monitor
+            _monitor?.UpdateProcessNames(new List<string>());
+        }
+    }
+
+    /// <summary>
     /// Starts execution of the provided jobs. 
     /// Can be called multiple times to add jobs to the running pool.
     /// </summary>

@@ -99,7 +99,45 @@
                     </StackPanel>
                 </Border>
 
-                <!-- CryptoSoft Configuration -->
+                <!-- Priority Extensions (V3.0) -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding Localization[PriorityExtensions]}" Classes="H2" FontSize="16" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[PriorityExtensionsHint]}"/>
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding NewPriorityExtension}"
+                                         Watermark=".pdf"
+                                         Height="38"
+                                         Margin="0,0,8,0"/>
+                                <Button Grid.Column="1"
+                                        Content="{Binding Localization[Add]}"
+                                        Command="{Binding AddPriorityExtensionCommand}"
+                                        Classes="Primary"
+                                        Height="38"
+                                        Margin="0,0,8,0"
+                                        Padding="20,0"/>
+                                <Button Grid.Column="2"
+                                        Content="{Binding Localization[Remove]}"
+                                        Command="{Binding RemovePriorityExtensionCommand}"
+                                        Height="38"
+                                        Padding="20,0"/>
+                            </Grid>
+
+                            <!-- List of priority extensions -->
+                            <ListBox ItemsSource="{Binding PriorityExtensions}"
+                                     SelectedItem="{Binding SelectedPriorityExtension}"
+                                     MinHeight="60"
+                                     MaxHeight="120"
+                                     Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 <Border Classes="Card">
                     <StackPanel Spacing="12">
                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -154,6 +192,40 @@
                                   SelectedItem="{Binding SelectedLogFormat}"
                                   HorizontalAlignment="Stretch"
                                   Height="38"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Docker / Azure Centralized Logging (V3.0) -->
+                <Border Classes="Card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{Binding Localization[DockerLogging]}" Classes="H2" FontSize="16"/>
+
+                        <!-- Enable Toggle -->
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <CheckBox IsChecked="{Binding EnableNetworkLogging}"
+                                      Content="{Binding Localization[EnableNetworkLogging]}"/>
+                        </StackPanel>
+
+                        <!-- Server IP -->
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[LogServerIp]}"/>
+                            <TextBox Text="{Binding LogServerIp}"
+                                     Watermark="4.178.254.175"
+                                     IsEnabled="{Binding EnableNetworkLogging}"
+                                     Height="38"/>
+                        </StackPanel>
+
+                        <!-- Server Port -->
+                        <StackPanel>
+                            <TextBlock Classes="Label" Text="{Binding Localization[LogServerPort]}"/>
+                            <NumericUpDown Value="{Binding LogServerPort}"
+                                           Minimum="1"
+                                           Maximum="65535"
+                                           Increment="1"
+                                           FormatString="N0"
+                                           IsEnabled="{Binding EnableNetworkLogging}"
+                                           Height="38"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
