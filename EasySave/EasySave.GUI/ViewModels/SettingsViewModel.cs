@@ -59,7 +59,7 @@ public partial class SettingsViewModel : ViewModelBase
     private bool _enableNetworkLogging = false;
 
     [ObservableProperty]
-    private string _logServerIp = "4.178.254.175";
+    private string _logServerIp = "127.0.0.1";
 
     [ObservableProperty]
     private int _logServerPort = 9000;
