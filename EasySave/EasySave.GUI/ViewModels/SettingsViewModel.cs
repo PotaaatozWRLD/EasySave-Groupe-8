@@ -37,15 +37,6 @@ public partial class SettingsViewModel : ViewModelBase
     private string? _selectedBusinessSoftware;
 
     [ObservableProperty]
-    private ObservableCollection<string> _priorityExtensions = new();
-
-    [ObservableProperty]
-    private string _newPriorityExtension = string.Empty;
-
-    [ObservableProperty]
-    private string? _selectedPriorityExtension;
-
-    [ObservableProperty]
     private string _cryptoSoftPath = string.Empty;
 
     [ObservableProperty]
@@ -54,15 +45,18 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private LogFormat _selectedLogFormat = LogFormat.JSON;
 
-    // V3.0 Docker/Azure Centralized Logging
+    // V3.0 Docker centralized logging
     [ObservableProperty]
-    private bool _enableNetworkLogging = false;
+    private string _selectedLoggingMode = "Local";
 
     [ObservableProperty]
     private string _logServerIp = "127.0.0.1";
 
     [ObservableProperty]
     private int _logServerPort = 9000;
+
+    public ObservableCollection<string> LoggingModes { get; } =
+        new ObservableCollection<string> { "Local", "Docker", "Both" };
 
     public ObservableCollection<LogFormat> LogFormats { get; }
     
@@ -132,33 +126,6 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void AddPriorityExtension()
-    {
-        if (!string.IsNullOrWhiteSpace(NewPriorityExtension))
-        {
-            var ext = NewPriorityExtension.Trim();
-            if (!ext.StartsWith("."))
-                ext = "." + ext;
-
-            if (!PriorityExtensions.Contains(ext))
-            {
-                PriorityExtensions.Add(ext);
-                NewPriorityExtension = string.Empty;
-            }
-        }
-    }
-
-    [RelayCommand]
-    private void RemovePriorityExtension()
-    {
-        if (SelectedPriorityExtension != null)
-        {
-            PriorityExtensions.Remove(SelectedPriorityExtension);
-            SelectedPriorityExtension = null;
-        }
-    }
-
-    [RelayCommand]
     private async Task BrowseCryptoSoft()
     {
         var dialog = new Avalonia.Platform.Storage.FilePickerOpenOptions
@@ -221,18 +188,12 @@ public partial class SettingsViewModel : ViewModelBase
             BusinessSoftwareNames.Add(software);
         }
 
-        PriorityExtensions.Clear();
-        foreach (var ext in AppConfig.GetPriorityExtensions())
-        {
-            PriorityExtensions.Add(ext);
-        }
-
         CryptoSoftPath = AppConfig.GetCryptoSoftPath();
         MaxLargeFileSize = AppConfig.GetMaxLargeFileSize();
         SelectedLogFormat = AppConfig.GetLogFormat();
 
-        // V3.0: Docker / Azure Centralized Logging
-        EnableNetworkLogging = AppConfig.GetEnableNetworkLogging();
+        // V3.0 Docker
+        SelectedLoggingMode = AppConfig.GetLoggingMode();
         LogServerIp = AppConfig.GetLogServerIp();
         LogServerPort = AppConfig.GetLogServerPort();
     }
@@ -241,13 +202,12 @@ public partial class SettingsViewModel : ViewModelBase
     {
         AppConfig.SetExtensionsToEncrypt(ExtensionsToEncrypt.ToList());
         AppConfig.SetBusinessSoftwareNames(BusinessSoftwareNames.ToList());
-        AppConfig.SetPriorityExtensions(PriorityExtensions.ToList());
         AppConfig.SetCryptoSoftPath(CryptoSoftPath);
         AppConfig.SetMaxLargeFileSize(MaxLargeFileSize);
         AppConfig.SetLogFormat(SelectedLogFormat);
 
-        // V3.0: Docker / Azure Centralized Logging
-        AppConfig.SetEnableNetworkLogging(EnableNetworkLogging);
+        // V3.0 Docker
+        AppConfig.SetLoggingMode(SelectedLoggingMode);
         AppConfig.SetLogServerIp(LogServerIp);
         AppConfig.SetLogServerPort(LogServerPort);
     }

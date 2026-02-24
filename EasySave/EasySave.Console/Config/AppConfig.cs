@@ -63,9 +63,9 @@ public class AppConfig
     public int LogServerPort { get; set; } = 9000;
 
     /// <summary>
-    /// v3.0: Enable network logging to Docker server. Default: false.
+    /// v3.0: Logging mode — Local, Docker, or Both. Default: Local.
     /// </summary>
-    public bool EnableNetworkLogging { get; set; } = false;
+    public string LoggingMode { get; set; } = "Local";
     
     /// <summary>
     /// Gets the log format as LogFormat enum.
@@ -286,18 +286,26 @@ public class AppConfig
     }
 
     /// <summary>
-    /// Gets whether network logging is enabled (V3.0)
+    /// v3.0: Gets the logging mode (Local, Docker, or Both).
     /// </summary>
-    public static bool GetEnableNetworkLogging()
+    public static string GetLoggingMode()
     {
         Load();
-        // Default to true if not specified in V3.0 context for demo purposes, 
-        // or strictly follow config. For now, let's respect the config default (false)
-        return _config!.EnableNetworkLogging;
+        return string.IsNullOrWhiteSpace(_config!.LoggingMode) ? "Local" : _config.LoggingMode;
     }
 
     /// <summary>
-    /// Gets the log server IP (V3.0)
+    /// v3.0: Sets the logging mode (Local, Docker, or Both).
+    /// </summary>
+    public static void SetLoggingMode(string mode)
+    {
+        Load();
+        _config!.LoggingMode = mode;
+        Save();
+    }
+
+    /// <summary>
+    /// v3.0: Gets the log server IP (V3.0)
     /// </summary>
     public static string GetLogServerIp()
     {
@@ -306,7 +314,7 @@ public class AppConfig
     }
 
     /// <summary>
-    /// Gets the log server Port (V3.0)
+    /// v3.0: Gets the log server Port (V3.0)
     /// </summary>
     public static int GetLogServerPort()
     {
@@ -315,17 +323,7 @@ public class AppConfig
     }
 
     /// <summary>
-    /// v3.0: Enables or disables network logging to Docker/Azure server.
-    /// </summary>
-    public static void SetEnableNetworkLogging(bool enable)
-    {
-        Load();
-        _config!.EnableNetworkLogging = enable;
-        Save();
-    }
-
-    /// <summary>
-    /// v3.0: Sets the log server IP address (Docker or Azure).
+    /// v3.0: Sets the log server IP address.
     /// </summary>
     public static void SetLogServerIp(string ip)
     {
@@ -343,7 +341,6 @@ public class AppConfig
         _config!.LogServerPort = port;
         Save();
     }
-
 
     public static bool HasLanguageConfigured()
     {
