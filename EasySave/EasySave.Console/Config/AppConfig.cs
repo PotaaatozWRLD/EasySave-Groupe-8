@@ -314,6 +314,37 @@ public class AppConfig
         return _config!.LogServerPort > 0 ? _config.LogServerPort : 9000;
     }
 
+    /// <summary>
+    /// v3.0: Enables or disables network logging to Docker/Azure server.
+    /// </summary>
+    public static void SetEnableNetworkLogging(bool enable)
+    {
+        Load();
+        _config!.EnableNetworkLogging = enable;
+        Save();
+    }
+
+    /// <summary>
+    /// v3.0: Sets the log server IP address (Docker or Azure).
+    /// </summary>
+    public static void SetLogServerIp(string ip)
+    {
+        Load();
+        _config!.LogServerIp = ip;
+        Save();
+    }
+
+    /// <summary>
+    /// v3.0: Sets the log server port.
+    /// </summary>
+    public static void SetLogServerPort(int port)
+    {
+        Load();
+        _config!.LogServerPort = port;
+        Save();
+    }
+
+
     public static bool HasLanguageConfigured()
     {
         string appDataPath = Path.Combine(
