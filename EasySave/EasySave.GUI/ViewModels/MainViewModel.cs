@@ -187,27 +187,32 @@ public partial class MainViewModel : ViewModelBase
         // Initialize logger with current configuration
         LogFormat logFormat = AppConfig.GetLogFormat();
         var fileLogger = LoggerFactory.CreateLogger(logFormat, _logPath, _statePath);
-        
-        // V3.0: Network Logging
-        if (AppConfig.GetEnableNetworkLogging())
+
+        // V3.0: Centralized logging — 3 modes defined by spec:
+        //   "Local"  → logs only on this PC (default)
+        //   "Docker" → logs only on Docker server
+        //   "Both"   → logs on this PC AND Docker server
+        string mode = AppConfig.GetLoggingMode();
+
+        if (mode == "Docker" || mode == "Both")
         {
             try
             {
                 string ip = AppConfig.GetLogServerIp();
                 int port = AppConfig.GetLogServerPort();
                 var networkLogger = new NetworkLogger(ip, port);
-                
-                // Use CompositeLogger to log to both file and network
-                _logger = new CompositeLogger(new List<ILogger> { fileLogger, networkLogger });
+
+                _logger = mode == "Both"
+                    ? new CompositeLogger(new List<ILogger> { fileLogger, networkLogger })
+                    : networkLogger; // Docker-only: no local file
             }
             catch (Exception ex)
             {
-                // Fallback to file logger if network logger fails to initialize
+                // Fallback to local if Docker init fails
                 _logger = fileLogger;
-                // Log the initialization error
-                _logger.WriteLog(new LogEntry 
-                { 
-                    JobName = "System", 
+                _logger.WriteLog(new LogEntry
+                {
+                    JobName = "System",
                     ErrorMessage = $"Failed to initialize network logger: {ex.Message}",
                     Timestamp = DateTime.Now
                 });
@@ -215,9 +220,10 @@ public partial class MainViewModel : ViewModelBase
         }
         else
         {
-            _logger = fileLogger;
+            _logger = fileLogger; // Local only
         }
     }
+
 
     private void LoadJobs()
     {
