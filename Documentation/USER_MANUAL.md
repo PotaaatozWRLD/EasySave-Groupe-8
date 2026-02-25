@@ -1,66 +1,29 @@
 # EasySave 3.0 - User Manual
 
-## Introduction
+## 1. Installation
+1.  Ensure **.NET 8.0 SDK** or Runtime is installed.
+2.  Extract the `EasySave` archive to your desired location.
+3.  To use the CryptoSoft features, ensure `CryptoSoft.exe` is present in the `CryptoSoft/bin/Release/net10.0/` directory (or configure the path).
+4.  (Optional) For Centralized Logging, ensure **Docker** is installed and running.
 
 EasySave 3.0 is a professional backup software that allows you to create and manage unlimited backup jobs with parallel execution capabilities. Each job can be configured to perform a full or differential backup with optional AES-256 encryption. Version 3.0 adds parallel backup execution, priority file management, real-time job control, automatic pause on business software detection, and centralized Docker-based logging.
 
-## Getting Started
+### Key Settings:
+- **`Language`**: `en` (English) or `fr` (French).
+- **`LogFormatString`**: `JSON` or `XML`.
+- **`ExtensionsToEncrypt`**: List of extensions to encrypt (e.g., `[".docx", ".pdf"]`).
+- **`BusinessSoftwareNames`**: List of process names that, if running, will **Pause** backups (e.g., `["notepad", "calc"]`).
+- **`PriorityExtensions`**: Files to back up first (e.g., `[".txt", ".csv"]`).
+- **`MaxLargeFileSizeKB`**: Files larger than this (in KB) will typically wait for a "slot" to prevent lagging the PC (Default: `1024`).
+- **`EnableNetworkLogging`**: Set to `true` to send logs to a server.
+- **`LogServerIp`**: IP address of the log server (Default: `127.0.0.1`).
 
-### Launching EasySave
-
-**Graphical User Interface (Recommended):**
-
-1. Double-click `EasySave.GUI.exe`
-2. Main window opens with all your backup jobs listed
-3. Create, edit, delete, or execute jobs using the intuitive UI
-4. Monitor real-time progress during backup execution
-
-**Console/Interactive Mode:**
-
-1. Run from command prompt:
-   ```
-   EasySave.Console.exe
-   ```
-2. Select your language (English or French)
-3. Use the menu to manage backups (compatible with v1.0/1.1)
-
-**Command Line Mode** (automated execution - no prompts):
-
-```bash
-EasySave.Console.exe 1        # Run job #1 directly
-EasySave.Console.exe 1-3      # Run jobs 1 through 3 automatically
-EasySave.Console.exe 1;3;5;10 # Run specific jobs automatically
-```
-
-*Note: In command line mode, backups execute immediately without any prompts.*
-
-### Creating a Backup Job
-
-#### Via GUI (Recommended)
-
-1. Launch `EasySave.GUI.exe`
-2. Click **Create New Job** button
-3. Fill in the Job Editor form:
-   - **Name**: Unique name for the backup
-   - **Source Path**: Directory to backup (e.g., C:\Documents)
-   - **Target Path**: Backup destination (e.g., D:\Backups)
-   - **Type**: Full or Differential backup
-   - **Encryption** (NEW v2.0):
-     - Enable/disable encryption
-     - Select file extensions to encrypt (e.g., .docx, .xlsx)
-   - **Validation**: Form validates paths and prevents duplicate names
-4. Click **Save Job**
-
-#### Via Console (Interactive)
-
-1. Run `EasySave.Console.exe`
-2. Select language (English or French)
-3. Choose option **2** to create a new job
-4. Answer prompts for Name, Source, Target, Type
-
-**Note**: GUI provides better validation and encryption configuration
+## 3. Usage (GUI)
 
 ### Managing Jobs
+- **Create:** Click the "+" button to add a new backup job.
+- **Edit:** Select a job and click the "Pen" icon.
+- **Delete:** Select a job and click the "Trash" icon.
 
 #### Via GUI
 
@@ -464,7 +427,12 @@ EasySave can backup from/to:
 
 ## Support
 
-For technical assistance, contact ProSoft support at <support@prosoft.com>
+## 4. Centralized Logging (Docker)
+To enable the log server:
+1.  Open a terminal in the project root.
+2.  Run `docker-compose up -d`.
+3.  Set `"EnableNetworkLogging": true` in `config.json`.
+4.  Logs will now be visible in the Docker container (`docker logs easysave-log-server`).
 
 ---
 **ProSoft - EasySave Version 3.0**

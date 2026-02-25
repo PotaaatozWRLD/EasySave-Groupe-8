@@ -45,6 +45,19 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private LogFormat _selectedLogFormat = LogFormat.JSON;
 
+    // V3.0 Docker centralized logging
+    [ObservableProperty]
+    private string _selectedLoggingMode = "Local";
+
+    [ObservableProperty]
+    private string _logServerIp = "127.0.0.1";
+
+    [ObservableProperty]
+    private int _logServerPort = 9000;
+
+    public ObservableCollection<string> LoggingModes { get; } =
+        new ObservableCollection<string> { "Local", "Docker", "Both" };
+
     public ObservableCollection<LogFormat> LogFormats { get; }
     
     public bool DialogResult { get; private set; }
@@ -178,6 +191,11 @@ public partial class SettingsViewModel : ViewModelBase
         CryptoSoftPath = AppConfig.GetCryptoSoftPath();
         MaxLargeFileSize = AppConfig.GetMaxLargeFileSize();
         SelectedLogFormat = AppConfig.GetLogFormat();
+
+        // V3.0 Docker
+        SelectedLoggingMode = AppConfig.GetLoggingMode();
+        LogServerIp = AppConfig.GetLogServerIp();
+        LogServerPort = AppConfig.GetLogServerPort();
     }
 
     private void SaveSettings()
@@ -187,5 +205,10 @@ public partial class SettingsViewModel : ViewModelBase
         AppConfig.SetCryptoSoftPath(CryptoSoftPath);
         AppConfig.SetMaxLargeFileSize(MaxLargeFileSize);
         AppConfig.SetLogFormat(SelectedLogFormat);
+
+        // V3.0 Docker
+        AppConfig.SetLoggingMode(SelectedLoggingMode);
+        AppConfig.SetLogServerIp(LogServerIp);
+        AppConfig.SetLogServerPort(LogServerPort);
     }
 }

@@ -1,161 +1,99 @@
-@startuml EasySave_Sequence_Execute_Backup_v2.0
+@startuml EasySave_Sequence_Parallel_Backup_v3.0
 !theme plain
 autonumber
 
 actor User
-participant "Program" as Prog
-participant "JobManager" as JM
-participant "BackupService" as BS
-participant "BusinessSoftwareDetector" as BSD
-participant "EncryptionService" as ES
-participant "PathHelper" as PH
-participant "ILogger" as Log
-participant "FileSystem" as FS
+participant "MainViewModel" as VM
+participant "ParallelCoordinator" as Coord
+participant "BusinessMonitor" as Monitor
+participant "BackupService" as Svc
+participant "LargeFileThrottle" as Throttle
+participant "EncryptionService" as Crypto
+participant "CompositeLogger" as Log
 
-User -> Prog : Run backup (job index)
-activate Prog
+User -> VM : Click "Execute All Jobs"
+activate VM
 
-Prog -> JM : GetJob(index)
-activate JM
-JM --> Prog : BackupJob
-deactivate JM
+VM -> Coord : ExecuteJobsInParallelAsync(jobs)
+activate Coord
 
-Prog -> BS : ExecuteBackup(job, businessSoftwareName)
-activate BS
+Coord -> Monitor : StartMonitoring()
+activate Monitor
+Monitor --> Coord : Monitoring Active
+deactivate Monitor
 
-' v2.0: Business software check
-alt Business software configured
-    BS -> BSD : IsAnyRunning(softwareList)
-    activate BSD
-    BSD --> BS : isRunning
-    deactivate BSD
+par For Each Job (Parallel Task)
+    Coord -> Coord : Create JobExecutionContext
     
-    alt Business software is running
-        BS --> Prog : throw Exception("Business software active")
-        Prog --> User : Display error message
-        deactivate BS
-        deactivate Prog
-        stop
-    end
-end
-
-' Calculate total files and size
-BS -> BS : CalculateTotalFilesAndSize(sourcePath)
-activate BS
-BS -> FS : GetFiles(sourceDir)
-activate FS
-FS --> BS : files[]
-deactivate FS
-BS -> FS : GetDirectories(sourceDir)
-activate FS
-FS --> BS : subdirs[]
-deactivate FS
-BS --> BS : (totalFiles, totalSize)
-deactivate BS
-
-' Initialize state
-BS -> Log : UpdateState(ACTIVE, 0%)
-activate Log
-Log -> FS : WriteAllText(state.json)
-activate FS
-deactivate FS
-deactivate Log
-
-' Process directory
-BS -> BS : ProcessDirectory(source, target, job)
-activate BS
-
-loop For each file in directory
-    ' Update state before copying
-    BS -> Log : UpdateState(ACTIVE, progress%)
-    activate Log
-    Log -> FS : WriteAllText(state.json)
-    deactivate Log
+    Coord -> Svc : ExecuteBackupWithContext(job, context)
+    activate Svc
     
-    alt Full backup OR (Differential AND source newer)
-        BS -> BS : Start timer
-        
-        ' v2.0: Encryption logic
-        alt File extension in priority list
-            ' Copy to temporary file
-            BS -> FS : Copy to temp file
-            activate FS
-            FS --> BS : tempFilePath
-            deactivate FS
+    Svc -> Svc : Scan Files
+    
+    loop For Each File
+        ' Business Logic Check
+        alt Business Software Detected
+            Monitor -> Coord : Raise SoftwareStarted
+            Coord -> Coord : PauseAllJobs()
+            Coord -> Svc : Pause() via Context
+            Svc -> Svc : Wait(PauseEvent)
             
-            ' Encrypt file
-            BS -> ES : EncryptFile(tempFile, targetFile)
-            activate ES
-            note right
-                v2.0: Calls CryptoSoft.exe
-            end note
-            ES --> BS : encryptionTime (ms)
-            deactivate ES
+            ... Software Closes ...
             
-            ' Delete temporary file
-            BS -> FS : Delete(tempFile)
-            activate FS
-            deactivate FS
-            
-        else Direct copy (no encryption)
-            ' Copy file directly
-            BS -> FS : OpenRead(sourceFile)
-            activate FS
-            FS --> BS : sourceStream
-            deactivate FS
-            
-            BS -> FS : Create(targetFile)
-            activate FS
-            FS --> BS : targetStream
-            deactivate FS
-            
-            BS -> FS : CopyTo(targetStream)
+            Monitor -> Coord : Raise SoftwareStopped
+            Coord -> Coord : ResumeAllJobs()
+            Coord -> Svc : Resume() via Context
+            Svc -> Svc : Continue
         end
         
-        BS -> BS : Stop timer
+        ' Priority Handling
+        Svc -> Svc : Check Priority Files
+        note right: If non-priority file,\nwait for priority queues to clear
         
-        ' Convert to UNC format
-        BS -> PH : ToUncPath(sourcePath)
-        activate PH
-        PH --> BS : uncSourcePath
-        deactivate PH
+        ' Large File Throttling
+        alt File Size > Limit
+            Svc -> Throttle : WaitAsync()
+            activate Throttle
+            Throttle --> Svc : Grant Access
+            deactivate Throttle
+        end
         
-        BS -> PH : ToUncPath(targetPath)
-        activate PH
-        PH --> BS : uncTargetPath
-        deactivate PH
+        ' Process File
+        alt Should Encrypt
+            Svc -> Crypto : EncryptFile()
+            activate Crypto
+            Crypto -> Crypto : Mutex.WaitOne()
+            Crypto -> "CryptoSoft.exe" : Process.Start()
+            "CryptoSoft.exe" --> Crypto : Exit
+            Crypto -> Crypto : Mutex.Release()
+            Crypto --> Svc : Done
+            deactivate Crypto
+        else
+            Svc -> Svc : File.Copy()
+        end
         
-        ' Log success (v2.0: includes EncryptionTime)
-        BS -> Log : WriteLog(logEntry with EncryptionTime)
+        ' Release Throttle
+        alt File Size > Limit
+            Svc -> Throttle : Release()
+        end
+        
+        Svc -> Log : WriteLog(entry)
         activate Log
-        note right
-            v2.0: LogEntry now includes
-            EncryptionTime field
-        end note
-        Log -> FS : AppendAllText(YYYY-MM-DD.json)
-        activate FS
-        deactivate FS
+        Log -> "File.json" : Write()
+        Log -> "Docker(TCP)" : Send()
         deactivate Log
+        
     end
+    
+    Svc --> Coord : Job Complete
+    deactivate Svc
 end
 
-' Process subdirectories recursively
-loop For each subdirectory
-    BS -> BS : ProcessDirectory(subDir, targetSubDir, job)
-end
+Coord -> Monitor : StopMonitoring()
+Coord --> VM : All Jobs Complete
+deactivate Coord
 
-deactivate BS
-
-' Mark as completed
-BS -> Log : UpdateState(END, 100%)
-activate Log
-Log -> FS : WriteAllText(state.json)
-deactivate Log
-
-BS --> Prog : backup completed
-deactivate BS
-
-Prog --> User : Display success message
-deactivate Prog
+VM --> User : Update UI "Completed"
+deactivate VM
 
 @enduml

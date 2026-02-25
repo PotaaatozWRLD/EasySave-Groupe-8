@@ -1,188 +1,63 @@
-@startuml EasySave_Use_Case_Diagram_v2.0
+@startuml EasySave_Use_Case_Diagram_v3.0
 !theme plain
 left to right direction
 
-' =============== ACTORS ===============
 actor "User" as User
 actor "System Administrator" as Admin
 
-' =============== SYSTEM BOUNDARY ===============
-rectangle "EasySave v2.0" {
+rectangle "EasySave v3.0" {
     
-    ' Job Management
     package "Job Management" {
-        usecase "Create Backup Job" as UC1
-        usecase "List Backup Jobs" as UC2
-        usecase "Edit Backup Job" as UC3
-        usecase "Delete Backup Job" as UC4
-        
-        note right of UC1
-            v2.0: Unlimited jobs
-            (v1.0/v1.1: limited to 5)
-            Define: name, source, target, type
-        end note
+        usecase "Create/Edit Jobs" as UC_Manage
+        usecase "Manage Priority Extensions" as UC_Priority
     }
     
-    ' Backup Execution
-    package "Backup Execution" {
-        usecase "Run Single Backup" as UC5
-        usecase "Run All Backups\n(Sequential)" as UC6
-        usecase "Execute via\nCommand Line" as UC7
-        
-        note right of UC7
-            Examples:
-            EasySave.exe 1-3
-            EasySave.exe 1;3
-        end note
+    package "Execution" {
+        usecase "Execute Jobs (Parallel)" as UC_Exec
+        usecase "Pause/Resume Job" as UC_Pause
+        usecase "Stop Job" as UC_Stop
+        usecase "Auto-Pause (Business Soft)" as UC_AutoPause
     }
     
-    ' Backup Types
-    package "Backup Types" {
-        usecase "Perform Full Backup" as UC8
-        usecase "Perform Differential\nBackup" as UC9
-        
-        note right of UC8
-            Copy all files
-            v2.0: With optional encryption
-        end note
-        
-        note right of UC9
-            Copy only modified files
-            v2.0: With optional encryption
-        end note
-    }
-    
-    ' Configuration
     package "Configuration" {
-        usecase "Change Language" as UC10
-        usecase "Select Language\n(EN/FR)" as UC11
-        
-        note right of UC11
-            Persistent setting
-        end note
+        usecase "Configure Throttling" as UC_Throttle
+        usecase "Configure Network Logging" as UC_NetLog
+        usecase "Configure Encryption" as UC_Encrypt
     }
     
-    ' Monitoring
     package "Monitoring" {
-        usecase "View Real-Time\nProgress" as UC12
-        usecase "Consult Daily Logs" as UC13
-        usecase "Check Backup State" as UC14
-        
-        note right of UC13
-            v1.1: JSON or XML format
-            UNC paths
-            Daily files
-        end note
-    }
-    
-    ' v2.0: Settings & Configuration
-    package "Settings & Configuration (v2.0)" {
-        usecase "Configure Encryption" as UC15
-        usecase "Set Priority Extensions" as UC16
-        usecase "Configure Business Software" as UC17
-        usecase "Choose Log Format\n(JSON/XML)" as UC18
-        
-        note right of UC15
-            v2.0: Specify CryptoSoft.exe path
-            and file extensions to encrypt
-        end note
-        
-        note right of UC17
-            v2.0: Block backups when
-            specific software is running
-        end note
-    }
-    
-    ' v2.0: GUI Interface
-    package "GUI Interface (v2.0)" {
-        usecase "Use Graphical Interface" as UC19
-        usecase "Drag & Drop Files" as UC20
-        usecase "View Real-Time State" as UC21
-        
-        note right of UC19
-            v2.0: Alternative to CLI
-            WPF/Avalonia interface
-        end note
+        usecase "View Real-Time Progress" as UC_Monitor
+        usecase "View Centralized Logs" as UC_ViewLogs
     }
 }
 
-' =============== EXTERNAL SYSTEMS ===============
 rectangle "External Systems" {
-    usecase "Write to Local Disk" as EXT1
-    usecase "Write to External Disk" as EXT2
-    usecase "Write to Network Drive" as EXT3
-    usecase "Encrypt with CryptoSoft" as EXT4
-    usecase "Check Running Processes" as EXT5
+    usecase "Docker Log Server" as EXT_Docker
+    usecase "CryptoSoft" as EXT_Crypto
 }
 
-' =============== RELATIONSHIPS ===============
+' Relations
+User --> UC_Manage
+User --> UC_Exec
+User --> UC_Pause
+User --> UC_Stop
+User --> UC_Monitor
 
-' User actions
-User --> UC1
-User --> UC2
-User --> UC3
-User --> UC4
-User --> UC5
-User --> UC6
-User --> UC7
-User --> UC10
-User --> UC12
-User --> UC13
+Admin --> UC_Priority
+Admin --> UC_Throttle
+Admin --> UC_NetLog
+Admin --> UC_ViewLogs
 
-' v2.0: User actions
-User --> UC15
-User --> UC16
-User --> UC17
-User --> UC18
-User --> UC19
+' Dependencies
+UC_Exec ..> UC_AutoPause : <<include>>
+UC_Exec ..> UC_Encrypt : <<include>>
+UC_Exec ..> UC_NetLog : <<include>>
 
-' Admin actions
-Admin --> UC14
-Admin --> UC13
-Admin --> UC11
-Admin --> UC17
-Admin --> UC18
+UC_AutoPause ..> UC_Monitor : Update Status
 
-' Include relationships
-UC5 ..> UC8 : <<include>>
-UC5 ..> UC9 : <<include>>
-UC6 ..> UC5 : <<include>>
-UC7 ..> UC5 : <<include>>
-
-UC1 ..> UC11 : <<extend>>
-UC10 ..> UC11 : <<include>>
-
-' Backup execution includes monitoring
-UC8 ..> UC12 : <<include>>
-UC9 ..> UC12 : <<include>>
-UC8 ..> UC14 : <<include>>
-UC9 ..> UC14 : <<include>>
-
-' v2.0: GUI includes
-UC19 ..> UC1 : <<include>>
-UC19 ..> UC2 : <<include>>
-UC19 ..> UC5 : <<include>>
-UC19 ..> UC21 : <<include>>
-
-' v2.0: Encryption extends backup
-UC8 ..> UC15 : <<extend>>
-UC9 ..> UC15 : <<extend>>
-
-' v2.0: Business software check
-UC5 ..> UC17 : <<extend>>
-UC6 ..> UC17 : <<extend>>
-
-' External systems
-UC8 --> EXT1
-UC8 --> EXT2
-UC8 --> EXT3
-UC9 --> EXT1
-UC9 --> EXT2
-UC9 --> EXT3
-
-' v2.0: External systems
-UC8 --> EXT4
-UC9 --> EXT4
-UC17 --> EXT5
+' External
+UC_NetLog --> EXT_Docker : Sends Logs
+UC_Encrypt --> EXT_Crypto : Invokes
+UC_ViewLogs ..> EXT_Docker : Reads
 
 @enduml

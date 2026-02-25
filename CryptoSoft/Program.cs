@@ -22,6 +22,17 @@ class Program
 
     static int Main(string[] args)
     {
+        // V3.0: Enforce Mono-Instance using Mutex
+        // "Global\" prefix ensures it works across all sessions
+        using var mutex = new Mutex(false, "Global\\CryptoSoftMutex");
+
+        // Try to acquire the mutex immediately. If false, another instance is running.
+        if (!mutex.WaitOne(0, false))
+        {
+            Console.Error.WriteLine("Error: CryptoSoft is already running. only one instance is allowed at a time.");
+            return -10; // Specific exit code for "Already Running"
+        }
+
         try
         {
             // Validate arguments
@@ -112,6 +123,11 @@ class Program
             Console.Error.WriteLine($"Unexpected error: {ex.Message}");
             Console.Error.WriteLine(ex.StackTrace);
             return -3;
+        }
+        finally
+        {
+            // Mutex is automatically released when 'using' block ends or process exits
+             mutex.ReleaseMutex();
         }
     }
 

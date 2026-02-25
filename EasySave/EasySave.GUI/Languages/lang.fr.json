@@ -65,5 +65,9 @@
   "Settings_Saved": "Paramètres enregistrés avec succès",
   "Browse_Source_Title": "Sélectionner le dossier source",
   "Browse_Target_Title": "Sélectionner le dossier cible",
-  "Browse_CryptoSoft_Title": "Sélectionner CryptoSoft.exe"
+  "Browse_CryptoSoft_Title": "Sélectionner CryptoSoft.exe",
+  "DockerLogging": "Logs Centralisés — Docker (V3.0)",
+  "LoggingMode": "Mode de journalisation (Local / Docker / Les deux)",
+  "LogServerIp": "Adresse IP du serveur Docker",
+  "LogServerPort": "Port du serveur Docker"
 }

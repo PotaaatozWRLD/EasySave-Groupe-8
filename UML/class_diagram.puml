@@ -1,77 +1,65 @@
-@startuml EasySave_Class_Diagram_v2.0
+@startuml EasySave_Class_Diagram_v3.0
 !theme plain
 skinparam classAttributeIconSize 0
 
 ' =============== CONSOLE LAYER ===============
 package "EasySave.Console" {
     class Program {
-        - {static} _lang : LanguageManager
         + {static} Main(args : string[]) : void
-        - {static} ShowLanguageSelectionMenu() : void
-        - {static} ChangeLanguage() : void
-        - {static} ListJobs() : void
-        - {static} CreateJob() : void
-        - {static} EditJob() : void
-        - {static} DeleteJob() : void
-        - {static} RunJob(backupService : BackupService) : void
-        - {static} RunAllJobs(backupService : BackupService) : void
-        - {static} ParseJobIndexes(input : string) : IEnumerable<int>
-    }
-
-    class LanguageManager {
-        - {static} _instance : LanguageManager
-        - {static} _lock : object
-        - _strings : Dictionary<string, string>
-        - _currentLanguage : string
-        - LanguageManager()
-        + {static} Instance : LanguageManager <<get>>
-        + CurrentLanguage : string <<get>>
-        - LoadLanguage(culture : string) : void
-        + GetString(key : string) : string
-        + ChangeLanguage(culture : string) : void
-        + ToggleLanguage() : void
     }
 
     class AppConfig {
-        - {static} ConfigFilePath : string
-        - {static} _config : AppConfig
-        - {static} _configPath : string
-        + Language : string
-        - {static} Load() : void
-        + {static} GetLanguage() : string
-        + {static} HasLanguageConfigured() : bool
-        + {static} SetLanguage(language : string) : void
-        + {static} GetLogFormat() : LogFormat
-        + {static} SetLogFormat(format : LogFormat) : void
+        + {static} Language : string
+        + {static} LogFormat : LogFormat
+        + {static} ExtensionsToEncrypt : List<string>
+        + {static} BusinessSoftwareNames : List<string>
+        + {static} CryptoSoftPath : string
+        + {static} PriorityExtensions : List<string>
+        + {static} MaxLargeFileSizeKB : long
+        + {static} LoggingMode : string
+        + {static} LogServerIp : string
+        + {static} LogServerPort : int
+        + {static} Save() : void
+        + {static} Load() : void
+    }
+
+    class LanguageManager {
+        + {static} Instance : LanguageManager
+        + CurrentLanguage : string
+        + GetString(key : string) : string
     }
 }
 
-' =============== GUI LAYER (v2.0) ===============
+' =============== GUI LAYER (v2.0/v3.0) ===============
 package "EasySave.GUI" {
     class MainViewModel {
         - _jobs : ObservableCollection<BackupJob>
-        - _logger : ILogger
-        + CreateJob() : void
-        + ExecuteJob(job : BackupJob) : void
-        + DeleteJob(job : BackupJob) : void
+        - _coordinator : ParallelBackupCoordinator?
+        - _logger : ILogger?
+        + ExecuteSelectedJobCommand : ICommand
+        + ExecuteAllJobsCommand : ICommand
+        + PauseJobCommand : ICommand
+        + ResumeJobCommand : ICommand
+        + StopJobCommand : ICommand
+        + PauseAllCommand : ICommand
+        + ResumeAllCommand : ICommand
+        + StopAllCommand : ICommand
+        + ExecuteSelectedJobAsync() : Task
+        + ExecuteAllJobsAsync() : Task
+        - InitializeServices() : void
     }
-    
-    class JobEditorViewModel {
-        + Job : BackupJob
+
+    class SettingsViewModel {
+        + SelectedLoggingMode : string
+        + LogServerIp : string
+        + LogServerPort : int
+        + LoggingModes : ObservableCollection<string>
         + SaveCommand : ICommand
-        + CancelCommand : ICommand
     }
     
     class LocalizationManager {
-        - {static} _instance : LocalizationManager
-        - {static} _lock : object
-        - _strings : Dictionary<string, string>
-        - _currentLanguage : string
-        - LocalizationManager()
-        + {static} Instance : LocalizationManager <<get>>
-        + CurrentLanguage : string <<get>>
-        + GetString(key : string) : string
-        + ChangeLanguage(culture : string) : void
+        + {static} Instance : LocalizationManager
+        + this[key] : string
     }
 }
 
@@ -88,53 +76,60 @@ package "EasySave.Core" {
             + SourcePath : string
             + TargetPath : string
             + Type : BackupType
-            + CreatedDate : DateTime?
-            + LastExecutionDate : DateTime?
-            + Description : string?
-            + BackupJob(name, sourcePath, targetPath, type)
+        }
+        
+        class JobExecutionContext {
+            + Job : BackupJob
+            + State : JobExecutionState
+            + PauseEvent : ManualResetEventSlim
+            + CancellationTokenSource : CancellationTokenSource
+            + CheckPauseAndCancellation() : void
+            + Pause() : void
+            + Resume() : void
+            + Stop() : void
         }
     }
 
     package "Services" {
         class JobManager {
-            - {static} JobsFilePath : string
             + {static} Jobs : List<BackupJob>
-            + {static} LoadJobs() : void
             + {static} SaveJobs() : void
-            + {static} AddJob(name, source, target, type) : void
-            + {static} DeleteJob(index : int) : void
-            + {static} GetJob(index : int) : BackupJob
+        }
+
+        class ParallelBackupCoordinator {
+            - _logger : ILogger
+            - _contexts : ConcurrentDictionary<string, JobExecutionContext>
+            - _monitor : BusinessSoftwareMonitor
+            + ExecuteJobsInParallelAsync(...) : Task
+            + PauseJob(jobName) : void
+            + ResumeJob(jobName) : void
+            + StopJob(jobName) : void
+        }
+
+        class BusinessSoftwareMonitor {
+            + event SoftwareStarted : EventHandler
+            + event SoftwareStopped : EventHandler
+            + StartMonitoring() : void
+            + StopMonitoring() : void
+        }
+
+        class LargeFileThrottle {
+             - _semaphore : SemaphoreSlim
+             + WaitAsync() : Task
+             + Release() : void
         }
 
         class BackupService {
             - _logger : ILogger
             - _encryptionService : EncryptionService?
-            - _extensionsToEncrypt : List<string>
-            + BackupService(logger : ILogger)
-            + BackupService(logger : ILogger, cryptoSoftPath : string, extensionsToEncrypt : List<string>)
-            + ExecuteBackup(job : BackupJob) : void
-            + ExecuteBackup(job : BackupJob, businessSoftwareName : string) : void
-            - CalculateTotalFilesAndSize(sourceDir : string) : (int, long)
-            - ProcessDirectory(sourceDir, targetDir, job, filesProcessed, bytesProcessed, totalFiles, totalSize) : void
-            - IsSourceNewer(sourceFile, targetFile) : bool
+            - _largeFileThrottle : LargeFileThrottle?
+            + ExecuteBackupWithContext(...) : void
+            - ProcessDirectory(...) : void
         }
         
         class EncryptionService {
-            - _cryptoSoftPath : string
-            + EncryptionService(cryptoSoftPath : string)
-            + EncryptFile(sourceFile : string, targetFile : string) : long
-            + {static} ShouldEncrypt(filePath : string, extensions : List<string>) : bool
-        }
-        
-        class BusinessSoftwareDetector <<static>> {
-            + {static} IsAnyRunning(processNames : List<string>) : bool
-            + {static} IsRunning(processName : string) : bool
-        }
-    }
-
-    package "Helpers" {
-        class PathHelper <<static>> {
-            + {static} ToUncPath(path : string) : string
+            - _semaphore : SemaphoreSlim
+            + EncryptFile(...) : long
         }
     }
 }
@@ -147,160 +142,51 @@ package "EasyLog" {
     }
 
     class JsonLogger {
-        - _logDirectory : string
-        - _stateFilePath : string
-        + JsonLogger(logDirectory, stateFilePath)
-        + WriteLog(logEntry : LogEntry) : void
-        + UpdateState(stateEntry : StateEntry) : void
+        + WriteLog() : void
     }
     
     class XmlLogger {
-        - _logDirectory : string
-        - _stateFilePath : string
-        + XmlLogger(logDirectory, stateFilePath)
-        + WriteLog(logEntry : LogEntry) : void
-        + UpdateState(stateEntry : StateEntry) : void
-    }
-    
-    class LoggerFactory <<static>> {
-        + {static} CreateLogger(format : LogFormat, logDirectory : string, stateFilePath : string) : ILogger
-    }
-    
-    enum LogFormat {
-        Json
-        Xml
+        + WriteLog() : void
     }
 
+    class NetworkLogger {
+        - _client : TcpClient
+        + WriteLog() : void
+        + UpdateState() : void
+    }
+
+    class CompositeLogger {
+        - _loggers : List<ILogger>
+        + WriteLog() : void
+        + UpdateState() : void
+    }
+    
     class LogEntry {
         + JobName : string
-        + SourcePath : string
-        + TargetPath : string
-        + FileName : string
-        + FileSize : long
+        + MachineName : string
+        + UserName : string
         + TransferTime : long
         + EncryptionTime : long
-        + ErrorMessage : string?
-        + Timestamp : DateTime
-    }
-
-    class StateEntry {
-        + Name : string
-        + LastActionTimestamp : string
-        + State : JobState
-        + TotalFiles : int
-        + TotalSize : long
-        + Progression : int
-        + NbFilesLeftToDo : int
-        + NbFilesLeftToDoSize : long
-        + CurrentSourceFilePath : string
-        + CurrentTargetFilePath : string
-    }
-
-    enum JobState {
-        ACTIVE
-        END
-        PAUSED
     }
 }
 
 ' =============== RELATIONSHIPS ===============
-Program --> LanguageManager : uses
-Program --> AppConfig : uses
-Program --> JobManager : uses
-Program --> BackupService : creates
 
-LanguageManager --> AppConfig : uses
+MainViewModel --> ParallelBackupCoordinator : Uses
+MainViewModel --> AppConfig : Configures
+SettingsViewModel --> AppConfig : Reads/Writes
+ParallelBackupCoordinator --> BackupService : Delegates
+ParallelBackupCoordinator --> BusinessSoftwareMonitor : Subscribes
+ParallelBackupCoordinator --> JobExecutionContext : Manages
+BackupService --> LargeFileThrottle : Uses
+BackupService --> EncryptionService : Uses
+BackupService --> ILogger : Logs to
+LogEntry --* ILogger : Data
 
-' GUI relationships (v2.0)
-MainViewModel --> BackupService : uses
-MainViewModel --> JobManager : uses
-MainViewModel --> ILogger : uses
-MainViewModel --> BackupJob : manages
-JobEditorViewModel --> BackupJob : edits
-LocalizationManager --> AppConfig : uses
-
-' Core services relationships (v2.0)
-BackupService --> ILogger : depends on
-BackupService --> BackupJob : uses
-BackupService --> PathHelper : uses
-BackupService --> LogEntry : creates
-BackupService --> StateEntry : creates
-BackupService --> EncryptionService : uses
-BackupService --> BusinessSoftwareDetector : uses
-
-EncryptionService ..> BackupService : used by
-
-JobManager --> BackupJob : manages
-JobManager ..> BackupType : uses
-
-BackupJob --> BackupType : has
-
-' Logger relationships (v2.0)
-LoggerFactory ..> JsonLogger : creates
-LoggerFactory ..> XmlLogger : creates
-LoggerFactory ..> LogFormat : uses
-AppConfig --> LogFormat : contains
-
-JsonLogger ..|> ILogger : implements
-JsonLogger --> LogEntry : uses
-JsonLogger --> StateEntry : uses
-
-XmlLogger ..|> ILogger : implements
-XmlLogger --> LogEntry : uses
-XmlLogger --> StateEntry : uses
-
-StateEntry --> JobState : has
-
-note right of JobManager
-  v2.0: Unlimited jobs
-  (v1.0/v1.1: max 5)
-  Saves to %AppData%\ProSoft\EasySave\jobs.json
-end note
-
-note right of BackupService
-  Supports Full and Differential backups
-  Calculates progress in real-time
-  Converts paths to UNC format
-  v2.0: Encryption & business software check
-end note
-
-note right of JsonLogger
-  Writes daily logs: YYYY-MM-DD.json
-  Updates state.json in real-time
-  Located in %AppData%\ProSoft\EasySave\
-end note
-
-note right of XmlLogger
-  v1.1: Alternative to JSON format
-  Same structure as JsonLogger
-  User-selectable format
-end note
-
-note right of LanguageManager
-  Singleton pattern
-  Supports EN and FR
-end note
-
-note right of LocalizationManager
-  v2.0: GUI-specific localization
-  Singleton pattern (like LanguageManager)
-end note
-
-note right of EncryptionService
-  v2.0: Calls CryptoSoft.exe
-  for priority file extensions
-  (.docx, .xlsx, etc.)
-end note
-
-note right of BusinessSoftwareDetector
-  v2.0: Prevents backups when
-  configured software is running
-end note
-
-note right of MainViewModel
-  v2.0: WPF/Avalonia GUI
-  MVVM pattern
-  ObservableCollection for live updates
-end note
+CompositeLogger ..|> ILogger
+NetworkLogger ..|> ILogger
+JsonLogger ..|> ILogger
+XmlLogger ..|> ILogger
+CompositeLogger o-- ILogger : Aggregates
 
 @enduml

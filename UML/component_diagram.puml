@@ -1,4 +1,4 @@
-@startuml EasySave_Component_Diagram_v2.0
+@startuml EasySave_Component_Diagram_v3.0
 !theme plain
 
 ' =============== EXTERNAL SYSTEMS ===============
@@ -8,226 +8,94 @@ cloud "User Environment" {
     file "GUI\nApplication" as GUIApp
 }
 
+node "Docker Host" {
+    component "Log Server\n(Alpine/socat\nMulti-connection)" as DockerLog
+    port "9000" as Port9000
+    DockerLog - Port9000
+}
+
 cloud "File System" {
     folder "%AppData%\\ProSoft\\EasySave" as AppData {
         file "config.json" as ConfigFile
         file "jobs.json" as JobsFile
-        file "state.json" as StateFile
-        folder "Logs" as LogsFolder {
-            file "2026-02-11.json" as DailyLogJSON
-            file "2026-02-11.xml" as DailyLogXML
-            file "..." as MoreLogs
-        }
+        folder "Logs" as LogsFolder
     }
-    
-    folder "Language Files" as LangFolder {
-        file "lang.en.json" as LangEN
-        file "lang.fr.json" as LangFR
-    }
-    
-    folder "Source Directories" as SourceDirs {
-        file "Files to backup" as SourceFiles
-    }
-    
-    folder "Target Directories" as TargetDirs {
-        file "Backed up files" as TargetFiles
-    }
-}
-
-' v2.0: External encryption software
-cloud "External Software" {
-    [CryptoSoft.exe] as CryptoSoft
-    note right of CryptoSoft
-        v2.0: External encryption tool
-        Encrypts priority files
-        (.docx, .xlsx, etc.)
-    end note
 }
 
 ' =============== APPLICATION COMPONENTS ===============
 package "EasySave Application" {
     
-    [EasySave.Console.exe] as Console
-    note right of Console
-        Main application (v1.0)
-        Command-line interface
-        Entry point
-    end note
-    
-    ' v2.0: GUI Component
     component "EasySave.GUI" as GUI {
         [MainViewModel]
-        [JobEditorViewModel]
         [LocalizationManager]
     }
-    note right of GUI
-        v2.0: WPF/Avalonia GUI
-        MVVM pattern
-        Alternative to CLI
-    end note
     
-    component "Presentation Layer" {
-        [Program] as Prog
-        [LanguageManager] as LangMgr
-        [AppConfig] as Config
+    component "EasySave.Console" {
+        [Program]
+        [AppConfig]
     }
     
-    component "Business Logic Layer" {
-        [JobManager] as JobMgr
-        [BackupService] as BackupSvc
-        [PathHelper] as PathHelp
-        [EncryptionService] as EncSvc
-        [BusinessSoftwareDetector] as BizSoft
-        [LoggerFactory] as LogFact
+    component "EasySave.Core" {
+        component "Services" {
+            [ParallelBackupCoordinator] as Coord
+            [BackupService] as BackupSvc
+            [BusinessSoftwareMonitor] as Monitor
+            [EncryptionService] as EncSvc
+            [LargeFileThrottle] as Throttle
+        }
+        
+        component "Models" {
+            [JobExecutionContext] as Context
+            [BackupJob] as Job
+        }
     }
     
     component "EasyLog.dll" as LogDLL {
         interface "ILogger" as ILog
+        [CompositeLogger] as CompLog
+        [NetworkLogger] as NetLog
         [JsonLogger] as JsonLog
         [XmlLogger] as XmlLog
-        [LogEntry] as LogEnt
-        [StateEntry] as StateEnt
-    }
-    
-    component "Data Models" {
-        [BackupJob] as Job
-        [BackupType] as Type
-        [JobState] as State
-        [LogFormat] as LogFmt
     }
 }
 
 ' =============== RELATIONSHIPS ===============
 
-' User interactions
-User --> Terminal : interacts
-User --> GUIApp : interacts (v2.0)
-Terminal --> Console : executes
-GUIApp --> GUI : launches
+' Entry Points
+User --> GUIApp
+GUIApp --> GUI
+Terminal --> Program
 
-' Console dependencies
-Console --> Prog : contains
-Prog --> LangMgr : uses
-Prog --> Config : uses
-Prog --> JobMgr : uses
-Prog --> BackupSvc : creates
+' GUI Wiring
+GUI --> Coord : manages
+GUI --> AppConfig : reads/writes
 
-' v2.0: GUI dependencies
-GUI --> MainViewModel : contains
-GUI --> JobEditorViewModel : contains
-GUI --> LocalizationManager : contains
-MainViewModel --> BackupSvc : uses
-MainViewModel --> JobMgr : uses
-MainViewModel --> ILog : creates
+' Coordinator Logic
+Coord --> BackupSvc : delegates (Parallel)
+Coord --> Monitor : subscribes
+Coord --> Context : tracks state
+Coord --> ILog : logs events
 
-' Language management
-LangMgr --> Config : reads language preference
-LangMgr --> LangEN : loads
-LangMgr --> LangFR : loads
-LangMgr --> ConfigFile : reads
-LocalizationManager --> Config : reads
-LocalizationManager --> LangEN : loads
-LocalizationManager --> LangFR : loads
-
-' Job management
-JobMgr --> Job : manages
-JobMgr --> JobsFile : reads/writes
-JobMgr --> Type : uses
-
-' Backup service
-BackupSvc --> ILog : depends on
-BackupSvc --> Job : uses
-BackupSvc --> PathHelp : uses
-BackupSvc --> LogEnt : creates
-BackupSvc --> StateEnt : creates
+' Backup Logic
+BackupSvc --> Job : reads
 BackupSvc --> EncSvc : uses
-BackupSvc --> BizSoft : uses
-
-' v2.0: Encryption service
-EncSvc --> CryptoSoft : invokes
-BackupSvc --> EncSvc : uses
-
-' v2.0: Business software detection
-BizSoft --> User : checks OS processes
-
-' v2.0: Logger factory
-LogFact --> JsonLog : creates
-LogFact --> XmlLog : creates
-LogFact --> LogFmt : uses
-Config --> LogFmt : contains
+BackupSvc --> Throttle : uses (for large files)
+BackupSvc --> ILog : logs transfers
 
 ' Logging
-JsonLog ..|> ILog : implements
-JsonLog --> LogEnt : writes
-JsonLog --> StateEnt : writes
-JsonLog --> DailyLogJSON : writes
-JsonLog --> StateFile : writes
+ILog <|.. CompLog
+CompLog --> NetLog : contains
+CompLog --> JsonLog : contains
+CompLog --> XmlLog : contains
 
-XmlLog ..|> ILog : implements
-XmlLog --> LogEnt : writes
-XmlLog --> StateEnt : writes
-XmlLog --> DailyLogXML : writes
-XmlLog --> StateFile : writes
+NetLog ..> Port9000 : TCP (Write)
+JsonLog ..> LogsFolder : File IO (Write)
 
-LogEnt --> State : uses
+' Configuration
+AppConfig --> ConfigFile : Read/Write
+Program --> AppConfig : Uses
 
-' File system operations
-BackupSvc --> SourceDirs : reads
-BackupSvc --> TargetDirs : writes
-Config --> ConfigFile : reads/writes
-
-' =============== NOTES ===============
-note bottom of LogDLL
-    <b>EasyLog.dll</b>
-    - Reusable logging library
-    - v1.1: XML format support
-    - v2.0: LoggerFactory pattern
-    - Real-time state updates
-    - Daily log files (JSON/XML)
-    - Separate Git project
-end note
-
-note bottom of JobMgr
-    <b>Job Management</b>
-    v2.0: Unlimited jobs
-    (v1.0/v1.1: max 5)
-    - Persistent storage
-    - CRUD operations
-end note
-
-note bottom of BackupSvc
-    <b>Backup Engine</b>
-    - Full & Differential support
-    - Recursive directory processing
-    - Progress calculation
-    - UNC path conversion
-    v2.0: Encryption & business check
-end note
-
-note bottom of EncSvc
-    <b>Encryption Service (v2.0)</b>
-    Calls CryptoSoft.exe for
-    priority file extensions
-    Measures encryption time
-end note
-
-note bottom of BizSoft
-    <b>Business Software Detector (v2.0)</b>
-    Prevents backups when
-    configured software is running
-end note
-
-note bottom of AppData
-    <b>Storage Location</b>
-    Standard Windows AppData
-    Compatible with server deployments
-    User-specific configuration
-end note
-
-' =============== DEPLOYMENT ===============
-node ".NET Runtime 10.0" as Runtime {
-    Console -down-> Runtime : requires
-    GUI -down-> Runtime : requires
-}
+' Monitoring
+Monitor --> User : Inspects Processes
 
 @enduml
