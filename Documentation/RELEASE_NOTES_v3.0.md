@@ -33,9 +33,12 @@
 - **Queueing:** EasySave now queues encryption requests to ensure `CryptoSoft` is never called concurrently, preventing errors.
 
 ### 7. Centralized Logging (Docker)
-- **Network Logging:** Logs can now be forwarded to a remote server via TCP.
-- **Docker Integration:** Includes a `docker-compose.yml` to spin up a lightweight log server (Alpine/Netcat).
-- **Composite Logging:** Supports logging to both local JSON/XML files and the network simultaneously.
+- **3 Logging Modes** configurable directly from Settings UI:
+  - **Local** — logs written to `%AppData%\ProSoft\EasySave\Logs\` only
+  - **Docker** — logs forwarded to Docker TCP server only
+  - **Both** — logs written locally **and** forwarded to Docker simultaneously
+- **Docker Integration:** Includes `docker-compose.yml` (Alpine + **socat**, multi-connection support).
+- **Machine Identification:** Each log entry includes `MachineName` and `UserName` to identify the source.
 
 ## 🛠 Technical Improvements
 - **MVVM Refactoring:** Major cleanup of `MainViewModel` to support async commands and parallel coordination.
