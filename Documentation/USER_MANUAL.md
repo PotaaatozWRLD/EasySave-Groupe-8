@@ -1,8 +1,9 @@
-# EasySave 2.0 - User Manual
+# EasySave 3.0 - User Manual
 
 ## Introduction
 
-EasySave is a professional backup software that allows you to create and manage **unlimited** backup jobs with modern graphical interface, automatic file encryption, and business software detection. This version features both a user-friendly GUI (Avalonia) and command-line interface for automation.
+EasySave is a backup software that allows you to create and manage up to 5 backup jobs. Each job can be configured to perform a full or differential backup. Version 1.1 adds XML logging format support and enhanced configuration options.
+>>>>>>> 9688a16b3bd14d19330b0efd2b7021dac755fe64
 
 ## Getting Started
 
@@ -89,11 +90,102 @@ EasySave.Console.exe 1;3;5;10 # Run specific jobs automatically
    - Pause/Resume/Stop controls
 4. View detailed log after completion
 
+**NEW in v3.0: Parallel Execution**
+- All selected jobs run **simultaneously** instead of sequentially
+- Backup time reduced by 40-60% depending on job count
+- Progress tracked independently for each job
+- Large files (>n KB) transfer exclusively to prevent bandwidth saturation
+- Priority files complete before non-priority files
+
 #### Via Console (Interactive)
 
 - **Run Single Job** (Option 5): Execute one specific backup
-- **Run All Jobs** (Option 6): Execute all configured backups sequentially
+- **Run All Jobs** (Option 6): Execute all configured backups in parallel
   - Examples: Enter "1" for job 1, or "1-3" for jobs 1 to 3, or "1;3" for jobs 1 and 3
+
+### Job Control (NEW v3.0)
+
+**Real-time pause, resume, and stop controls for backup jobs:**
+
+#### Individual Job Control (via GUI)
+
+For each running backup job:
+
+1. **⏸️ Pause Button**
+   - Pauses the job after current file completes
+   - Safe checkpoint - no data loss
+   - Other jobs continue running
+
+2. **▶️ Play/Resume Button**
+   - Resumes a paused job
+   - Continues from checkpoint
+   - Differential backup continues where it left off
+
+3. **⏹️ Stop Button**
+   - Immediately terminates the job
+   - Saves progress to state file
+   - Can be resumed later (starts from checkpoint)
+
+#### Global Controls (via GUI)
+
+Operate on **all running jobs simultaneously**:
+
+- **Pause All**: Pauses every job after current file
+- **Resume All**: Resumes all paused jobs
+- **Stop All**: Terminates all jobs immediately
+
+#### Status Indicators
+
+Each job shows its current state:
+- 🟢 **RUNNING**: Job actively transferring files
+- 🟡 **PAUSED**: Job waiting for resume
+- ⏹️ **STOPPED**: Job halted, waiting for action
+- ✅ **COMPLETE**: Job finished successfully
+- ❌ **ERROR**: Job encountered error
+
+### Priority File Management (NEW v3.0)
+
+**Intelligent scheduling ensures critical files backup first:**
+
+#### How Priority Works
+
+1. **Administrator configures priority extensions** in Settings
+   - Example: `.docx`, `.xlsx`, `.pptx`, `.sql`
+   - These files are considered "critical"
+
+2. **During parallel execution:**
+   - Priority files are transferred FIRST across all jobs
+   - Non-priority files wait until NO priority files remain
+   - Prevents critical business documents from taking too long to backup
+
+#### Example Scenario
+
+```
+Job A has: [INVOICE.docx] [photo.jpg] [backup.sql]
+Job B has: [REPORT.xlsx] [video.mp4] [notes.txt]
+
+Priority extensions: .docx, .xlsx, .sql
+Large file threshold: 5 MB
+
+Transfer order:
+1. Job A: INVOICE.docx (HIGH PRIORITY)
+2. Job B: REPORT.xlsx (HIGH PRIORITY)
+3. Job A: backup.sql (HIGH PRIORITY)
+4. Job B: notes.txt (non-priority, OK to start)
+5. Job A: photo.jpg (non-priority)
+6. Job B: video.mp4 (>5MB, exclusive transfer)
+```
+
+#### Configuring Priority Extensions
+
+1. Click **Settings** in main menu
+2. Scroll to **Priority File Management**
+3. Enter file extensions (comma-separated):
+   ```
+   .docx,.xlsx,.pptx,.accdb,.sql
+   ```
+4. Click **Save**
+5. Next backup uses new priority list
 
 ### Settings
 
@@ -115,24 +207,58 @@ EasySave.Console.exe 1;3;5;10 # Run specific jobs automatically
 3. Change desired options
 4. Confirm changes (applied immediately to next backup)
 
-### Business Software Detection (NEW v2.0)
+### Business Software Detection (NEW v3.0)
 
-**Protects your data from corruption when business applications are using files:**
+**Automatic pause when business applications are detected:**
 
-1. Application checks if configured software is running
-2. If detected, backup is **blocked** with clear message
-3. Suggestion: Close the application and retry
-4. Once software exits, backup can execute normally
+#### How It Works
 
-**Default monitored applications:**
-- Microsoft Office (Word, Excel, PowerPoint)
-- Databases (SQL Server, MySQL)
+1. **Background monitoring**: System continuously monitors running applications
+2. **If business software detected**:
+   - ⏸️ ALL active backup jobs **automatically pause**
+   - Clear notification displayed: "Business software detected - Backup paused"
+   - No user action required
+3. **When software closes**:
+   - ✅ Jobs **automatically resume** from checkpoint
+   - Backup continues seamlessly
+   - Full transparency to user
+
+#### Default Monitored Applications
+
+- Microsoft Office: Word (WINWORD.EXE), Excel (EXCEL.EXE), PowerPoint (POWERPNT.EXE)
+- Databases: SQL Server (sqlservr.exe), MySQL (MYSQLD.EXE)
 - Custom applications (configurable)
 
-**Manage in Settings:**
-- View current monitored list
-- Add custom applications
-- Disable detection if not needed
+#### User Experience Example
+
+```
+14:30:15 → Backup running normally
+14:30:45 → User opens Excel (EXCEL.EXE)
+14:30:46 ⏸️ PAUSED: Business software detected (Excel)
+           All backup jobs paused after current file.
+           
+14:32:10 → User closes Excel
+14:32:11 ▶️ RESUMED: All jobs resumed automatically
+
+Checkpoint restored - backup continues without interruption
+```
+
+#### Customizing Monitored Applications
+
+1. Open **Settings** in GUI
+2. Go to **Business Software Detection**
+3. Add/remove application executable names:
+   ```
+   WINWORD.EXE
+   EXCEL.EXE
+   POWERPNT.EXE
+   OUTLOOK.EXE
+   sqlservr.exe
+   MYSQLD.EXE
+   [Add custom apps]
+   ```
+4. Click **Save** - takes effect immediately
+5. Disable entirely if needed (checkbox)
 
 ### Command Line Usage (Console Version)
 
@@ -161,10 +287,117 @@ EasySave.Console.exe 2-4       # Execute range of jobs
 
 **Note**: Encryption and business software detection work in CLI mode too
 
-## Backup Types
+## Large File Management (NEW v3.0)
 
-- **Full Backup**: Copies all files from source to target (slower, comprehensive)
-- **Differential Backup**: Only copies files modified since the last backup (faster, efficient)
+**Prevent bandwidth saturation with large file constraints:**
+
+### Large File Threshold Configuration
+
+To protect network bandwidth, only ONE file larger than the threshold can transfer simultaneously. Small files (<threshold) from other jobs can continue.
+
+#### Setting the Threshold
+
+1. Open **Settings** in GUI
+2. Go to **Performance Settings**
+3. Find **Large File Threshold (KB)**
+4. Enter size in kilobytes:
+   ```
+   5000  (5 MB - recommended for most networks)
+   1000  (1 MB - for slower networks)
+   10000 (10 MB - for fast networks)
+   ```
+5. Click **Save**
+
+#### Example with Large File Constraint
+
+```
+Large file threshold: 5000 KB
+
+Job A: file1.xlsx (6 MB) ← Large file, blocks other large transfers
+Job B: backup.docx (800 KB) → Can transfer (small)
+Job C: video.mp4 (50 MB) ← Waits (large, and Job A has large file)
+Job D: photo.jpg (2 MB) → Can transfer (small)
+
+Result:
+- Job A: Large file transfers exclusively
+- Job B: Small file transfers in parallel
+- Job D: Small file transfers in parallel
+- Job C: Waits until Job A completes
+```
+
+### Bandwidth Impact
+
+- **Without constraint**: Multiple large files compete for bandwidth → slower overall
+- **With constraint**: One large file uses full bandwidth → faster overall
+- **Recommendation**: Set to 40-50% of your typical available bandwidth
+
+---
+
+## Centralized Logging (NEW v3.0)
+
+**Optional Docker-based log aggregation for enterprise deployments:**
+
+### Three Deployment Modes
+
+#### 1. Local Only (Default)
+
+- Logs stored in: `%AppData%\ProSoft\EasySave\Logs\`
+- Only this PC's logs retained
+- Perfect for: Single users, small offices
+- **Configuration**: Done by default
+
+#### 2. Centralized Only
+
+- Logs sent to Docker service
+- No logs stored locally
+- Perfect for: Enterprise deployments, compliance auditing
+- Requires: Docker service running
+
+#### 3. Hybrid (Local + Centralized)
+
+- Logs stored locally AND sent to Docker
+- Redundancy and offline access
+- Perfect for: High-availability environments
+- Requires: Docker service (with local fallback)
+
+### Enabling Centralized Logging
+
+#### Prerequisites
+
+1. **Docker Service Running**
+   - System administrator deploys Docker service
+   - Service URL provided (e.g., `http://logs.company.internal:8080`)
+   - Service must be accessible from your PC
+
+#### Configuration Steps
+
+1. Open **Settings** in EasySave GUI
+2. Scroll to **Logging Configuration**
+3. Check **Enable Centralized Logging**
+4. Enter Docker service URL:
+   ```
+   http://logs.company.internal:8080
+   ```
+5. Choose mode:
+   - ☐ Local only
+   - ☑ Centralized only
+   - ☑ Hybrid (local + centralized)
+6. Click **Save**
+
+### Benefits of Centralization
+
+- **Single source of truth**: All user backups in one place
+- **Audit trail**: Who backed up what, when
+- **Compliance**: Meet regulatory requirements
+- **Analytics**: View trends across entire company
+- **Faster investigation**: When issues occur
+
+### Troubleshooting Centralized Logging
+
+- **"Cannot reach Docker service"**: Check URL and network connectivity
+- **Local fallback active**: Service unavailable, logs stored locally
+- **Logs appear delayed**: Normal, sync interval 5-10 seconds
+- **Contact IT**: If Docker service is down
 
 ## Encryption (NEW v2.0)
 
@@ -190,11 +423,15 @@ EasySave.Console.exe 2-4       # Execute range of jobs
 - **EncryptionTime > 0**: File successfully encrypted
 - **EncryptionTime < 0**: Encryption failed (file backed up unencrypted)
 
-### Performance Impact
+### CryptoSoft Mono-Instance (NEW v3.0)
 
-- Encryption adds ~10-20% overhead depending on file size
-- Large files take longer to encrypt
-- Recommended: encrypt outside peak hours for network drives
+EasySave integrates with CryptoSoft encryption service. CryptoSoft runs as a **single instance per machine** for security:
+
+- **Can't launch CryptoSoft twice**: Only one instance allowed on your PC
+- **If already running**: Error message shown, second launch blocked
+- **After closing**: Next launch works normally
+
+**User Impact**: Minimal - automatic background process, user doesn't interact directly
 
 ## Log Files
 
@@ -214,14 +451,22 @@ EasySave can backup from/to:
 
 ## Troubleshooting
 
-- **"Cannot add more than 5 jobs"**: Maximum limit reached. Delete an existing job first.
+- **"Cannot add more than 5 jobs"**: This limitation was removed in v2.0. You can create unlimited jobs.
 - **Access denied errors**: Ensure you have read/write permissions on source and target folders.
 - **Job not found**: Verify the job number in the list (Option 1).
+
+### NEW in v3.0
+
+- **Job paused unexpectedly**: Business software detected. Close the application and it will resume automatically.
+- **Jobs not running in parallel**: Check if large file is transferring (only one >n KB at a time). Wait for completion.
+- **Jobs stuck on priority file**: Other jobs waiting for priority files to complete. This is expected behavior.
+- **"CryptoSoft already running"**: Close the existing CryptoSoft instance. Only one can run per machine.
+- **Centralized logs not syncing**: Check Docker service URL in Settings. Local fallback active if unavailable.
 
 ## Support
 
 For technical assistance, contact ProSoft support at <support@prosoft.com>
 
 ---
-**ProSoft - EasySave Version 1.1**
+**ProSoft - EasySave Version 3.0**
 © 2026 ProSoft. All rights reserved.
