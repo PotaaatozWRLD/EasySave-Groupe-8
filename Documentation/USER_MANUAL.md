@@ -2,8 +2,7 @@
 
 ## Introduction
 
-EasySave is a backup software that allows you to create and manage up to 5 backup jobs. Each job can be configured to perform a full or differential backup. Version 1.1 adds XML logging format support and enhanced configuration options.
->>>>>>> 9688a16b3bd14d19330b0efd2b7021dac755fe64
+EasySave 3.0 is a professional backup software that allows you to create and manage unlimited backup jobs with parallel execution capabilities. Each job can be configured to perform a full or differential backup with optional AES-256 encryption. Version 3.0 adds parallel backup execution, priority file management, real-time job control, automatic pause on business software detection, and centralized Docker-based logging.
 
 ## Getting Started
 
