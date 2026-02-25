@@ -7,7 +7,7 @@
         x:Class="EasySave.GUI.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="ProSoft EasySave v2.0"
+        Title="ProSoft EasySave v3.0"
         Width="1200" Height="700"
         MinWidth="1000" MinHeight="650"
         Background="{DynamicResource BackgroundColor}"
