@@ -9,7 +9,7 @@ cloud "User Environment" {
 }
 
 node "Docker Host" {
-    component "Log Server\n(Alpine/Netcat)" as DockerLog
+    component "Log Server\n(Alpine/socat\nMulti-connection)" as DockerLog
     port "9000" as Port9000
     DockerLog - Port9000
 }
