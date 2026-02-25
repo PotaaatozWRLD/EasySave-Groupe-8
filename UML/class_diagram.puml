@@ -16,7 +16,7 @@ package "EasySave.Console" {
         + {static} CryptoSoftPath : string
         + {static} PriorityExtensions : List<string>
         + {static} MaxLargeFileSizeKB : long
-        + {static} EnableNetworkLogging : bool
+        + {static} LoggingMode : string
         + {static} LogServerIp : string
         + {static} LogServerPort : int
         + {static} Save() : void
@@ -46,6 +46,15 @@ package "EasySave.GUI" {
         + StopAllCommand : ICommand
         + ExecuteSelectedJobAsync() : Task
         + ExecuteAllJobsAsync() : Task
+        - InitializeServices() : void
+    }
+
+    class SettingsViewModel {
+        + SelectedLoggingMode : string
+        + LogServerIp : string
+        + LogServerPort : int
+        + LoggingModes : ObservableCollection<string>
+        + SaveCommand : ICommand
     }
     
     class LocalizationManager {
@@ -165,6 +174,7 @@ package "EasyLog" {
 
 MainViewModel --> ParallelBackupCoordinator : Uses
 MainViewModel --> AppConfig : Configures
+SettingsViewModel --> AppConfig : Reads/Writes
 ParallelBackupCoordinator --> BackupService : Delegates
 ParallelBackupCoordinator --> BusinessSoftwareMonitor : Subscribes
 ParallelBackupCoordinator --> JobExecutionContext : Manages
@@ -176,6 +186,7 @@ LogEntry --* ILogger : Data
 CompositeLogger ..|> ILogger
 NetworkLogger ..|> ILogger
 JsonLogger ..|> ILogger
+XmlLogger ..|> ILogger
 CompositeLogger o-- ILogger : Aggregates
 
 @enduml
