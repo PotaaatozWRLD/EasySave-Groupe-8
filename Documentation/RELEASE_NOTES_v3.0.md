@@ -468,11 +468,13 @@ Execution sequence:
 
 **Test Execution:**
 
-```bash
-cd EasySave/EasySave.Tests
-dotnet test
-# Result: Total: 130+ | Passed: 130+ ✅ | Failed: 0 | Duration: ~12s
-```
+### 7. Centralized Logging (Docker)
+- **3 Logging Modes** configurable directly from Settings UI:
+  - **Local** — logs written to `%AppData%\ProSoft\EasySave\Logs\` only
+  - **Docker** — logs forwarded to Docker TCP server only
+  - **Both** — logs written locally **and** forwarded to Docker simultaneously
+- **Docker Integration:** Includes `docker-compose.yml` (Alpine + **socat**, multi-connection support).
+- **Machine Identification:** Each log entry includes `MachineName` and `UserName` to identify the source.
 
 ---
 
